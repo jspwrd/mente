@@ -4,26 +4,24 @@ A reasoner that, for computation-shaped intents, synthesizes a small Python
 function, executes it in a subprocess sandbox, validates the output, and —
 on repeated success — promotes the verified snippet into the ToolRegistry.
 
-Phase 1: templated synthesis (no LLM) — recognizes a small family of shapes
-and produces functions from a template. The subprocess + AST-gate machinery
-is real; swapping the synthesis step for an LLM-authored function is a
-one-file change.
-
-Phase 2: LLM-authored synthesis, AST-level validation (no unsafe ops), test-
-driven acceptance, library versioning, primitive composition.
+The synthesis step itself is pluggable: see ``aria.synthesizers`` for the
+``Synthesizer`` Protocol and the two shipped backends (template, LLM). The
+subprocess + AST-gate machinery below is the trust boundary — every
+synthesized function, regardless of author, runs through it.
 """
 from __future__ import annotations
 
 import ast
 import asyncio
 import hashlib
+import inspect
 import json
-import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .synthesizers import Synthesizer, TemplateSynthesizer
 from .tools import ToolRegistry
 from .types import Intent, ReasonerTier, Response
 from .world_model import WorldModel
@@ -131,62 +129,18 @@ class LibraryStore:
         return list(self._primitives.values())
 
 
-# --- Templated synthesis for a small set of shapes -------------------------
-
-_FIB_RE = re.compile(r"(?:fib(?:onacci)?\D+(\d+)|(\d+)\D+fib(?:onacci)?)", re.I)
-_POW_RE = re.compile(r"(\d+)\s*(?:\*\*|\^|to the power of|to the)\s*(\d+)", re.I)
-_FACT_RE = re.compile(r"factorial(?:\s+of)?\s+(\d+)|(\d+)\D+factorial", re.I)
-
-
-@dataclass
-class TemplateSynthesizer:
-    """Recognizes a small family of computation requests and emits Python
-    source to compute them. No LLM involved — replace with an LLM call in
-    Phase 2."""
-
-    def synthesize(self, intent_text: str) -> tuple[str, str, dict] | None:
-        """Return (source, entrypoint, args) or None if we can't synthesize."""
-        m = _FIB_RE.search(intent_text)
-        if m:
-            n = int(m.group(1) or m.group(2))
-            src = (
-                "def fib(n):\n"
-                "    a, b = 0, 1\n"
-                "    for _ in range(n):\n"
-                "        a, b = b, a + b\n"
-                "    return a\n"
-            )
-            return src, "fib", {"n": n}
-        m = _FACT_RE.search(intent_text)
-        if m:
-            n = int(m.group(1) or m.group(2))
-            src = (
-                "def factorial(n):\n"
-                "    out = 1\n"
-                "    for k in range(2, n + 1):\n"
-                "        out *= k\n"
-                "    return out\n"
-            )
-            return src, "factorial", {"n": n}
-        m = _POW_RE.search(intent_text)
-        if m:
-            a, b = int(m.group(1)), int(m.group(2))
-            src = "def power(a, b):\n    return a ** b\n"
-            return src, "power", {"a": a, "b": b}
-        return None
-
-
 @dataclass
 class SynthesisReasoner:
     """Reasoner that attempts to answer via program synthesis.
 
-    Flow: recognize shape → synthesize code → validate AST → execute sandboxed
-    → if successful, promote to library (and register as a tool) → return
-    the computed value.
+    Flow: synthesize code (template or LLM) → validate AST → execute
+    sandboxed → if successful, promote to library (and register as a tool)
+    → return the computed value. The ``synthesizer`` field is pluggable; if
+    unset, the deterministic template synthesizer is used.
     """
     library: LibraryStore
     tools: ToolRegistry
-    synthesizer: TemplateSynthesizer = field(default_factory=TemplateSynthesizer)
+    synthesizer: Synthesizer = field(default_factory=TemplateSynthesizer)
     name: str = "specialist.synthesis"
     tier: ReasonerTier = "specialist"
     est_cost_ms: float = 50.0
@@ -194,7 +148,14 @@ class SynthesisReasoner:
     async def answer(
         self, intent: Intent, world: WorldModel, tools: ToolRegistry
     ) -> Response:
-        candidate = self.synthesizer.synthesize(intent.text)
+        # Synthesizers may expose an async `asynthesize` (LLM) or a sync
+        # `synthesize` (template); prefer the async form when available so we
+        # don't block the event loop on a network call.
+        asyn = getattr(self.synthesizer, "asynthesize", None)
+        if asyn is not None and inspect.iscoroutinefunction(asyn):
+            candidate = await asyn(intent.text)
+        else:
+            candidate = self.synthesizer.synthesize(intent.text)
         if candidate is None:
             return Response(
                 text="", reasoner=self.name, tier=self.tier,
