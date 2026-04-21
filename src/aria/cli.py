@@ -1,0 +1,442 @@
+"""Unified command-line interface.
+
+All entry points live here so there's exactly one thing to run:
+
+    ./aria              # interactive REPL
+    ./aria demo         # scripted demo
+    ./aria federated    # hub + peer in one process, real TCP bus between them
+    ./aria reset        # wipe .aria/ state
+    ./aria test         # smoke tests (bus, synthesis, memory)
+    ./aria --help       # all options
+"""
+from __future__ import annotations
+
+import argparse
+import asyncio
+import os
+import shutil
+import signal
+import sys
+from pathlib import Path
+
+from .runtime import Runtime
+from .types import Belief, Intent
+
+
+BANNER = r"""
+   _      ___   ___
+  /_\    | _ \ |_ _|   /_\
+ / _ \   |   /  | |   / _ \
+/_/ \_\  |_|_\ |___| /_/ \_\
+
+  persistent, event-driven reasoning process
+"""
+
+
+def _root() -> Path:
+    """Project root — so .aria/ lives in the project dir regardless of cwd."""
+    return Path(__file__).resolve().parent.parent.parent
+
+
+def _data_root(name: str = ".aria") -> Path:
+    return _root() / name
+
+
+async def _seed(rt: Runtime) -> None:
+    """Seed the world model with a lightweight identity so demos feel grounded."""
+    user_name = os.environ.get("USER") or "there"
+    await rt.world.assert_belief(
+        Belief(entity="user", attribute="name", value=user_name.capitalize())
+    )
+
+
+# ---------------------------------------------------------------------------
+# interactive REPL
+# ---------------------------------------------------------------------------
+
+async def _run_repl(rt: Runtime) -> None:
+    """Read lines from stdin, route through runtime, print responses."""
+    print(BANNER)
+    print(f"booted. {len(rt.reasoners)} reasoners, {len(rt.tools.list())} tools.")
+    print("type a message. /help for commands. /quit to exit.\n")
+
+    loop = asyncio.get_event_loop()
+    while True:
+        try:
+            line = await loop.run_in_executor(None, lambda: input("you> "))
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith("/"):
+            if line in ("/quit", "/exit", "/q"):
+                break
+            if line == "/help":
+                _print_help()
+                continue
+            if line == "/state":
+                _print_state(rt)
+                continue
+            if line == "/library":
+                _print_library(rt)
+                continue
+            if line == "/bus":
+                _print_bus(rt)
+                continue
+            if line == "/digest":
+                d = rt.consolidator.consolidate()
+                for k, v in d.items():
+                    print(f"  {k}: {v}")
+                continue
+            print(f"unknown command: {line} (try /help)")
+            continue
+
+        r = await rt.handle_intent(Intent(text=line))
+        reasoner = rt.latent.get("last_reasoner")
+        print(f"aria[{reasoner}]> {r.text}")
+
+
+def _print_help() -> None:
+    print("""commands:
+  /help      this
+  /state     current latent state
+  /library   synthesized primitives
+  /bus       last 20 bus events
+  /digest    force a consolidation digest
+  /quit      exit
+""")
+
+
+def _print_state(rt: Runtime) -> None:
+    for k, v in rt.latent.values.items():
+        s = str(v)
+        if len(s) > 80:
+            s = s[:77] + "..."
+        print(f"  {k}: {s}")
+
+
+def _print_library(rt: Runtime) -> None:
+    prims = rt.library.list()
+    if not prims:
+        print("  (library empty — try 'compute the 10th fibonacci number')")
+        return
+    for p in prims:
+        print(f"  {p.name}  entry={p.entrypoint}  calls={p.invocations}")
+
+
+def _print_bus(rt: Runtime) -> None:
+    for e in rt.bus.recent(n=20):
+        payload = str(e.payload)
+        if len(payload) > 60:
+            payload = payload[:57] + "..."
+        print(f"  {e.topic:32s} from={e.origin:20s} {payload}")
+
+
+# ---------------------------------------------------------------------------
+# scripted demo
+# ---------------------------------------------------------------------------
+
+DEMO_SCRIPT = [
+    "hello",
+    "who am I?",
+    "what time is it?",
+    "remember that the deploy freeze starts Monday",
+    "remember that raspberry pis are memory-bandwidth bound",
+    "what do you know about hardware?",
+    "compute the 15th fibonacci number",
+    "what is the factorial of 8",
+    "if I gave you three raspberry pis, could you run a 70B model across them?",
+    "what are you?",
+    "what have you been doing?",
+]
+
+
+async def _run_demo(rt: Runtime) -> None:
+    print(BANNER)
+    print("scripted demo — watch the router pick reasoners per intent.\n")
+    for text in DEMO_SCRIPT:
+        r = await rt.handle_intent(Intent(text=text))
+        reasoner = rt.latent.get("last_reasoner")
+        print(f">>> {text}")
+        print(f"    [{reasoner}] {r.text}")
+        if text == "what do you know about hardware?":
+            # mid-run consolidation so the self-model has something to read
+            rt.consolidator.consolidate()
+
+    print("\nfinal library:")
+    _print_library(rt)
+
+
+# ---------------------------------------------------------------------------
+# federated demo — hub + peer in one process, real TCP between them
+# ---------------------------------------------------------------------------
+
+async def _run_federated(port: int) -> None:
+    from .bus import EventBus
+    from .discovery import Announcer, Directory, RemoteReasoner, RemoteRequestHandler
+    from .specialists import MathSpecialist
+    from .tools import ToolRegistry
+    from .transport import TCPTransport
+    from .world_model import WorldModel
+
+    print(BANNER)
+    print(f"federated demo — hub + math peer, TCP bus on port {port}\n")
+
+    # --- hub (main runtime) ---
+    hub_id = "hub.main"
+    hub_bus = EventBus(transport=TCPTransport(node_id=hub_id, port=port, role="hub"))
+    rt = Runtime(root=_data_root(".aria-hub"), node_id=hub_id, bus=hub_bus)
+    await rt.start()
+    await _seed(rt)
+    directory = Directory(bus=rt.bus, self_node_id=hub_id)
+    directory.wire()
+
+    # --- peer (math specialist) ---
+    peer_id = "peer.math"
+    peer_bus = EventBus(transport=TCPTransport(node_id=peer_id, port=port, role="spoke"))
+    await peer_bus.start()
+    peer_world = WorldModel(bus=peer_bus)
+    peer_tools = ToolRegistry()
+    peer_reasoners = [MathSpecialist()]
+    RemoteRequestHandler(
+        bus=peer_bus, node_id=peer_id,
+        reasoners=peer_reasoners, world=peer_world, tools=peer_tools,
+    ).wire()
+
+    stop = asyncio.Event()
+    peer_announcer = Announcer(
+        bus=peer_bus, node_id=peer_id,
+        reasoners=peer_reasoners, specialization="math",
+    )
+    hub_announcer = Announcer(bus=rt.bus, node_id=hub_id, reasoners=rt.reasoners)
+    tasks = [
+        asyncio.create_task(peer_announcer.run(stop)),
+        asyncio.create_task(hub_announcer.run(stop)),
+    ]
+
+    print("waiting for peer discovery...")
+    for _ in range(50):
+        if directory.specialists():
+            break
+        await asyncio.sleep(0.1)
+
+    specialists = directory.specialists()
+    print(f"discovered: {[f'{p.node_id}:{p.reasoner}' for p in specialists]}\n")
+    for p in specialists:
+        remote = RemoteReasoner(bus=rt.bus, node_id=hub_id, target=p)
+        # rt.reasoners, rt.router.reasoners, rt.router.metacog.reasoners all
+        # reference the same list — append once.
+        rt.reasoners.append(remote)
+
+    try:
+        await _run_repl(rt)
+    finally:
+        stop.set()
+        for t in tasks:
+            t.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        await peer_bus.close()
+        await rt.shutdown()
+
+
+# ---------------------------------------------------------------------------
+# peer subcommand (for people who want real multi-process)
+# ---------------------------------------------------------------------------
+
+async def _run_peer_only(port: int, node_id: str) -> None:
+    from .bus import EventBus
+    from .discovery import Announcer, RemoteRequestHandler
+    from .specialists import MathSpecialist
+    from .tools import ToolRegistry
+    from .transport import TCPTransport
+    from .world_model import WorldModel
+
+    bus = EventBus(transport=TCPTransport(node_id=node_id, port=port, role="spoke"))
+    await bus.start()
+    world = WorldModel(bus=bus)
+    tools = ToolRegistry()
+    reasoners = [MathSpecialist()]
+    RemoteRequestHandler(bus=bus, node_id=node_id, reasoners=reasoners,
+                         world=world, tools=tools).wire()
+    stop = asyncio.Event()
+    ann = asyncio.create_task(
+        Announcer(bus=bus, node_id=node_id, reasoners=reasoners,
+                  specialization="math").run(stop)
+    )
+    print(f"[{node_id}] peer up on port {port}; Ctrl-C to stop.")
+    try:
+        await asyncio.Event().wait()
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        pass
+    finally:
+        stop.set()
+        ann.cancel()
+        await bus.close()
+
+
+# ---------------------------------------------------------------------------
+# smoke tests
+# ---------------------------------------------------------------------------
+
+async def _smoke_tests() -> int:
+    """Cheap end-to-end checks. Exits non-zero on failure."""
+    from .bus import EventBus
+    from .transport import TCPTransport
+    from .types import Event
+
+    print("== bus smoke test ==")
+    port = 7999
+    hub = EventBus(transport=TCPTransport(node_id="t.hub", port=port, role="hub"))
+    spoke = EventBus(transport=TCPTransport(node_id="t.spoke", port=port, role="spoke"))
+    await hub.start()
+    await spoke.start()
+    inbox_hub, inbox_spoke = [], []
+    async def on_hub(e):
+        inbox_hub.append(e)
+    async def on_spoke(e):
+        inbox_spoke.append(e)
+    hub.subscribe("t.*", on_hub)
+    spoke.subscribe("t.*", on_spoke)
+    await spoke.publish(Event(topic="t.ping", payload={}, origin="t.spoke"))
+    await hub.publish(Event(topic="t.pong", payload={}, origin="t.hub"))
+    await asyncio.sleep(0.1)
+    assert any(e.origin == "t.spoke" for e in inbox_hub), "hub didn't receive"
+    assert any(e.origin == "t.hub" for e in inbox_spoke), "spoke didn't receive"
+    await spoke.close()
+    await hub.close()
+    print("  ✓ TCP bus round-trip")
+
+    print("== synthesis smoke test ==")
+    rt = Runtime(root=_data_root(".aria-test"))
+    await rt.start()
+    r = await rt.handle_intent(Intent(text="compute the 10th fibonacci number"))
+    assert "55" in r.text, f"expected fib(10)=55, got: {r.text!r}"
+    print(f"  ✓ synthesis: {r.text}")
+    r = await rt.handle_intent(Intent(text="what is the factorial of 6"))
+    assert "720" in r.text, f"expected factorial(6)=720, got: {r.text!r}"
+    print(f"  ✓ synthesis: {r.text}")
+    await rt.shutdown()
+
+    print("== semantic memory smoke test ==")
+    rt = Runtime(root=_data_root(".aria-test"))
+    await rt.start()
+    rt.semantic_mem.remember("redis uses AOF or RDB for persistence")
+    rt.semantic_mem.remember("postgres uses write-ahead logging")
+    hits = rt.semantic_mem.search("database durability", k=2)
+    assert hits, "semantic search returned nothing"
+    print(f"  ✓ semantic search top hit: {hits[0]['text']!r}")
+    await rt.shutdown()
+
+    shutil.rmtree(_data_root(".aria-test"), ignore_errors=True)
+    print("\nall smoke tests passed.")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# reset
+# ---------------------------------------------------------------------------
+
+def _reset() -> None:
+    root = _root()
+    removed = []
+    for p in sorted(root.glob(".aria*")):
+        shutil.rmtree(p, ignore_errors=True)
+        removed.append(p.name)
+    if removed:
+        print(f"removed: {', '.join(removed)}")
+    else:
+        print("nothing to reset.")
+
+
+# ---------------------------------------------------------------------------
+# dispatch
+# ---------------------------------------------------------------------------
+
+async def _do_run(data_dir: str) -> None:
+    rt = Runtime(root=_data_root(data_dir))
+    await rt.start()
+    await _seed(rt)
+    bg = rt.start_background()
+    try:
+        await _run_repl(rt)
+    finally:
+        rt.stop_background()
+        await asyncio.gather(*bg, return_exceptions=True)
+        await rt.shutdown()
+
+
+async def _do_demo(data_dir: str) -> None:
+    rt = Runtime(root=_data_root(data_dir))
+    await rt.start()
+    await _seed(rt)
+    bg = rt.start_background()
+    try:
+        await _run_demo(rt)
+    finally:
+        rt.stop_background()
+        await asyncio.gather(*bg, return_exceptions=True)
+        await rt.shutdown()
+
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="aria",
+        description="Persistent, event-driven reasoning process. "
+                    "Run with no args for an interactive REPL.",
+    )
+    sub = p.add_subparsers(dest="command")
+
+    p_run = sub.add_parser("run", help="interactive REPL (default)")
+    p_run.add_argument("--data", default=".aria", help="state directory")
+
+    p_demo = sub.add_parser("demo", help="scripted walkthrough")
+    p_demo.add_argument("--data", default=".aria", help="state directory")
+
+    p_fed = sub.add_parser("federated", help="hub + peer in one process, real TCP bus")
+    p_fed.add_argument("--port", type=int, default=7722)
+
+    p_peer = sub.add_parser("peer", help="run only the math specialist peer (advanced)")
+    p_peer.add_argument("--port", type=int, default=7722)
+    p_peer.add_argument("--id", default="peer.math")
+
+    sub.add_parser("test", help="smoke tests")
+    sub.add_parser("reset", help="wipe all .aria* state directories")
+
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    cmd = args.command or "run"
+
+    def _install_sigint() -> None:
+        # Let Ctrl-C cleanly exit asyncio loops on macOS.
+        try:
+            signal.signal(signal.SIGINT, signal.default_int_handler)
+        except ValueError:
+            pass
+
+    _install_sigint()
+
+    if cmd == "run":
+        asyncio.run(_do_run(args.data))
+    elif cmd == "demo":
+        asyncio.run(_do_demo(args.data))
+    elif cmd == "federated":
+        asyncio.run(_run_federated(args.port))
+    elif cmd == "peer":
+        asyncio.run(_run_peer_only(args.port, args.id))
+    elif cmd == "test":
+        return asyncio.run(_smoke_tests())
+    elif cmd == "reset":
+        _reset()
+    else:
+        build_parser().print_help()
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
