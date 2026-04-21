@@ -24,6 +24,7 @@ from .metacog import Metacog
 from .reasoners import DeepSimulatedReasoner, FastHeuristicReasoner, Reasoner, set_self_model_hook
 from .router import Router
 from .self_model import SelfModel
+from .specialists import CodeSpecialist
 from .state import LatentState
 from .synthesis import LibraryStore, SynthesisReasoner
 from .tools import ToolRegistry
@@ -67,7 +68,7 @@ class Runtime:
             from .llm import AnthropicReasoner, anthropic_available
             deep = AnthropicReasoner() if anthropic_available() else DeepSimulatedReasoner()
             synth = SynthesisReasoner(library=self.library, tools=self.tools)
-            self.reasoners = [FastHeuristicReasoner(), synth, deep]
+            self.reasoners = [FastHeuristicReasoner(), synth, CodeSpecialist(), deep]
 
         metacog = Metacog(reasoners=self.reasoners)
         self.router = Router(reasoners=self.reasoners, metacog=metacog)

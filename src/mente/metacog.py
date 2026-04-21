@@ -47,6 +47,11 @@ _SPECIALIST_PATS: dict[str, list[re.Pattern[str]]] = {
         re.compile(r"\bfactorial\b.*\d|\d.*\bfactorial\b", re.I),
         re.compile(r"\d+\s*(?:\*\*|\^|to the power of)\s*\d+", re.I),
     ],
+    "code": [
+        re.compile(r"```", re.I),
+        re.compile(r"\b(review|check|critique|analyze|audit|lint)\s+(this|the following|my)\s+(code|snippet|function|script)\b", re.I),
+        re.compile(r"\bwhat'?s?\s+wrong\s+with\s+(this|the|my)\b", re.I),
+    ],
 }
 
 
