@@ -20,6 +20,7 @@ import signal
 import sys
 from pathlib import Path
 
+from .config import MenteConfig
 from .runtime import Runtime
 from .types import Belief, Intent
 
@@ -355,7 +356,7 @@ def _reset() -> None:
 # ---------------------------------------------------------------------------
 
 async def _do_run(data_dir: str) -> None:
-    rt = Runtime(root=_data_root(data_dir))
+    rt = Runtime(root=_data_root(data_dir), config=MenteConfig.load())
     await rt.start()
     await _seed(rt)
     bg = rt.start_background()
@@ -368,7 +369,7 @@ async def _do_run(data_dir: str) -> None:
 
 
 async def _do_demo(data_dir: str) -> None:
-    rt = Runtime(root=_data_root(data_dir))
+    rt = Runtime(root=_data_root(data_dir), config=MenteConfig.load())
     await rt.start()
     await _seed(rt)
     bg = rt.start_background()

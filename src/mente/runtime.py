@@ -16,9 +16,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .bus import EventBus
+from .config import MenteConfig
 from .consolidator import Consolidator
 from .curiosity import Curiosity
 from .embeddings import SemanticMemory
+from .logging import bind as log_bind
+from .logging import configure as configure_logging
+from .logging import get_logger
 from .memory import FastMemory, SlowMemory
 from .metacog import Metacog
 from .reasoners import DeepSimulatedReasoner, FastHeuristicReasoner, Reasoner, set_self_model_hook
@@ -32,11 +36,14 @@ from .types import Event, Intent, Response
 from .verifier import Verifier
 from .world_model import WorldModel
 
+_log = get_logger("runtime")
+
 
 @dataclass
 class Runtime:
     root: Path
     node_id: str = "mente.local"
+    config: MenteConfig = field(default_factory=MenteConfig.default)
     bus: EventBus = field(default_factory=EventBus)
     world: WorldModel = field(init=False)
     fast_mem: FastMemory = field(default_factory=FastMemory)
@@ -46,7 +53,7 @@ class Runtime:
     tools: ToolRegistry = field(default_factory=ToolRegistry)
     reasoners: list[Reasoner] = field(default_factory=list)
     router: Router = field(init=False)
-    verifier: Verifier = field(default_factory=Verifier)
+    verifier: Verifier = field(init=False)
     self_model: SelfModel = field(init=False)
     consolidator: Consolidator = field(init=False)
     curiosity: Curiosity = field(init=False)
@@ -54,11 +61,15 @@ class Runtime:
     _curiosity_stop: asyncio.Event = field(default_factory=asyncio.Event)
 
     def __post_init__(self) -> None:
+        configure_logging(level=self.config.log_level, json=self.config.log_json)
         self.root.mkdir(parents=True, exist_ok=True)
+        self.bus = self.bus or EventBus()
         self.world = WorldModel(bus=self.bus)
         self.slow_mem = SlowMemory(db_path=self.root / "episodic.sqlite")
         self.semantic_mem = SemanticMemory(db_path=self.root / "semantic.sqlite")
         self.latent = LatentState.load(self.root / "latent.json")
+        self.verifier = Verifier(min_confidence=self.config.verifier_min_confidence)
+        _log.info("runtime initialized", extra={"node_id": self.node_id, "root": str(self.root)})
 
         # Default reasoner roster; override after construction if desired.
         # If an Anthropic API key is available, use the real LLM as the deep
@@ -71,7 +82,12 @@ class Runtime:
             self.reasoners = [FastHeuristicReasoner(), synth, CodeSpecialist(), deep]
 
         metacog = Metacog(reasoners=self.reasoners)
-        self.router = Router(reasoners=self.reasoners, metacog=metacog)
+        self.router = Router(
+            reasoners=self.reasoners,
+            metacog=metacog,
+            min_confidence=self.config.router_min_confidence,
+            ms_per_conf=self.config.router_ms_per_conf,
+        )
 
         self._register_default_tools()
         self._wire_subscribers()
@@ -82,8 +98,18 @@ class Runtime:
         )
         set_self_model_hook(self.self_model.answer)
 
-        self.consolidator = Consolidator(slow_mem=self.slow_mem, latent=self.latent)
-        self.curiosity = Curiosity(bus=self.bus, world=self.world, latent=self.latent)
+        self.consolidator = Consolidator(
+            slow_mem=self.slow_mem,
+            latent=self.latent,
+            interval_s=self.config.consolidator_interval_s,
+        )
+        self.curiosity = Curiosity(
+            bus=self.bus,
+            world=self.world,
+            latent=self.latent,
+            interval_s=self.config.curiosity_interval_s,
+            idle_threshold_s=self.config.curiosity_idle_threshold_s,
+        )
         self.curiosity.wire()
 
         async def _on_curiosity(event: Event) -> None:
