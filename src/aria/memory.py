@@ -90,6 +90,49 @@ class SlowMemory:
             for r in rows
         ]
 
+    def summarize(self, kind: str | None = None, since: float | None = None) -> dict[str, Any]:
+        """Aggregate stats over episodes.
+
+        Returns totals plus per-kind and per-actor counts and the first/last ts.
+        Uses SQL GROUP BY over the existing connection — cheap even on large logs.
+        """
+        assert self._conn is not None
+        where = " WHERE 1=1"
+        args: list[Any] = []
+        if kind:
+            where += " AND kind = ?"
+            args.append(kind)
+        if since:
+            where += " AND ts >= ?"
+            args.append(since)
+
+        total_row = self._conn.execute(
+            f"SELECT COUNT(*), MIN(ts), MAX(ts) FROM episodes{where}", args
+        ).fetchone()
+        total = int(total_row[0]) if total_row and total_row[0] is not None else 0
+        first_ts = total_row[1] if total_row and total_row[1] is not None else None
+        last_ts = total_row[2] if total_row and total_row[2] is not None else None
+
+        by_kind: dict[str, int] = {}
+        for k, c in self._conn.execute(
+            f"SELECT kind, COUNT(*) FROM episodes{where} GROUP BY kind", args
+        ).fetchall():
+            by_kind[k] = int(c)
+
+        by_actor: dict[str, int] = {}
+        for a, c in self._conn.execute(
+            f"SELECT actor, COUNT(*) FROM episodes{where} GROUP BY actor", args
+        ).fetchall():
+            by_actor[a] = int(c)
+
+        return {
+            "total": total,
+            "by_kind": by_kind,
+            "by_actor": by_actor,
+            "first_ts": first_ts,
+            "last_ts": last_ts,
+        }
+
     def close(self) -> None:
         if self._conn:
             self._conn.close()
