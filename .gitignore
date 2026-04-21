@@ -9,3 +9,4 @@ build/
 *.sqlite
 *.sqlite-journal
 .DS_Store
+.claude/
