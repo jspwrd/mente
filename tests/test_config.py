@@ -1,12 +1,12 @@
 """Tests for :mod:`mente.config` — precedence, coercion, and round-trip."""
 from __future__ import annotations
 
+import dataclasses
 from pathlib import Path
 
 import pytest
 
 from mente.config import MenteConfig
-
 
 # -- defaults ---------------------------------------------------------------
 
@@ -33,7 +33,7 @@ def test_default_has_expected_values() -> None:
 
 def test_default_is_frozen() -> None:
     c = MenteConfig.default()
-    with pytest.raises(Exception):  # dataclasses.FrozenInstanceError
+    with pytest.raises(dataclasses.FrozenInstanceError):
         c.bus_port = 1234  # type: ignore[misc]
 
 

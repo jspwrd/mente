@@ -24,7 +24,6 @@ from ..types import Intent, Response
 from ..world_model import WorldModel
 from .types import Verdict
 
-
 MergeStrategy = Literal["min", "mean", "any"]
 
 

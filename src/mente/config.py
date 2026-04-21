@@ -12,13 +12,13 @@ example, ``bus_port`` -> ``MENTE_BUS_PORT`` and ``verifier_min_confidence``
 """
 from __future__ import annotations
 
+import contextlib
 import dataclasses
 import os
 import tomllib
 from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Any
-
 
 _TRUE_STRINGS = {"1", "true", "yes", "on", "y", "t"}
 _FALSE_STRINGS = {"0", "false", "no", "off", "n", "f"}
@@ -105,12 +105,12 @@ class MenteConfig:
 
     # -- constructors -------------------------------------------------------
     @classmethod
-    def default(cls) -> "MenteConfig":
+    def default(cls) -> MenteConfig:
         """Return a config populated entirely with the declared defaults."""
         return cls()
 
     @classmethod
-    def from_toml(cls, path: Path | str) -> "MenteConfig":
+    def from_toml(cls, path: Path | str) -> MenteConfig:
         """Parse a TOML file into an ``MenteConfig``.
 
         Unknown keys raise ``ValueError`` so typos surface loudly. Values are
@@ -126,7 +126,7 @@ class MenteConfig:
         return cls._apply_overrides(cls.default(), data, source=str(toml_path))
 
     @classmethod
-    def from_env(cls, base: "MenteConfig | None" = None) -> "MenteConfig":
+    def from_env(cls, base: MenteConfig | None = None) -> MenteConfig:
         """Return ``base`` (or defaults) with any ``MENTE_*`` env vars applied."""
         base = base if base is not None else cls.default()
         overrides: dict[str, Any] = {}
@@ -138,7 +138,7 @@ class MenteConfig:
         return dataclasses.replace(base, **overrides)
 
     @classmethod
-    def load(cls, toml_path: Path | str | None = None) -> "MenteConfig":
+    def load(cls, toml_path: Path | str | None = None) -> MenteConfig:
         """Single entry point: defaults -> TOML (if present) -> env overrides.
 
         If ``toml_path`` is given but the file doesn't exist, TOML is silently
@@ -146,10 +146,8 @@ class MenteConfig:
         """
         cfg = cls.default()
         if toml_path is not None:
-            try:
+            with contextlib.suppress(FileNotFoundError):
                 cfg = cls.from_toml(toml_path)
-            except FileNotFoundError:
-                pass
         return cls.from_env(cfg)
 
     # -- serialisation ------------------------------------------------------
@@ -175,11 +173,11 @@ class MenteConfig:
     @classmethod
     def _apply_overrides(
         cls,
-        base: "MenteConfig",
+        base: MenteConfig,
         overrides: dict[str, Any],
         *,
         source: str,
-    ) -> "MenteConfig":
+    ) -> MenteConfig:
         known = {f.name: f for f in fields(cls)}
         unknown = sorted(set(overrides) - known.keys())
         if unknown:

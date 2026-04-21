@@ -6,7 +6,6 @@ import pytest
 from mente.types import Belief, Intent
 from mente.verifiers import HeuristicVerifier, Verdict
 
-
 # -- basic shape / shim -----------------------------------------------------
 
 

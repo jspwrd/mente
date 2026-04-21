@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 
 from .bus import EventBus
 from .state import LatentState
-from .types import Event, Intent
+from .types import Event
 from .world_model import WorldModel
 
 
@@ -87,5 +87,5 @@ class Curiosity:
         while not stop.is_set():
             try:
                 await asyncio.wait_for(stop.wait(), timeout=self.interval_s)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 await self.tick()

@@ -11,8 +11,6 @@ import asyncio
 import sys
 from pathlib import Path
 
-import pytest
-
 # Make src/ importable when pytest is invoked from the project root.
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"

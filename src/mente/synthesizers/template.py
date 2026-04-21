@@ -10,7 +10,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-
 _FIB_RE = re.compile(r"(?:fib(?:onacci)?\D+(\d+)|(\d+)\D+fib(?:onacci)?)", re.I)
 _POW_RE = re.compile(r"(\d+)\s*(?:\*\*|\^|to the power of|to the)\s*(\d+)", re.I)
 _FACT_RE = re.compile(r"factorial(?:\s+of)?\s+(\d+)|(\d+)\D+factorial", re.I)

@@ -21,7 +21,7 @@ class LatentState:
     path: Path | None = None
 
     @classmethod
-    def load(cls, path: Path) -> "LatentState":
+    def load(cls, path: Path) -> LatentState:
         if path.exists():
             data = json.loads(path.read_text())
             return cls(values=data, path=path)

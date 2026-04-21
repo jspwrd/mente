@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pytest
+from fixtures.cognition_helpers import make_world
 
 from mente.synthesis import (
     LibraryStore,
@@ -12,9 +13,6 @@ from mente.synthesis import (
 )
 from mente.tools import ToolRegistry
 from mente.types import Intent
-
-from fixtures.cognition_helpers import make_world
-
 
 # --- TemplateSynthesizer recognition ---------------------------------------
 

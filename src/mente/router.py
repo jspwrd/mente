@@ -11,7 +11,7 @@ to escalate earlier next time.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from .metacog import Metacog
 from .reasoners import Reasoner

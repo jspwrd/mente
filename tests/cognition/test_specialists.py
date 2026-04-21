@@ -1,15 +1,14 @@
 """Tests for mente.specialists.MathSpecialist — arithmetic pattern recognition + safe AST eval."""
 from __future__ import annotations
 
-from mente.specialists import MathSpecialist, _safe_eval
-from mente.tools import ToolRegistry
-from mente.types import Intent
-
 import ast
 
 import pytest
-
 from fixtures.cognition_helpers import make_world
+
+from mente.specialists import MathSpecialist, _safe_eval
+from mente.tools import ToolRegistry
+from mente.types import Intent
 
 
 async def test_math_addition():

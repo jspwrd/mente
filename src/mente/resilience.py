@@ -10,7 +10,8 @@ import asyncio
 import functools
 import random
 import time
-from typing import Any, Awaitable, Callable, TypeVar
+from collections.abc import Awaitable, Callable
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -65,8 +66,8 @@ def timeout(
         async def wrapper(*args: Any, **kwargs: Any) -> T:
             try:
                 return await asyncio.wait_for(fn(*args, **kwargs), timeout=seconds)
-            except asyncio.TimeoutError as e:
-                raise asyncio.TimeoutError(
+            except TimeoutError as e:
+                raise TimeoutError(
                     f"{getattr(fn, '__name__', 'call')} exceeded {seconds}s timeout"
                 ) from e
 

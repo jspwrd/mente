@@ -1,12 +1,12 @@
 """Tests for mente.router.Router — decide() argmax + route() escalation."""
 from __future__ import annotations
 
+from fixtures.cognition_helpers import StubReasoner, make_world
+
 from mente.metacog import Metacog
 from mente.router import Router
 from mente.tools import ToolRegistry
 from mente.types import Intent, Response
-
-from fixtures.cognition_helpers import StubReasoner, make_world
 
 
 def test_decide_picks_fast_for_fast_covered_pattern():

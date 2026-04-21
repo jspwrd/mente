@@ -25,7 +25,6 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from mente.bus import EventBus  # noqa: E402
-
 from tests.fixtures.core_events import EventCapture  # noqa: E402
 
 

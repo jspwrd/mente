@@ -7,7 +7,6 @@ import pytest
 
 from mente.resilience import CircuitBreaker, CircuitOpenError, retry_async, timeout
 
-
 # --- retry_async ----------------------------------------------------------
 
 

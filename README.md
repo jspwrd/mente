@@ -104,11 +104,12 @@ Inside the REPL, slash commands peek at internals:
 ## Installing as a package
 
 ```bash
-pip install mente                           # core (stdlib only)
-pip install 'mente[llm]'                    # adds anthropic SDK for the deep tier
-pip install 'mente[embeddings]'             # adds voyage embeddings
-pip install 'mente[dev]'                    # pytest, ruff, mypy
+uv add mente                                # core (stdlib only)
+uv add 'mente[llm]'                         # adds anthropic SDK for the deep tier
+uv add 'mente[embeddings]'                  # adds voyage embeddings
 ```
+
+pip works too: `pip install mente`, `pip install 'mente[llm]'`, etc.
 
 ```python
 import asyncio

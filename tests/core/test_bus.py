@@ -7,7 +7,6 @@ import pytest
 
 from mente.bus import EventBus
 from mente.types import Event
-
 from tests.fixtures.core_events import EventCapture
 
 

@@ -8,7 +8,6 @@ import pytest
 from mente.bus import EventBus
 from mente.types import Belief
 from mente.world_model import WorldModel
-
 from tests.fixtures.core_events import EventCapture
 
 

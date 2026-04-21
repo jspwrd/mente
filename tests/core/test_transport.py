@@ -7,7 +7,6 @@ import pytest
 
 from mente.transport import InProcessTransport, TCPTransport
 from mente.types import Event
-
 from tests.fixtures.core_events import EventCapture
 from tests.fixtures.core_net import find_unused_port
 

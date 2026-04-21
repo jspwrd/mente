@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pytest
+from fixtures.cognition_helpers import make_world, register_default_tools
 
 from mente.reasoners import (
     DeepSimulatedReasoner,
@@ -10,8 +11,6 @@ from mente.reasoners import (
 )
 from mente.tools import ToolRegistry
 from mente.types import Belief, Intent
-
-from fixtures.cognition_helpers import make_world, register_default_tools
 
 
 async def _setup(beliefs=None):

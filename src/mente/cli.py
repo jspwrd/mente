@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import os
 import shutil
 import signal
@@ -21,7 +22,6 @@ from pathlib import Path
 
 from .runtime import Runtime
 from .types import Belief, Intent
-
 
 BANNER = r"""
    _      ___   ___
@@ -413,10 +413,8 @@ def main(argv: list[str] | None = None) -> int:
 
     def _install_sigint() -> None:
         # Let Ctrl-C cleanly exit asyncio loops on macOS.
-        try:
+        with contextlib.suppress(ValueError):
             signal.signal(signal.SIGINT, signal.default_int_handler)
-        except ValueError:
-            pass
 
     _install_sigint()
 

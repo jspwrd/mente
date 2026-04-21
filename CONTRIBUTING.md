@@ -7,36 +7,39 @@ complexity and abstractions.
 
 ## Getting set up
 
+We use [`uv`](https://docs.astral.sh/uv/) for dependency and environment management.
+
 ```bash
 git clone https://github.com/jspwrd/mente.git
 cd mente
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+uv sync --all-extras --dev    # creates .venv, installs deps from uv.lock
 ```
+
+No `uv`? Install it: `brew install uv` (macOS) or see
+https://docs.astral.sh/uv/getting-started/installation/.
 
 ## Running tests
 
 ```bash
-pytest -q          # unit tests
+uv run pytest -q    # unit tests
 ./mente test        # in-process smoke tests (bus, synthesis, memory)
 ```
 
 ## Linting and types
 
 ```bash
-ruff check .
-ruff format .
-mypy src/mente
+uv run ruff check .
+uv run ruff format .
+uv run mypy src/mente
 ```
 
-`pre-commit` is configured; enable it locally with `pre-commit install`.
+`pre-commit` is configured; enable it locally with `uv run pre-commit install`.
 
 ## Submitting a PR
 
 1. Fork and create a topic branch from `main`.
 2. Keep commits focused; write a clear message explaining the *why*.
-3. Make sure `pytest`, `./mente test`, and `ruff check .` pass.
+3. Make sure `uv run pytest`, `./mente test`, and `uv run ruff check .` pass.
 4. Open a PR and fill out the template.
 
 ## Code style

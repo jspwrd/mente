@@ -6,6 +6,7 @@ pytest-asyncio into "auto" mode so we don't decorate every coroutine.
 """
 from __future__ import annotations
 
+import contextlib
 import sys
 from pathlib import Path
 
@@ -21,7 +22,5 @@ for p in (_SRC, _TESTS):
 def pytest_configure(config):  # type: ignore[no-untyped-def]
     """Force pytest-asyncio into AUTO mode for this subtree so bare `async def`
     tests run without decorators. Safe to call even if already set."""
-    try:
+    with contextlib.suppress(Exception):  # pragma: no cover - defensive
         config.option.asyncio_mode = "auto"
-    except Exception:  # pragma: no cover - defensive
-        pass

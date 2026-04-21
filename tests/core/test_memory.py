@@ -6,7 +6,6 @@ from pathlib import Path
 
 from mente.memory import FastMemory, SlowMemory
 
-
 # --- FastMemory -------------------------------------------------------------
 
 def test_fast_memory_set_and_get():

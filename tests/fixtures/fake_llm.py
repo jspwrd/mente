@@ -26,7 +26,7 @@ class FakeMessage:
 @dataclass
 class FakeMessagesAPI:
     """Captures each call and returns the configured response."""
-    parent: "FakeAsyncAnthropic"
+    parent: FakeAsyncAnthropic
 
     async def create(self, **kwargs: Any) -> FakeMessage:
         self.parent.calls.append(kwargs)

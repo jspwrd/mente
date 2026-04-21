@@ -10,6 +10,7 @@ import asyncio
 import socket
 
 import pytest
+from fixtures.advanced_helpers import EchoReasoner
 
 from mente.bus import EventBus
 from mente.discovery import (
@@ -24,8 +25,6 @@ from mente.tools import ToolRegistry
 from mente.transport import TCPTransport
 from mente.types import Event, Intent
 from mente.world_model import WorldModel
-
-from fixtures.advanced_helpers import EchoReasoner
 
 
 @pytest.mark.asyncio

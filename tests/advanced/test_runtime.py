@@ -11,12 +11,11 @@ import json
 from pathlib import Path
 
 import pytest
+from fixtures.advanced_helpers import make_runtime, shutdown_runtime
 
 from mente.runtime import Runtime
 from mente.synthesis import LibraryStore, Primitive
 from mente.types import Event, Intent
-
-from fixtures.advanced_helpers import make_runtime, shutdown_runtime
 
 
 @pytest.mark.asyncio

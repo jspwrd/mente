@@ -23,7 +23,6 @@ from ..types import Intent, Response
 from ..world_model import WorldModel
 from .types import Verdict
 
-
 # Tier-aware acceptance thresholds. See module docstring for rationale.
 TIER_THRESHOLDS: dict[str, float] = {
     "fast": 0.7,

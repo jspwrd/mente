@@ -16,7 +16,6 @@ from ..tools import ToolRegistry
 from ..types import Intent, ReasonerTier, Response
 from ..world_model import WorldModel
 
-
 _SAFE_OPS = {
     ast.Add: operator.add, ast.Sub: operator.sub,
     ast.Mult: operator.mul, ast.Div: operator.truediv,

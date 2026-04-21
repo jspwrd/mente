@@ -7,7 +7,6 @@ the loop quiet when the user was active recently.
 from __future__ import annotations
 
 import asyncio
-import time
 
 import pytest
 
@@ -137,7 +136,7 @@ async def test_tick_activity_tracker_ignores_internal_origins() -> None:
 
         # Curiosity-originated intent — should NOT bump the idle marker.
         before = cur._last_user_intent_ts
-        time.sleep(0.01)  # ensure time.time() advances if it were (wrongly) set
+        await asyncio.sleep(0.01)  # ensure time.time() advances if it were (wrongly) set
         await bus.publish(Event(topic="intent.curiosity", origin="curiosity", payload={"text": "self-prompt"}))
         await asyncio.sleep(0)
         assert cur._last_user_intent_ts == before

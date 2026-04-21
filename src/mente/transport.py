@@ -16,6 +16,7 @@ caller. Same for Redis streams, ZeroMQ, etc.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import os
 from collections.abc import Awaitable, Callable
@@ -120,10 +121,8 @@ class TCPTransport:
                 if writer in self._writers:
                     self._writers.remove(writer)
                 writer.close()
-                try:
+                with contextlib.suppress(Exception):
                     await writer.wait_closed()
-                except Exception:
-                    pass
 
         self._server = await asyncio.start_server(_accept, self.host, self.port)
 
@@ -177,10 +176,8 @@ class TCPTransport:
             t.cancel()
         if self._hub_writer:
             self._hub_writer.close()
-            try:
+            with contextlib.suppress(Exception):
                 await self._hub_writer.wait_closed()
-            except Exception:
-                pass
         if self._server is not None:
             self._server.close()
             await self._server.wait_closed()

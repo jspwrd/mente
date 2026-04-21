@@ -14,7 +14,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Fixtures — install a fake `anthropic` module (if absent) and reload the
 # synthesizer so it picks up the stub.

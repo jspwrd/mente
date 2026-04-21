@@ -3,15 +3,13 @@ from __future__ import annotations
 
 import math
 
-import pytest
-
 from mente.embedders import Embedder, HashEmbedder
 from mente.embedders.hashing import HashEmbedder as HashingModuleHashEmbedder
 from mente.embeddings import HashEmbedder as ShimHashEmbedder
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
-    return sum(x * y for x, y in zip(a, b))
+    return sum(x * y for x, y in zip(a, b, strict=True))
 
 
 def test_hash_embedder_default_dim() -> None:

@@ -24,7 +24,7 @@ __all__ = ["Embedder", "HashEmbedder", "SemanticMemory"]
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
-    return sum(x * y for x, y in zip(a, b))  # both are unit-normalized
+    return sum(x * y for x, y in zip(a, b, strict=True))  # both are unit-normalized
 
 
 def _encode(vec: list[float]) -> str:

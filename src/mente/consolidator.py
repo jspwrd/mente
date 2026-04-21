@@ -99,7 +99,7 @@ class Consolidator:
         while not stop.is_set():
             try:
                 await asyncio.wait_for(stop.wait(), timeout=self.interval_s)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 try:
                     self.consolidate()
                 except Exception as e:  # pragma: no cover - belt & suspenders

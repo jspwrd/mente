@@ -28,7 +28,6 @@ from ..tools import ToolRegistry
 from ..types import Intent, ReasonerTier, Response
 from ..world_model import WorldModel
 
-
 _BUILTINS: frozenset[str] = frozenset(dir(builtins))
 
 # Intent-shape detection: these phrases or syntactic markers mean the user
@@ -85,9 +84,7 @@ def _is_code_intent(text: str) -> bool:
         return True
     if any(phrase in lowered for phrase in _TRIGGER_PHRASES):
         return True
-    if _CODE_TOKEN_RE.search(text):
-        return True
-    return False
+    return bool(_CODE_TOKEN_RE.search(text))
 
 
 class _ScopeVisitor(ast.NodeVisitor):

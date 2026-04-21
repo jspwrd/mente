@@ -24,7 +24,6 @@ sys.path.insert(0, str(_ROOT / "src"))
 from mente.runtime import Runtime  # noqa: E402
 from mente.types import Intent  # noqa: E402
 
-
 # Each example uses a dedicated data dir so its state doesn't collide with
 # the main REPL's `.mente/` or other examples.
 DATA_DIR = _ROOT / ".mente-example-coding"

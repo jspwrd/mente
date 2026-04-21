@@ -63,7 +63,7 @@ class Announcer:
         while not stop.is_set():
             try:
                 await asyncio.wait_for(stop.wait(), timeout=self.interval_s)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 await self.announce_once()
 
 
@@ -152,7 +152,7 @@ class RemoteReasoner:
         )
         try:
             data = await asyncio.wait_for(fut, timeout=self.timeout_s)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._pending.pop(request_id, None)
             return Response(
                 text=f"[timeout from {self.target.node_id}]",

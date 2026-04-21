@@ -11,7 +11,6 @@ import hashlib
 import os
 from collections import OrderedDict
 
-
 _INSTALL_HINT = (
     "voyageai is not installed. install the embeddings extra: "
     "pip install 'mente[embeddings]' (or pip install voyageai)."
@@ -79,7 +78,9 @@ class VoyageEmbedder:
                 uncached_texts.append(text)
         if uncached_texts:
             result = self._client.embed(uncached_texts, model=self.model)
-            for slot, text, emb in zip(uncached_idx, uncached_texts, result.embeddings):
+            for slot, text, emb in zip(
+                uncached_idx, uncached_texts, result.embeddings, strict=True
+            ):
                 vec = list(emb)
                 out[slot] = vec
                 self._cache_put(self._cache_key(text), vec)

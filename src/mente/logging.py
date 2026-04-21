@@ -18,7 +18,8 @@ import json
 import logging as stdlog
 import re
 import sys
-from typing import Any, Iterator, TextIO
+from collections.abc import Iterator
+from typing import Any, TextIO
 
 __all__ = [
     "get_logger",
@@ -33,9 +34,14 @@ __all__ = [
 # context
 # ---------------------------------------------------------------------------
 
-_context: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
-    "mente_log_context", default={}
+_context: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
+    "mente_log_context", default=None
 )
+
+
+def _ctx_get() -> dict[str, Any]:
+    v = _context.get()
+    return v if v is not None else {}
 
 
 @contextlib.contextmanager
@@ -45,7 +51,7 @@ def bind(**ctx: Any) -> Iterator[None]:
     Uses ``contextvars`` so the context is isolated per asyncio task / thread
     that has its own context.
     """
-    current = _context.get()
+    current = _ctx_get()
     merged = {**current, **ctx}
     token = _context.set(merged)
     try:
@@ -136,7 +142,7 @@ class JsonFormatter(stdlog.Formatter):
 
         # currently bound context overrides colliding extras by design — the
         # active trace_id should win.
-        for key, value in _context.get().items():
+        for key, value in _ctx_get().items():
             payload[key] = value
 
         if record.exc_info:
@@ -150,7 +156,7 @@ class _ContextPlainFormatter(stdlog.Formatter):
 
     def format(self, record: stdlog.LogRecord) -> str:
         base = super().format(record)
-        ctx = _context.get()
+        ctx = _ctx_get()
         if not ctx:
             return base
         suffix = " ".join(f"{k}={v}" for k, v in ctx.items())

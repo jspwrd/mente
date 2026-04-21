@@ -27,7 +27,6 @@ from .tools import ToolRegistry
 from .types import Intent, ReasonerTier, Response
 from .world_model import WorldModel
 
-
 # A list of disallowed AST nodes. Keeps synthesized code sandboxable.
 _DISALLOWED_NODES = (
     ast.Import, ast.ImportFrom, ast.Global, ast.Nonlocal, ast.With,
@@ -81,7 +80,7 @@ except Exception as e:
         out, err = await asyncio.wait_for(
             proc.communicate(json.dumps(args).encode()), timeout=timeout_s,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         proc.kill()
         await proc.wait()
         return {"ok": False, "error": f"timeout after {timeout_s}s"}
@@ -219,7 +218,7 @@ class SynthesisReasoner:
         self.tools._tools[prim.name] = self.tools._tools.get(prim.name) or _make_spec(prim, _invoke)
 
 
-def _make_spec(prim: Primitive, fn) -> "object":
+def _make_spec(prim: Primitive, fn) -> object:
     from .tools import ToolSpec
     return ToolSpec(
         name=prim.name,

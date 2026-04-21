@@ -1,10 +1,10 @@
 """Tests for mente.verifier.Verifier — accept/reject + contradiction detection."""
 from __future__ import annotations
 
+from fixtures.cognition_helpers import make_world
+
 from mente.types import Belief, Intent, Response
 from mente.verifier import Verifier
-
-from fixtures.cognition_helpers import make_world
 
 
 def _resp(text: str, conf: float = 0.9) -> Response:

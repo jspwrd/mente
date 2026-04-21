@@ -26,7 +26,6 @@ from pathlib import Path
 from mente.runtime import Runtime
 from mente.types import Belief, Event, Intent
 
-
 # --- heuristics for spotting diary-shaped input ---------------------------
 DIARY_TRIGGERS = ("today", "tonight", "this morning", "dear diary", "i felt", "i feel")
 

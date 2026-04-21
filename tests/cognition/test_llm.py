@@ -6,13 +6,12 @@ from __future__ import annotations
 import os
 
 import pytest
+from fixtures.cognition_helpers import make_world
+from fixtures.fake_llm import make_fake_anthropic_module
 
 from mente import llm
 from mente.tools import ToolRegistry
 from mente.types import Belief, Intent
-
-from fixtures.cognition_helpers import make_world
-from fixtures.fake_llm import FakeAsyncAnthropic, make_fake_anthropic_module
 
 
 def _install_fake(monkeypatch, **fake_kwargs):
