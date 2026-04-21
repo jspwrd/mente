@@ -4,20 +4,25 @@ A loosely-ordered list of what's next. Contributions welcome — pick
 anything that looks interesting and open a PR (or an issue to discuss first
 if the scope is large).
 
+## Type-check ratchet
+
+`mypy` is advisory in CI today. Tighten module-by-module:
+
+- [ ] `types.py`, `state.py`, `bus.py`, `memory.py` → `disallow_untyped_defs`
+- [ ] `world_model.py`, `tools.py`, `transport.py`, `verifier.py` → same
+- [ ] `reasoners.py`, `router.py`, `metacog.py` → same
+- [ ] `specialists/`, `synthesizers/`, `embedders/`, `verifiers/` → same
+- [ ] `runtime.py`, `cli.py`, `discovery.py` → same (harder, generic-heavy)
+- [ ] Final: flip `strict = true` repo-wide and drop `continue-on-error`.
+
 ## Near-term (0.2.x)
 
-- **Real embeddings by default** — ship a CPU-friendly local embedder
-  (sentence-transformers) as an optional dep so offline users don't fall
-  back to hash-n-grams.
-- **Wire `MenteConfig` + `mente.logging`** — currently shipped as orphan
-  modules; adopt them in `Runtime` and `cli` so the whole system reads
-  settings from one place and logs structured events.
-- **`CodeSpecialist` routing hook** — register it with the metacog so
-  code-shaped intents route to it automatically (currently only
-  `MathSpecialist` is wired in the default roster).
 - **Secrets redaction in logs** — apply `mente.logging.redact_secrets`
   to the structured logger by default.
-- **Mkdocs → GitHub Pages** — on-push deploy of the docs site.
+- **Demo GIF in README** — record `./mente run` with `asciinema` / `vhs`.
+- **Launch post** — 800-word technical essay for HN/lobste.rs.
+- **Auto-update README section on `./mente` output** — a small doctest
+  that re-renders the sample REPL session so it never drifts.
 
 ## Medium-term (0.3.x – 0.5.x)
 
