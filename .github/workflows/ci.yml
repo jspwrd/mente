@@ -33,8 +33,11 @@ jobs:
       - name: Lint (ruff)
         run: uv run ruff check .
 
-      - name: Type-check (mypy, soft)
-        run: uv run mypy src/mente || true
+      - name: Type-check (mypy, advisory)
+        # Non-gating for now. Tightening plan is tracked in ROADMAP.md —
+        # ratchet each module toward `disallow_untyped_defs` then `strict`.
+        continue-on-error: true
+        run: uv run mypy src/mente
 
       - name: Unit tests (pytest)
         run: uv run pytest -q

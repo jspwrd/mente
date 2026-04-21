@@ -32,7 +32,7 @@ def cs():
 # --- contract / shape -------------------------------------------------------
 
 def test_reexport_from_specialists_module():
-    # Critical invariant: peer.py etc. do `from mente.specialists import MathSpecialist`.
+    # Invariant: downstream code does `from mente.specialists import MathSpecialist, CodeSpecialist`.
     assert MathSpecialist().name == "specialist.math"
     assert CodeSpecialist().name == "specialist.code"
 
