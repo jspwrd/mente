@@ -33,6 +33,7 @@ dependencies = []
 [project.optional-dependencies]
 llm = ["anthropic>=0.40.0"]
 embeddings = ["voyageai>=0.2"]
+embeddings-local = ["sentence-transformers>=3.0"]
 docs = ["mkdocs>=1.6", "mkdocs-material>=9.5", "mkdocstrings[python]>=0.25"]
 dev = [
     "pytest>=8",

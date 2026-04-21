@@ -20,7 +20,6 @@ from .config import MenteConfig
 from .consolidator import Consolidator
 from .curiosity import Curiosity
 from .embeddings import SemanticMemory
-from .logging import bind as log_bind
 from .logging import configure as configure_logging
 from .logging import get_logger
 from .memory import FastMemory, SlowMemory
