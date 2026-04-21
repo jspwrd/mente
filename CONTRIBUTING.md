@@ -8,7 +8,7 @@ complexity and abstractions.
 ## Getting set up
 
 ```bash
-git clone https://github.com/jasperreed/mente.git
+git clone https://github.com/jspwrd/mente.git
 cd mente
 python -m venv .venv
 source .venv/bin/activate

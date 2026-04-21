@@ -43,10 +43,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/jasperreed/mente"
-Repository = "https://github.com/jasperreed/mente"
-Issues = "https://github.com/jasperreed/mente/issues"
-Documentation = "https://github.com/jasperreed/mente"
+Homepage = "https://github.com/jspwrd/mente"
+Repository = "https://github.com/jspwrd/mente"
+Issues = "https://github.com/jspwrd/mente/issues"
+Documentation = "https://github.com/jspwrd/mente"
 
 [build-system]
 requires = ["hatchling"]

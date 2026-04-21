@@ -49,7 +49,7 @@ framework's worldview.
 ## Quickstart
 
 ```bash
-git clone https://github.com/jasperreed/mente.git
+git clone https://github.com/jspwrd/mente.git
 cd mente
 ./mente             # interactive REPL
 ```

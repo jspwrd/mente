@@ -73,5 +73,5 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   trusted-LAN setups only.
 - No Windows support (macOS / Linux only).
 
-[Unreleased]: https://github.com/jasperreed/mente/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/jasperreed/mente/releases/tag/v0.1.0
+[Unreleased]: https://github.com/jspwrd/mente/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/jspwrd/mente/releases/tag/v0.1.0
