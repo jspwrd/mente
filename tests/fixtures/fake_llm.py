@@ -1,4 +1,4 @@
-"""Reusable fake Anthropic async client for testing aria.llm.AnthropicReasoner.
+"""Reusable fake Anthropic async client for testing mente.llm.AnthropicReasoner.
 
 Provides a drop-in replacement for `anthropic.AsyncAnthropic` that records
 every `messages.create(...)` call and returns canned content blocks. Tests can
@@ -62,7 +62,7 @@ def make_fake_anthropic_module(
     """Build a fake `anthropic` module stand-in + the FakeAsyncAnthropic instance
     its `AsyncAnthropic()` constructor will return.
 
-    Use this to monkeypatch `aria.llm.anthropic` so AnthropicReasoner.__post_init__
+    Use this to monkeypatch `mente.llm.anthropic` so AnthropicReasoner.__post_init__
     picks up the fake without the real SDK being installed.
     """
     fake_client = FakeAsyncAnthropic(

@@ -1,9 +1,9 @@
-"""Tests for aria.types dataclass defaults and TTL semantics."""
+"""Tests for mente.types dataclass defaults and TTL semantics."""
 from __future__ import annotations
 
 import time
 
-from aria.types import Belief, Decision, Event, Intent, Response, Trace
+from mente.types import Belief, Decision, Event, Intent, Response, Trace
 
 
 def test_event_defaults_populated():

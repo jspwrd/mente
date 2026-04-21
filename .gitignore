@@ -5,7 +5,7 @@ venv/
 *.egg-info/
 dist/
 build/
-.aria/
+.mente/
 *.sqlite
 *.sqlite-journal
 .DS_Store

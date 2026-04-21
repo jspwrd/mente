@@ -4,11 +4,11 @@ The synthesizer is deliberately conservative: it demands a JSON object with
 ``source``, ``entrypoint``, and ``args``; strips any markdown fences; and
 returns ``None`` on refusal or parse failure so the caller can fall back to
 the template synthesizer. Produced source is NOT trusted — the shared
-``aria.synthesis._validate_ast`` / ``_run_sandboxed`` gates in the
+``mente.synthesis._validate_ast`` / ``_run_sandboxed`` gates in the
 ``SynthesisReasoner`` still police the output.
 
 This synthesizer has its own Anthropic client; it does not depend on, and is
-not coupled to, ``aria.llm``.
+not coupled to, ``mente.llm``.
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ except ImportError:  # pragma: no cover
     _ANTHROPIC_AVAILABLE = False
 
 
-_SYSTEM_PROMPT = """You are a program-synthesis assistant for ARIA.
+_SYSTEM_PROMPT = """You are a program-synthesis assistant for MENTE.
 
 Given a natural-language intent describing a computation, emit a SINGLE pure
 Python function that computes it, plus the call arguments extracted from the
@@ -121,7 +121,7 @@ class LLMSynthesizer:
     def __post_init__(self) -> None:
         if not _ANTHROPIC_AVAILABLE:
             raise RuntimeError(
-                "anthropic SDK not installed. Install with: pip install 'aria[llm]'"
+                "anthropic SDK not installed. Install with: pip install 'mente[llm]'"
             )
         key = self.api_key or os.environ.get("ANTHROPIC_API_KEY")
         if not key:

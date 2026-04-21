@@ -11,8 +11,8 @@ import textwrap
 
 import pytest
 
-from aria.specialists import CodeSpecialist, MathSpecialist
-from aria.types import Intent
+from mente.specialists import CodeSpecialist, MathSpecialist
+from mente.types import Intent
 
 
 def _ask(code_specialist, world_tools, text):
@@ -32,7 +32,7 @@ def cs():
 # --- contract / shape -------------------------------------------------------
 
 def test_reexport_from_specialists_module():
-    # Critical invariant: peer.py etc. do `from aria.specialists import MathSpecialist`.
+    # Critical invariant: peer.py etc. do `from mente.specialists import MathSpecialist`.
     assert MathSpecialist().name == "specialist.math"
     assert CodeSpecialist().name == "specialist.code"
 

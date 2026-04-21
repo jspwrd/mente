@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import pytest
 
-from aria.types import Belief, Intent
-from aria.verifiers import HeuristicVerifier, Verdict
+from mente.types import Belief, Intent
+from mente.verifiers import HeuristicVerifier, Verdict
 
 
 # -- basic shape / shim -----------------------------------------------------
@@ -18,8 +18,8 @@ def test_verifier_returns_verdict(intent, world, make_response_fixture):
 
 
 def test_backcompat_shim_exports_verifier_and_verdict():
-    from aria.verifier import Verdict as ShimVerdict
-    from aria.verifier import Verifier as ShimVerifier
+    from mente.verifier import Verdict as ShimVerdict
+    from mente.verifier import Verifier as ShimVerifier
 
     assert ShimVerifier is HeuristicVerifier
     assert ShimVerdict is Verdict

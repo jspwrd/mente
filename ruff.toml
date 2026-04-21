@@ -6,4 +6,4 @@ select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC"]
 ignore = ["E501"]
 
 [lint.isort]
-known-first-party = ["aria"]
+known-first-party = ["mente"]

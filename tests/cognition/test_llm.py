@@ -1,4 +1,4 @@
-"""Tests for aria.llm.AnthropicReasoner — constructor gating, prompt structure,
+"""Tests for mente.llm.AnthropicReasoner — constructor gating, prompt structure,
 model/thinking params, error path. Never calls the real API.
 """
 from __future__ import annotations
@@ -7,16 +7,16 @@ import os
 
 import pytest
 
-from aria import llm
-from aria.tools import ToolRegistry
-from aria.types import Belief, Intent
+from mente import llm
+from mente.tools import ToolRegistry
+from mente.types import Belief, Intent
 
 from fixtures.cognition_helpers import make_world
 from fixtures.fake_llm import FakeAsyncAnthropic, make_fake_anthropic_module
 
 
 def _install_fake(monkeypatch, **fake_kwargs):
-    """Patch aria.llm so AnthropicReasoner.__post_init__ uses a fake SDK."""
+    """Patch mente.llm so AnthropicReasoner.__post_init__ uses a fake SDK."""
     module, client = make_fake_anthropic_module(**fake_kwargs)
     monkeypatch.setattr(llm, "anthropic", module, raising=False)
     monkeypatch.setattr(llm, "_ANTHROPIC_AVAILABLE", True, raising=False)
@@ -81,8 +81,8 @@ async def test_system_prompt_has_cache_breakpoint_on_preamble(monkeypatch):
     preamble, context = system[0], system[1]
     assert preamble["type"] == "text"
     assert preamble.get("cache_control") == {"type": "ephemeral"}
-    # Preamble must be the FROZEN ARIA instructions (not the volatile snapshot).
-    assert "ARIA" in preamble["text"]
+    # Preamble must be the FROZEN MENTE instructions (not the volatile snapshot).
+    assert "MENTE" in preamble["text"]
     # Context block must NOT be cache-controlled — it changes turn to turn.
     assert "cache_control" not in context
     assert context["type"] == "text"

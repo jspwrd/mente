@@ -1,8 +1,8 @@
 """Semantic memory backed by a pluggable Embedder.
 
 The Embedder Protocol and HashEmbedder implementation now live in
-`aria.embedders`; they are re-exported here for backward compatibility so
-callers can still `from aria.embeddings import HashEmbedder, Embedder`.
+`mente.embedders`; they are re-exported here for backward compatibility so
+callers can still `from mente.embeddings import HashEmbedder, Embedder`.
 
 SemanticMemory stores (text, vector, metadata) rows and serves cosine-
 similarity queries. Vectors are stored base64-encoded in SQLite to stay in

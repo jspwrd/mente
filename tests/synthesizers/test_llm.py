@@ -37,11 +37,11 @@ def _install_fake_anthropic(monkeypatch: pytest.MonkeyPatch) -> types.ModuleType
 
 
 def _reload_llm_module() -> Any:
-    """Reload aria.synthesizers.llm so its module-level anthropic import
+    """Reload mente.synthesizers.llm so its module-level anthropic import
     rebinds to the current ``sys.modules['anthropic']``."""
-    if "aria.synthesizers.llm" in sys.modules:
-        return importlib.reload(sys.modules["aria.synthesizers.llm"])
-    return importlib.import_module("aria.synthesizers.llm")
+    if "mente.synthesizers.llm" in sys.modules:
+        return importlib.reload(sys.modules["mente.synthesizers.llm"])
+    return importlib.import_module("mente.synthesizers.llm")
 
 
 def _fake_message(text: str) -> Any:
@@ -228,7 +228,7 @@ def test_sync_synthesize_from_running_loop_raises(monkeypatch: pytest.MonkeyPatc
     reason="live API key required",
 )
 def test_live_synthesis() -> None:  # pragma: no cover — opt-in
-    from aria.synthesizers.llm import LLMSynthesizer
+    from mente.synthesizers.llm import LLMSynthesizer
 
     synth = LLMSynthesizer()
     out = asyncio.run(synth.asynthesize("compute the 10th fibonacci number"))

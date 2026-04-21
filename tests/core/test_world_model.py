@@ -1,13 +1,13 @@
-"""Tests for aria.world_model.WorldModel: assert_belief → state.* events + queries."""
+"""Tests for mente.world_model.WorldModel: assert_belief → state.* events + queries."""
 from __future__ import annotations
 
 import time
 
 import pytest
 
-from aria.bus import EventBus
-from aria.types import Belief
-from aria.world_model import WorldModel
+from mente.bus import EventBus
+from mente.types import Belief
+from mente.world_model import WorldModel
 
 from tests.fixtures.core_events import EventCapture
 

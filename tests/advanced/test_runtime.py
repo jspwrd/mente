@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from aria.runtime import Runtime
-from aria.synthesis import LibraryStore, Primitive
-from aria.types import Event, Intent
+from mente.runtime import Runtime
+from mente.synthesis import LibraryStore, Primitive
+from mente.types import Event, Intent
 
 from fixtures.advanced_helpers import make_runtime, shutdown_runtime
 
@@ -86,11 +86,11 @@ async def test_default_tools_registered(tmp_path: Path) -> None:
         now = await rt.tools.invoke("clock.now")
         assert now.ok and isinstance(now.value, str) and "T" in now.value
 
-        saved = await rt.tools.invoke("memory.note", fact="aria uses an event bus")
+        saved = await rt.tools.invoke("memory.note", fact="mente uses an event bus")
         assert saved.ok and saved.value is True
 
         recalled = await rt.tools.invoke("memory.recall")
-        assert recalled.ok and "aria uses an event bus" in recalled.value
+        assert recalled.ok and "mente uses an event bus" in recalled.value
 
         hits = await rt.tools.invoke("memory.search", query="event bus", k=2)
         assert hits.ok and isinstance(hits.value, list)

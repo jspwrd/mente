@@ -1,4 +1,4 @@
-"""Structured logging helpers for ARIA.
+"""Structured logging helpers for MENTE.
 
 A thin layer over the stdlib ``logging`` module that adds:
 
@@ -7,7 +7,7 @@ A thin layer over the stdlib ``logging`` module that adds:
 * per-task context (e.g. ``trace_id``) via ``contextvars``
 * best-effort redaction of API-key-like strings
 
-No third-party dependencies. The module is named ``aria.logging`` which
+No third-party dependencies. The module is named ``mente.logging`` which
 shadows ``import logging`` inside this file, so we alias to ``stdlog``.
 """
 from __future__ import annotations
@@ -34,7 +34,7 @@ __all__ = [
 # ---------------------------------------------------------------------------
 
 _context: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
-    "aria_log_context", default={}
+    "mente_log_context", default={}
 )
 
 
@@ -161,8 +161,8 @@ class _ContextPlainFormatter(stdlog.Formatter):
 # configuration
 # ---------------------------------------------------------------------------
 
-_ROOT_NAME = "aria"
-_HANDLER_NAME = "aria._default_handler"
+_ROOT_NAME = "mente"
+_HANDLER_NAME = "mente._default_handler"
 _configured: bool = False
 
 
@@ -171,7 +171,7 @@ def configure(
     json: bool = False,
     stream: TextIO = sys.stderr,
 ) -> None:
-    """Configure the ``aria`` root logger once.
+    """Configure the ``mente`` root logger once.
 
     Idempotent: calling more than once is a no-op (the handler is not
     re-installed, level is not changed). This makes it safe to call from
@@ -210,9 +210,9 @@ def configure(
 
 
 def get_logger(name: str) -> stdlog.Logger:
-    """Return a child logger under the ``aria`` tree.
+    """Return a child logger under the ``mente`` tree.
 
-    ``get_logger("runtime")`` -> logger named ``aria.runtime``. Bare ``aria``
+    ``get_logger("runtime")`` -> logger named ``mente.runtime``. Bare ``mente``
     is returned if ``name`` is empty.
     """
     if not name:

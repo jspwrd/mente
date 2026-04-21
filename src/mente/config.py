@@ -1,14 +1,14 @@
-"""Single source of truth for ARIA runtime configuration.
+"""Single source of truth for MENTE runtime configuration.
 
 Precedence at load time: defaults < TOML file < environment variables.
 
-This module is intentionally stdlib-only and imports no other ARIA module.
+This module is intentionally stdlib-only and imports no other MENTE module.
 Adoption by runtime/cli/etc. happens in a follow-up unit; for now this is a
 future-adoption seed that launch-time ops can exercise and tests can cover.
 
-Env-var naming: every dataclass field maps to ``ARIA_<FIELD_UPPER>``. For
-example, ``bus_port`` -> ``ARIA_BUS_PORT`` and ``verifier_min_confidence``
--> ``ARIA_VERIFIER_MIN_CONFIDENCE``.
+Env-var naming: every dataclass field maps to ``MENTE_<FIELD_UPPER>``. For
+example, ``bus_port`` -> ``MENTE_BUS_PORT`` and ``verifier_min_confidence``
+-> ``MENTE_VERIFIER_MIN_CONFIDENCE``.
 """
 from __future__ import annotations
 
@@ -79,18 +79,18 @@ def _coerce(value: str, annotation: Any, field_name: str) -> Any:
 
 
 def _env_var_name(field_name: str) -> str:
-    return f"ARIA_{field_name.upper()}"
+    return f"MENTE_{field_name.upper()}"
 
 
 @dataclass(frozen=True)
-class AriaConfig:
-    """Immutable runtime configuration for an ARIA process."""
+class MenteConfig:
+    """Immutable runtime configuration for an MENTE process."""
 
-    data_root: Path = Path(".aria")
+    data_root: Path = Path(".mente")
     bus_host: str = "127.0.0.1"
     bus_port: int = 7722
     bus_role: str = "inproc"  # one of: "inproc", "hub", "spoke"
-    node_id: str = "aria.local"
+    node_id: str = "mente.local"
     consolidator_interval_s: float = 10.0
     curiosity_interval_s: float = 3.0
     curiosity_idle_threshold_s: float = 5.0
@@ -105,13 +105,13 @@ class AriaConfig:
 
     # -- constructors -------------------------------------------------------
     @classmethod
-    def default(cls) -> "AriaConfig":
+    def default(cls) -> "MenteConfig":
         """Return a config populated entirely with the declared defaults."""
         return cls()
 
     @classmethod
-    def from_toml(cls, path: Path | str) -> "AriaConfig":
-        """Parse a TOML file into an ``AriaConfig``.
+    def from_toml(cls, path: Path | str) -> "MenteConfig":
+        """Parse a TOML file into an ``MenteConfig``.
 
         Unknown keys raise ``ValueError`` so typos surface loudly. Values are
         coerced per the field's annotation where the TOML type doesn't match
@@ -120,14 +120,14 @@ class AriaConfig:
         toml_path = Path(path)
         with toml_path.open("rb") as fh:
             data = tomllib.load(fh)
-        # Support either a flat table or an [aria] section.
-        if "aria" in data and isinstance(data["aria"], dict):
-            data = data["aria"]
+        # Support either a flat table or an [mente] section.
+        if "mente" in data and isinstance(data["mente"], dict):
+            data = data["mente"]
         return cls._apply_overrides(cls.default(), data, source=str(toml_path))
 
     @classmethod
-    def from_env(cls, base: "AriaConfig | None" = None) -> "AriaConfig":
-        """Return ``base`` (or defaults) with any ``ARIA_*`` env vars applied."""
+    def from_env(cls, base: "MenteConfig | None" = None) -> "MenteConfig":
+        """Return ``base`` (or defaults) with any ``MENTE_*`` env vars applied."""
         base = base if base is not None else cls.default()
         overrides: dict[str, Any] = {}
         for f in fields(cls):
@@ -138,7 +138,7 @@ class AriaConfig:
         return dataclasses.replace(base, **overrides)
 
     @classmethod
-    def load(cls, toml_path: Path | str | None = None) -> "AriaConfig":
+    def load(cls, toml_path: Path | str | None = None) -> "MenteConfig":
         """Single entry point: defaults -> TOML (if present) -> env overrides.
 
         If ``toml_path`` is given but the file doesn't exist, TOML is silently
@@ -175,11 +175,11 @@ class AriaConfig:
     @classmethod
     def _apply_overrides(
         cls,
-        base: "AriaConfig",
+        base: "MenteConfig",
         overrides: dict[str, Any],
         *,
         source: str,
-    ) -> "AriaConfig":
+    ) -> "MenteConfig":
         known = {f.name: f for f in fields(cls)}
         unknown = sorted(set(overrides) - known.keys())
         if unknown:

@@ -11,11 +11,11 @@ import time
 
 import pytest
 
-from aria.bus import EventBus
-from aria.curiosity import Curiosity
-from aria.state import LatentState
-from aria.types import Belief, Event
-from aria.world_model import WorldModel
+from mente.bus import EventBus
+from mente.curiosity import Curiosity
+from mente.state import LatentState
+from mente.types import Belief, Event
+from mente.world_model import WorldModel
 
 
 async def _fresh(bus: EventBus | None = None) -> tuple[EventBus, WorldModel, LatentState, Curiosity]:

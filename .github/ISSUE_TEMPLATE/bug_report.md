@@ -22,7 +22,7 @@ What you expected to happen.
 What actually happened (include tracebacks if any).
 
 ## Environment
-- ARIA version / commit:
+- MENTE version / commit:
 - Python version:
 - OS:
 - Optional extras installed (llm / embeddings / docs):

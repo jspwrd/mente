@@ -1,7 +1,7 @@
-site_name: ARIA
+site_name: MENTE
 site_description: Seed of a persistent, heterogeneous, event-driven reasoning process.
-site_url: https://example.github.io/aria/
-repo_url: https://github.com/example/aria
+site_url: https://example.github.io/mente/
+repo_url: https://github.com/example/mente
 edit_uri: edit/main/docs/
 
 theme:

@@ -1,15 +1,15 @@
-"""Tests for aria.reasoners — FastHeuristicReasoner + DeepSimulatedReasoner."""
+"""Tests for mente.reasoners — FastHeuristicReasoner + DeepSimulatedReasoner."""
 from __future__ import annotations
 
 import pytest
 
-from aria.reasoners import (
+from mente.reasoners import (
     DeepSimulatedReasoner,
     FastHeuristicReasoner,
     set_self_model_hook,
 )
-from aria.tools import ToolRegistry
-from aria.types import Belief, Intent
+from mente.tools import ToolRegistry
+from mente.types import Belief, Intent
 
 from fixtures.cognition_helpers import make_world, register_default_tools
 
@@ -105,14 +105,14 @@ async def test_self_model_hook_invoked_for_self_query():
 
     def hook(text: str) -> str:
         seen.append(text)
-        return "I am ARIA."
+        return "I am MENTE."
 
     set_self_model_hook(hook)
     try:
         r = FastHeuristicReasoner()
         resp = await r.answer(Intent(text="what are you?"), world, tools)
         assert seen == ["what are you?"]
-        assert resp.text == "I am ARIA."
+        assert resp.text == "I am MENTE."
         assert resp.confidence >= 0.9
     finally:
         set_self_model_hook(None)

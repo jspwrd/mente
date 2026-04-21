@@ -1,6 +1,6 @@
 # Architecture
 
-ARIA is a persistent, event-driven reasoning process. The design rejects the
+MENTE is a persistent, event-driven reasoning process. The design rejects the
 "one big LLM call per turn" loop in favor of a nervous system: many small
 subsystems talking over a shared bus, with tiered reasoners that specialize
 and a router that picks between them based on predicted cost and confidence.
@@ -42,7 +42,7 @@ flowchart LR
 
 ## §1. Nervous System: the Event Bus
 
-Every subsystem in ARIA is a publisher or subscriber. There is no god-object
+Every subsystem in MENTE is a publisher or subscriber. There is no god-object
 runtime wiring direct calls; events on topics like `turn.input`,
 `router.dispatched`, `verifier.verdict`, and `memory.digest` drive the whole
 process forward. Wildcard topic subscriptions let observers (logging, the
@@ -109,14 +109,14 @@ Some intents trigger program synthesis: the reasoner proposes Python code,
 it's run in a sandbox against examples, and on success it's promoted to a
 persistent primitive in the library. Next time the same intent class comes
 in, the primitive runs directly — no LLM call. The library is the moat:
-ARIA gets faster and more competent the longer it runs.
+MENTE gets faster and more competent the longer it runs.
 
 ## §8. Consolidator & Curiosity
 
-The consolidator is ARIA's sleep cycle. It scans recent episodes, distills
+The consolidator is MENTE's sleep cycle. It scans recent episodes, distills
 them into digests (summaries, novel facts, failed assumptions), and writes
 those digests back into semantic memory. Curiosity reads world-model gaps
-and consolidator output to generate self-prompts during idle time — ARIA
+and consolidator output to generate self-prompts during idle time — MENTE
 pokes at what it doesn't know.
 
 ## §9. Discovery & Federation

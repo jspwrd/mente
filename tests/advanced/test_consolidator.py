@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from aria.consolidator import Consolidator
-from aria.memory import SlowMemory
-from aria.state import LatentState
+from mente.consolidator import Consolidator
+from mente.memory import SlowMemory
+from mente.state import LatentState
 
 
 def _setup(tmp_path: Path) -> tuple[SlowMemory, LatentState, Consolidator]:

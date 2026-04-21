@@ -12,9 +12,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from aria.bus import EventBus
-from aria.transport import TCPTransport
-from aria.types import Event
+from mente.bus import EventBus
+from mente.transport import TCPTransport
+from mente.types import Event
 
 
 async def main() -> int:

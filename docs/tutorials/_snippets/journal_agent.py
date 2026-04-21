@@ -1,4 +1,4 @@
-"""A simple journal agent built on ARIA in ~80 lines.
+"""A simple journal agent built on MENTE in ~80 lines.
 
 Run it directly:
 
@@ -6,11 +6,11 @@ Run it directly:
 
 The agent:
   - registers a `journal.add` tool that writes free-text diary entries into
-    ARIA's semantic memory
+    MENTE's semantic memory
   - asserts a Belief about who the user is so the world model is seeded
   - subscribes to `intent.*` events and auto-detects diary-shaped input,
     routing it to the tool without the user having to say "save this"
-  - answers reflective queries via ARIA's built-in semantic search
+  - answers reflective queries via MENTE's built-in semantic search
 
 It uses only the public surface: Runtime, Intent, Belief, plus the tool
 registry decorator. No API keys required — the HashEmbedder handles
@@ -23,8 +23,8 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from aria.runtime import Runtime
-from aria.types import Belief, Event, Intent
+from mente.runtime import Runtime
+from mente.types import Belief, Event, Intent
 
 
 # --- heuristics for spotting diary-shaped input ---------------------------
@@ -48,7 +48,7 @@ async def build_agent(root: Path) -> Runtime:
         Belief(entity="user", attribute="role", value="journal keeper"),
     )
 
-    # Register a custom tool. ARIA's tool registry handles typing + cost
+    # Register a custom tool. MENTE's tool registry handles typing + cost
     # bookkeeping; the router will see it on the registry like any other.
     @rt.tools.register(
         "journal.add",
@@ -58,7 +58,7 @@ async def build_agent(root: Path) -> Runtime:
     )
     async def _journal_add(entry: str) -> int:
         # Store twice: once under "journal" for domain-specific recall, once
-        # under "note" so ARIA's built-in "what do you know about X?" path
+        # under "note" so MENTE's built-in "what do you know about X?" path
         # (which queries kind="note") can also surface these entries.
         rt.semantic_mem.remember(entry, kind="journal")
         rid = rt.semantic_mem.remember(entry, kind="note")
@@ -79,7 +79,7 @@ async def build_agent(root: Path) -> Runtime:
 
 async def main() -> None:
     # Use a throwaway state dir so the demo is reproducible.
-    root = Path(tempfile.mkdtemp(prefix="aria-journal-"))
+    root = Path(tempfile.mkdtemp(prefix="mente-journal-"))
     try:
         rt = await build_agent(root)
 
@@ -97,12 +97,12 @@ async def main() -> None:
             await rt.handle_intent(Intent(text=line))
 
         print("\n--- reflective recall ---")
-        # ARIA's fast-tier reasoner recognizes "what do you know about X"
+        # MENTE's fast-tier reasoner recognizes "what do you know about X"
         # and routes it to the semantic search tool automatically.
         question = "what do you know about debugging?"
         print(f"> {question}")
         response = await rt.handle_intent(Intent(text=question))
-        print(f"aria> {response.text}")
+        print(f"mente> {response.text}")
 
         print("\n--- direct semantic-memory query ---")
         hits = rt.semantic_mem.search("shipping code", k=2, kind="journal")

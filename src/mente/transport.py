@@ -190,13 +190,13 @@ class TCPTransport:
 
 
 def tcp_from_env(node_id: str) -> Transport:
-    """Build a TCPTransport from env vars (ARIA_BUS_HOST, ARIA_BUS_PORT,
-    ARIA_BUS_ROLE). Falls back to InProcessTransport if unset."""
-    if not os.environ.get("ARIA_BUS_ROLE"):
+    """Build a TCPTransport from env vars (MENTE_BUS_HOST, MENTE_BUS_PORT,
+    MENTE_BUS_ROLE). Falls back to InProcessTransport if unset."""
+    if not os.environ.get("MENTE_BUS_ROLE"):
         return InProcessTransport()
     return TCPTransport(
         node_id=node_id,
-        host=os.environ.get("ARIA_BUS_HOST", "127.0.0.1"),
-        port=int(os.environ.get("ARIA_BUS_PORT", "7722")),
-        role=os.environ.get("ARIA_BUS_ROLE", "spoke"),
+        host=os.environ.get("MENTE_BUS_HOST", "127.0.0.1"),
+        port=int(os.environ.get("MENTE_BUS_PORT", "7722")),
+        role=os.environ.get("MENTE_BUS_ROLE", "spoke"),
     )

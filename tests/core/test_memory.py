@@ -1,10 +1,10 @@
-"""Tests for aria.memory: FastMemory TTL + SlowMemory SQLite episodic log."""
+"""Tests for mente.memory: FastMemory TTL + SlowMemory SQLite episodic log."""
 from __future__ import annotations
 
 import time
 from pathlib import Path
 
-from aria.memory import FastMemory, SlowMemory
+from mente.memory import FastMemory, SlowMemory
 
 
 # --- FastMemory -------------------------------------------------------------

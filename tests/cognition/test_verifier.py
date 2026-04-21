@@ -1,8 +1,8 @@
-"""Tests for aria.verifier.Verifier — accept/reject + contradiction detection."""
+"""Tests for mente.verifier.Verifier — accept/reject + contradiction detection."""
 from __future__ import annotations
 
-from aria.types import Belief, Intent, Response
-from aria.verifier import Verifier
+from mente.types import Belief, Intent, Response
+from mente.verifier import Verifier
 
 from fixtures.cognition_helpers import make_world
 

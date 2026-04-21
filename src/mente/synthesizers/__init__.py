@@ -2,7 +2,7 @@
 
 A synthesizer maps an intent's natural-language text to a concrete
 (source, entrypoint, args) triple. The triple is then validated and executed
-by the shared sandbox machinery in ``aria.synthesis``; synthesizers
+by the shared sandbox machinery in ``mente.synthesis``; synthesizers
 themselves don't touch the sandbox.
 
 Two implementations ship:
@@ -34,7 +34,7 @@ class Synthesizer(Protocol):
 
 
 def __getattr__(name: str) -> Any:
-    # Lazy-import LLMSynthesizer so that `from aria.synthesizers import
+    # Lazy-import LLMSynthesizer so that `from mente.synthesizers import
     # TemplateSynthesizer` works when `anthropic` is not installed.
     if name == "LLMSynthesizer":
         from .llm import LLMSynthesizer

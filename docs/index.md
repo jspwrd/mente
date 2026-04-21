@@ -1,4 +1,4 @@
-# ARIA
+# MENTE
 
 A persistent, event-driven reasoning process. Seed of a cognitive architecture
 with heterogeneous reasoner tiers, semantic/episodic memory, program synthesis
@@ -26,15 +26,15 @@ Runs on stdlib Python 3.11+ — no install, no dependencies required.
 ## Installation
 
 ```bash
-pip install aria
+pip install mente
 ```
 
-Or run straight from a checkout — ARIA's core has zero runtime dependencies:
+Or run straight from a checkout — MENTE's core has zero runtime dependencies:
 
 ```bash
-git clone https://github.com/example/aria
-cd aria
-./aria
+git clone https://github.com/example/mente
+cd mente
+./mente
 ```
 
 ## 10-line example
@@ -43,11 +43,11 @@ cd aria
 import asyncio
 from pathlib import Path
 
-from aria.runtime import Runtime
-from aria.types import Intent
+from mente.runtime import Runtime
+from mente.types import Intent
 
 async def main():
-    rt = Runtime(root=Path(".aria"))
+    rt = Runtime(root=Path(".mente"))
     response = await rt.handle_intent(Intent(text="compute the 15th fibonacci number"))
     print(response.text)
 
@@ -57,18 +57,18 @@ asyncio.run(main())
 Or just drop into the REPL:
 
 ```
-$ ./aria
-aria> compute the 15th fibonacci number
+$ ./mente
+mente> compute the 15th fibonacci number
 610
-aria> remember that my favorite number is 7
+mente> remember that my favorite number is 7
 ok
-aria> what do you remember?
+mente> what do you remember?
 - favorite number is 7
 ```
 
 ## How is it different?
 
-| Capability                 | ARIA                              | LangChain                  | OpenClaw                  |
+| Capability                 | MENTE                              | LangChain                  | OpenClaw                  |
 | -------------------------- | --------------------------------- | -------------------------- | ------------------------- |
 | Core dependencies          | stdlib only                       | dozens                     | a few                     |
 | Architecture style         | event bus, pub/sub                | chain/graph DSL            | scripted orchestrator     |

@@ -7,15 +7,15 @@ from pathlib import Path
 import pytest
 
 # Make `src/` importable when pytest is invoked from repo root without an
-# install. Mirrors the behaviour of the `./aria` launcher.
+# install. Mirrors the behaviour of the `./mente` launcher.
 _ROOT = Path(__file__).resolve().parents[2]
 _SRC = _ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from aria.bus import EventBus  # noqa: E402
-from aria.tools import ToolRegistry  # noqa: E402
-from aria.world_model import WorldModel  # noqa: E402
+from mente.bus import EventBus  # noqa: E402
+from mente.tools import ToolRegistry  # noqa: E402
+from mente.world_model import WorldModel  # noqa: E402
 
 
 @pytest.fixture

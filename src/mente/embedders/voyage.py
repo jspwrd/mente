@@ -1,7 +1,7 @@
 """Voyage AI embedder.
 
 Thin wrapper around `voyageai.Client` that conforms to the Embedder
-Protocol. Import of `voyageai` is lazy so installing ARIA stays dep-free
+Protocol. Import of `voyageai` is lazy so installing MENTE stays dep-free
 for offline users; the dependency is declared under the optional
 `embeddings` extra.
 """
@@ -14,7 +14,7 @@ from collections import OrderedDict
 
 _INSTALL_HINT = (
     "voyageai is not installed. install the embeddings extra: "
-    "pip install 'aria[embeddings]' (or pip install voyageai)."
+    "pip install 'mente[embeddings]' (or pip install voyageai)."
 )
 
 

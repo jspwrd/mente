@@ -5,9 +5,9 @@ import math
 
 import pytest
 
-from aria.embedders import Embedder, HashEmbedder
-from aria.embedders.hashing import HashEmbedder as HashingModuleHashEmbedder
-from aria.embeddings import HashEmbedder as ShimHashEmbedder
+from mente.embedders import Embedder, HashEmbedder
+from mente.embedders.hashing import HashEmbedder as HashingModuleHashEmbedder
+from mente.embeddings import HashEmbedder as ShimHashEmbedder
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
@@ -57,8 +57,8 @@ def test_hash_embedder_cosine_ordering_preserved() -> None:
 
 
 def test_shim_reexports_same_class() -> None:
-    # Backward-compat: aria.embeddings.HashEmbedder must be the same class
-    # as the one in aria.embedders.hashing.
+    # Backward-compat: mente.embeddings.HashEmbedder must be the same class
+    # as the one in mente.embedders.hashing.
     assert ShimHashEmbedder is HashingModuleHashEmbedder
     assert ShimHashEmbedder is HashEmbedder
 
@@ -71,9 +71,9 @@ def test_shim_and_direct_produce_identical_vectors() -> None:
 
 def test_class_hashembedder_not_defined_in_embeddings_module() -> None:
     """Guard against someone reintroducing a body-level class HashEmbedder
-    in aria.embeddings; it must stay a re-export."""
+    in mente.embeddings; it must stay a re-export."""
     import inspect
 
-    import aria.embeddings as shim
+    import mente.embeddings as shim
     src = inspect.getsource(shim)
     assert "class HashEmbedder" not in src

@@ -1,12 +1,12 @@
 # Quickstart
 
-A 15-minute tour of ARIA. You'll install it, chat with it, watch it synthesize
+A 15-minute tour of MENTE. You'll install it, chat with it, watch it synthesize
 code, and confirm that its state survives a restart.
 
 ## Prerequisites
 
 - Python 3.11+
-- A checkout of the repository (no dependencies required — ARIA's Phase 1
+- A checkout of the repository (no dependencies required — MENTE's Phase 1
   runs on the stdlib)
 
 ## Install
@@ -15,22 +15,22 @@ Two ways to get started, from least to most permanent:
 
 ```bash
 # Option A — no install, use the launcher in the checkout
-./aria --help
+./mente --help
 
 # Option B — install from PyPI (coming with the first release)
-pip install aria
-aria --help
+pip install mente
+mente --help
 ```
 
-The rest of this page uses `./aria` since it works immediately after cloning.
+The rest of this page uses `./mente` since it works immediately after cloning.
 
-## First session: `./aria run`
+## First session: `./mente run`
 
 Launch the interactive REPL:
 
 ```bash
-./aria reset      # start clean so output matches below
-./aria run
+./mente reset      # start clean so output matches below
+./mente run
 ```
 
 You'll see the banner and a prompt:
@@ -57,13 +57,13 @@ synthesis.
 
 ```
 you> hello
-aria[fast.heuristic]> Hi — I'm online.
+mente[fast.heuristic]> Hi — I'm online.
 
 you> who am I?
-aria[fast.heuristic]> You are Jasper.
+mente[fast.heuristic]> You are Jasper.
 
 you> what time is it?
-aria[fast.heuristic]> It is 2026-04-21T15:42:07.
+mente[fast.heuristic]> It is 2026-04-21T15:42:07.
 ```
 
 The user's name comes from a `Belief` that the CLI seeds on startup (it
@@ -74,13 +74,13 @@ verify.
 
 ```
 you> remember that redis uses an append-only file for durability
-aria[fast.heuristic]> Noted: redis uses an append-only file for durability.
+mente[fast.heuristic]> Noted: redis uses an append-only file for durability.
 
 you> remember that postgres uses write-ahead logging
-aria[fast.heuristic]> Noted: postgres uses write-ahead logging.
+mente[fast.heuristic]> Noted: postgres uses write-ahead logging.
 
 you> what do you remember?
-aria[fast.heuristic]> I remember: redis uses an append-only file for durability;
+mente[fast.heuristic]> I remember: redis uses an append-only file for durability;
 postgres uses write-ahead logging.
 ```
 
@@ -91,7 +91,7 @@ store in one hop.
 
 ```
 you> what do you know about databases?
-aria[fast.heuristic]> About 'databases': redis uses an append-only file for
+mente[fast.heuristic]> About 'databases': redis uses an append-only file for
 durability (score 0.14); postgres uses write-ahead logging (score 0.11).
 ```
 
@@ -103,7 +103,7 @@ without a language model.
 
 ```
 you> compute the 10th fibonacci number
-aria[specialist.synthesis]> fib(n=10) = 55
+mente[specialist.synthesis]> fib(n=10) = 55
 
 you> /library
   lib.fib.3ddeaa  entry=fib  calls=1
@@ -118,23 +118,23 @@ synthesis — it's a registered tool now.
 
 ```
 you> your reasoners
-aria[fast.heuristic]> I have 3 reasoners loaded: fast.heuristic,
+mente[fast.heuristic]> I have 3 reasoners loaded: fast.heuristic,
 specialist.synthesis, deep.sim.
 
 you> how many turns have you handled?
-aria[fast.heuristic]> I have handled 6 turns so far.
+mente[fast.heuristic]> I have handled 6 turns so far.
 ```
 
 The `SelfModel` reads `LatentState` and the reasoner roster. The fast
 reasoner has a pattern that dispatches introspective questions to it.
 
-## `./aria demo`
+## `./mente demo`
 
 If you'd rather see everything at once, run:
 
 ```bash
-./aria reset
-./aria demo
+./mente reset
+./mente demo
 ```
 
 This plays an 11-step scripted sequence: greeting, identity, clock,
@@ -145,10 +145,10 @@ so you can see that the functions stuck.
 
 ## Reset and state persistence
 
-ARIA writes everything to `.aria/` under the project directory:
+MENTE writes everything to `.mente/` under the project directory:
 
 ```
-.aria/
+.mente/
   episodic.sqlite    append-only event log
   semantic.sqlite    vector store for semantic recall
   latent.json        checkpointed latent state (turns, last intent, digest)
@@ -160,12 +160,12 @@ sessions back-to-back:
 
 ```bash
 # Session 1
-./aria reset
-printf "remember that coffee helps my focus\n/quit\n" | ./aria run
+./mente reset
+printf "remember that coffee helps my focus\n/quit\n" | ./mente run
 # => Noted: coffee helps my focus.
 
 # Session 2 — a brand-new process
-printf "what do you remember?\n/quit\n" | ./aria run
+printf "what do you remember?\n/quit\n" | ./mente run
 # => I remember: coffee helps my focus.
 ```
 
@@ -175,17 +175,17 @@ and answered correctly. Nothing was in memory between the two runs.
 To wipe state and start over:
 
 ```bash
-./aria reset
+./mente reset
 ```
 
-This removes every `.aria*` directory in the project root.
+This removes every `.mente*` directory in the project root.
 
 ## Next steps
 
 - [Build an agent](build-an-agent.md) — a ~80-line journal agent that
   registers a custom tool, subscribes to intent events, and reuses
-  ARIA's memory surface.
-- [Extending ARIA](../extending.md) — protocol signatures and minimal
+  MENTE's memory surface.
+- [Extending MENTE](../extending.md) — protocol signatures and minimal
   implementations for adding your own reasoners, tools, specialists,
   embedders, synthesizers, and verifiers.
 - [Architecture](../architecture.md) — why the system is shaped this way.

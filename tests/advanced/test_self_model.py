@@ -7,11 +7,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aria.memory import SlowMemory
-from aria.reasoners import DeepSimulatedReasoner, FastHeuristicReasoner
-from aria.self_model import SelfModel
-from aria.state import LatentState
-from aria.tools import ToolRegistry
+from mente.memory import SlowMemory
+from mente.reasoners import DeepSimulatedReasoner, FastHeuristicReasoner
+from mente.self_model import SelfModel
+from mente.state import LatentState
+from mente.tools import ToolRegistry
 
 
 def _build(tmp_path: Path) -> SelfModel:

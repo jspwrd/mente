@@ -1,6 +1,6 @@
 # Build an agent
 
-You'll build a **journal agent** on top of ARIA: a small domain-specific
+You'll build a **journal agent** on top of MENTE: a small domain-specific
 agent that captures free-text diary entries, stores them with semantic
 search, and answers reflective queries. End-to-end: under 100 lines.
 
@@ -13,7 +13,7 @@ python docs/tutorials/_snippets/journal_agent.py
 
 ## What you're reusing
 
-Most of the wiring comes from ARIA. You don't have to write:
+Most of the wiring comes from MENTE. You don't have to write:
 
 - a message bus — `EventBus` is already on the runtime
 - intent routing — `Router` picks the right reasoner by predicted
@@ -36,7 +36,7 @@ The journal agent does three things:
    I shipped…" we don't want to require them to type
    `remember that …`. We'll subscribe to `intent.*` events and mirror
    diary-shaped utterances into our own tool.
-2. **Stores entries with semantic search**. Uses ARIA's `semantic_mem`
+2. **Stores entries with semantic search**. Uses MENTE's `semantic_mem`
    (HashEmbedder + cosine search) — no API keys needed.
 3. **Answers reflective queries**. "What do you know about debugging?" is
    already a shape the fast-tier reasoner handles via `memory.search`. By
@@ -50,8 +50,8 @@ The full file is under 100 lines. We'll go piece by piece.
 ### 1. Instantiate the runtime
 
 ```python
-from aria.runtime import Runtime
-from aria.types import Belief, Event, Intent
+from mente.runtime import Runtime
+from mente.types import Belief, Event, Intent
 
 rt = Runtime(root=root)
 await rt.start()
@@ -148,11 +148,11 @@ That's the whole loop.
 If your doc toolchain doesn't support the `--8<--` include syntax, open
 [`_snippets/journal_agent.py`](_snippets/journal_agent.py) directly.
 
-## What ARIA's bus / router / verifier save you
+## What MENTE's bus / router / verifier save you
 
 Rolling this from scratch would require, at minimum:
 
-| Concern                | What ARIA provides                             |
+| Concern                | What MENTE provides                             |
 | ---------------------- | ---------------------------------------------- |
 | Pub/sub with wildcards | `EventBus.subscribe("intent.*", handler)`     |
 | Tiered routing         | `Router` with cost/confidence trade-off        |
@@ -170,7 +170,7 @@ for this user) and inherit the rest.
 
 ## Next steps
 
-- [Extending ARIA](../extending.md) — if you want to plug in a real
+- [Extending MENTE](../extending.md) — if you want to plug in a real
   reasoner, embedder, or verifier, these are the protocol shapes.
 - [Architecture](../architecture.md) — how the pieces fit together.
 - [API reference](../reference/) — full signatures for every surface.

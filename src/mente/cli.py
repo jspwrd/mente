@@ -2,12 +2,12 @@
 
 All entry points live here so there's exactly one thing to run:
 
-    ./aria              # interactive REPL
-    ./aria demo         # scripted demo
-    ./aria federated    # hub + peer in one process, real TCP bus between them
-    ./aria reset        # wipe .aria/ state
-    ./aria test         # smoke tests (bus, synthesis, memory)
-    ./aria --help       # all options
+    ./mente              # interactive REPL
+    ./mente demo         # scripted demo
+    ./mente federated    # hub + peer in one process, real TCP bus between them
+    ./mente reset        # wipe .mente/ state
+    ./mente test         # smoke tests (bus, synthesis, memory)
+    ./mente --help       # all options
 """
 from __future__ import annotations
 
@@ -34,11 +34,11 @@ BANNER = r"""
 
 
 def _root() -> Path:
-    """Project root — so .aria/ lives in the project dir regardless of cwd."""
+    """Project root — so .mente/ lives in the project dir regardless of cwd."""
     return Path(__file__).resolve().parent.parent.parent
 
 
-def _data_root(name: str = ".aria") -> Path:
+def _data_root(name: str = ".mente") -> Path:
     return _root() / name
 
 
@@ -95,7 +95,7 @@ async def _run_repl(rt: Runtime) -> None:
 
         r = await rt.handle_intent(Intent(text=line))
         reasoner = rt.latent.get("last_reasoner")
-        print(f"aria[{reasoner}]> {r.text}")
+        print(f"mente[{reasoner}]> {r.text}")
 
 
 def _print_help() -> None:
@@ -187,7 +187,7 @@ async def _run_federated(port: int) -> None:
     # --- hub (main runtime) ---
     hub_id = "hub.main"
     hub_bus = EventBus(transport=TCPTransport(node_id=hub_id, port=port, role="hub"))
-    rt = Runtime(root=_data_root(".aria-hub"), node_id=hub_id, bus=hub_bus)
+    rt = Runtime(root=_data_root(".mente-hub"), node_id=hub_id, bus=hub_bus)
     await rt.start()
     await _seed(rt)
     directory = Directory(bus=rt.bus, self_node_id=hub_id)
@@ -309,7 +309,7 @@ async def _smoke_tests() -> int:
     print("  ✓ TCP bus round-trip")
 
     print("== synthesis smoke test ==")
-    rt = Runtime(root=_data_root(".aria-test"))
+    rt = Runtime(root=_data_root(".mente-test"))
     await rt.start()
     r = await rt.handle_intent(Intent(text="compute the 10th fibonacci number"))
     assert "55" in r.text, f"expected fib(10)=55, got: {r.text!r}"
@@ -320,7 +320,7 @@ async def _smoke_tests() -> int:
     await rt.shutdown()
 
     print("== semantic memory smoke test ==")
-    rt = Runtime(root=_data_root(".aria-test"))
+    rt = Runtime(root=_data_root(".mente-test"))
     await rt.start()
     rt.semantic_mem.remember("redis uses AOF or RDB for persistence")
     rt.semantic_mem.remember("postgres uses write-ahead logging")
@@ -329,7 +329,7 @@ async def _smoke_tests() -> int:
     print(f"  ✓ semantic search top hit: {hits[0]['text']!r}")
     await rt.shutdown()
 
-    shutil.rmtree(_data_root(".aria-test"), ignore_errors=True)
+    shutil.rmtree(_data_root(".mente-test"), ignore_errors=True)
     print("\nall smoke tests passed.")
     return 0
 
@@ -341,7 +341,7 @@ async def _smoke_tests() -> int:
 def _reset() -> None:
     root = _root()
     removed = []
-    for p in sorted(root.glob(".aria*")):
+    for p in sorted(root.glob(".mente*")):
         shutil.rmtree(p, ignore_errors=True)
         removed.append(p.name)
     if removed:
@@ -382,17 +382,17 @@ async def _do_demo(data_dir: str) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="aria",
+        prog="mente",
         description="Persistent, event-driven reasoning process. "
                     "Run with no args for an interactive REPL.",
     )
     sub = p.add_subparsers(dest="command")
 
     p_run = sub.add_parser("run", help="interactive REPL (default)")
-    p_run.add_argument("--data", default=".aria", help="state directory")
+    p_run.add_argument("--data", default=".mente", help="state directory")
 
     p_demo = sub.add_parser("demo", help="scripted walkthrough")
-    p_demo.add_argument("--data", default=".aria", help="state directory")
+    p_demo.add_argument("--data", default=".mente", help="state directory")
 
     p_fed = sub.add_parser("federated", help="hub + peer in one process, real TCP bus")
     p_fed.add_argument("--port", type=int, default=7722)
@@ -402,7 +402,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_peer.add_argument("--id", default="peer.math")
 
     sub.add_parser("test", help="smoke tests")
-    sub.add_parser("reset", help="wipe all .aria* state directories")
+    sub.add_parser("reset", help="wipe all .mente* state directories")
 
     return p
 

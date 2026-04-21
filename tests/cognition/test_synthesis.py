@@ -1,17 +1,17 @@
-"""Tests for aria.synthesis — templated recognition, sandboxed execution, library persistence, AST gating."""
+"""Tests for mente.synthesis — templated recognition, sandboxed execution, library persistence, AST gating."""
 from __future__ import annotations
 
 import pytest
 
-from aria.synthesis import (
+from mente.synthesis import (
     LibraryStore,
     Primitive,
     SynthesisReasoner,
     TemplateSynthesizer,
     _validate_ast,
 )
-from aria.tools import ToolRegistry
-from aria.types import Intent
+from mente.tools import ToolRegistry
+from mente.types import Intent
 
 from fixtures.cognition_helpers import make_world
 

@@ -1,10 +1,10 @@
-"""Tests for aria.state.LatentState — disk-backed dict with checkpointing."""
+"""Tests for mente.state.LatentState — disk-backed dict with checkpointing."""
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-from aria.state import LatentState
+from mente.state import LatentState
 
 
 def test_load_missing_file_returns_empty(tmp_root: Path):

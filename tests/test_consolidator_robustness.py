@@ -19,9 +19,9 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from aria.consolidator import Consolidator  # noqa: E402
-from aria.memory import SlowMemory  # noqa: E402
-from aria.state import LatentState  # noqa: E402
+from mente.consolidator import Consolidator  # noqa: E402
+from mente.memory import SlowMemory  # noqa: E402
+from mente.state import LatentState  # noqa: E402
 
 
 def _make_consolidator(tmp_path: Path) -> Consolidator:

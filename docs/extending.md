@@ -1,6 +1,6 @@
-# Extending ARIA
+# Extending MENTE
 
-Every moving part of ARIA is a swap point. This guide shows the current
+Every moving part of MENTE is a swap point. This guide shows the current
 shape of each hook, a minimal implementation you can drop in today, and
 how to wire it into a `Runtime`.
 
@@ -8,19 +8,19 @@ how to wire it into a `Runtime`.
 > **Verifier** — are defined only as Phase 1 conventions today (a
 > `Protocol` in one case, a dataclass with a known method name in the
 > others). They are slated to be formalized into dedicated packages
-> (`aria.embedders`, `aria.synthesizers`, `aria.verifiers`) in Phase 2 with
+> (`mente.embedders`, `mente.synthesizers`, `mente.verifiers`) in Phase 2 with
 > the same shape you see below. The examples here use the current public
 > API exactly as it lives on `main`.
 
 ## Add a reasoner
 
-A reasoner is the primary swap point between ARIA and a real model —
+A reasoner is the primary swap point between MENTE and a real model —
 Claude, local Llama, a specialist fine-tune, anything that can map an
 intent to a response.
 
 ### Protocol
 
-From [`aria/reasoners.py`](reference/reasoners.md):
+From [`mente/reasoners.py`](reference/reasoners.md):
 
 ```python
 class Reasoner(Protocol):
@@ -37,9 +37,9 @@ class Reasoner(Protocol):
 
 ```python
 from dataclasses import dataclass
-from aria.types import Intent, ReasonerTier, Response
-from aria.tools import ToolRegistry
-from aria.world_model import WorldModel
+from mente.types import Intent, ReasonerTier, Response
+from mente.tools import ToolRegistry
+from mente.world_model import WorldModel
 
 @dataclass
 class GreetingReasoner:
@@ -65,7 +65,7 @@ class GreetingReasoner:
 ### Wiring
 
 ```python
-rt = Runtime(root=Path(".aria"))
+rt = Runtime(root=Path(".mente"))
 await rt.start()
 rt.reasoners.append(GreetingReasoner())
 # The runtime's router and metacog both reference rt.reasoners by
@@ -81,7 +81,7 @@ by bus subscribers.
 
 ### Shape
 
-From [`aria/tools.py`](reference/tools.md):
+From [`mente/tools.py`](reference/tools.md):
 
 ```python
 @dataclass
@@ -128,7 +128,7 @@ when the metacog recognizes a matching domain pattern.
 
 ```python
 from dataclasses import dataclass
-from aria.types import Intent, ReasonerTier, Response
+from mente.types import Intent, ReasonerTier, Response
 
 @dataclass
 class UpperCaseSpecialist:
@@ -157,7 +157,7 @@ rt.reasoners.append(UpperCaseSpecialist())
 
 For the router's metacog to *prefer* your specialist over the deep tier
 on matching intents, teach it about your domain. Today that means adding
-a pattern to `aria.metacog._SPECIALIST_PATS` (keyed by a substring of
+a pattern to `mente.metacog._SPECIALIST_PATS` (keyed by a substring of
 your reasoner's `name`). Phase 2 will formalize this as a
 `SpecialistRegistry` entry alongside each reasoner.
 
@@ -165,7 +165,7 @@ your reasoner's `name`). Phase 2 will formalize this as a
 
 ### Protocol
 
-From [`aria/embeddings.py`](reference/embeddings.md):
+From [`mente/embeddings.py`](reference/embeddings.md):
 
 ```python
 class Embedder(Protocol):
@@ -174,7 +174,7 @@ class Embedder(Protocol):
 ```
 
 Phase 1 ships `HashEmbedder` (stdlib-only, character n-grams, no API key).
-Phase 2 will move `Embedder` into a dedicated `aria.embedders` package
+Phase 2 will move `Embedder` into a dedicated `mente.embedders` package
 alongside adapters for sentence-transformers, Voyage, and OpenAI.
 
 ### Minimal implementation
@@ -196,7 +196,7 @@ class ConstantEmbedder:
 ### Wiring
 
 ```python
-from aria.embeddings import SemanticMemory
+from mente.embeddings import SemanticMemory
 rt.semantic_mem = SemanticMemory(
     db_path=rt.root / "semantic.sqlite",
     embedder=ConstantEmbedder(),
@@ -216,7 +216,7 @@ verified-primitive library.
 
 ### Shape
 
-From [`aria/synthesis.py`](reference/synthesis.md). Phase 1 doesn't yet
+From [`mente/synthesis.py`](reference/synthesis.md). Phase 1 doesn't yet
 have a formal `Protocol` — `TemplateSynthesizer` establishes the shape:
 
 ```python
@@ -225,7 +225,7 @@ class Synthesizer:
         """Return (source, entrypoint, args) or None if we can't synthesize."""
 ```
 
-Phase 2 will lift this into `aria.synthesizers` with a proper `Protocol`.
+Phase 2 will lift this into `mente.synthesizers` with a proper `Protocol`.
 
 ### Minimal implementation
 
@@ -249,7 +249,7 @@ class CountWordsSynthesizer:
 ### Wiring
 
 ```python
-from aria.synthesis import SynthesisReasoner
+from mente.synthesis import SynthesisReasoner
 
 # Replace the default SynthesisReasoner's synthesizer after construction:
 for r in rt.reasoners:
@@ -268,7 +268,7 @@ can trigger rework or escalation.
 
 ### Shape
 
-From [`aria/verifier.py`](reference/verifier.md):
+From [`mente/verifier.py`](reference/verifier.md):
 
 ```python
 @dataclass
@@ -284,14 +284,14 @@ class Verifier:  # duck-typed today; becomes a Protocol in Phase 2
 ```
 
 Phase 1 ships a heuristic `Verifier` dataclass; a formal `Protocol` will
-live in `aria.verifiers` in Phase 2 alongside adapters for PRM-style
+live in `mente.verifiers` in Phase 2 alongside adapters for PRM-style
 trained verifiers and formal checkers (SMT, type systems, test runners).
 
 ### Minimal implementation
 
 ```python
 from dataclasses import dataclass
-from aria.verifier import Verdict
+from mente.verifier import Verdict
 
 @dataclass
 class LengthGate:

@@ -1,12 +1,12 @@
-"""Tests for aria.bus.EventBus: subscribe, publish, wildcards, fan-out, recent tap."""
+"""Tests for mente.bus.EventBus: subscribe, publish, wildcards, fan-out, recent tap."""
 from __future__ import annotations
 
 import asyncio
 
 import pytest
 
-from aria.bus import EventBus
-from aria.types import Event
+from mente.bus import EventBus
+from mente.types import Event
 
 from tests.fixtures.core_events import EventCapture
 

@@ -1,9 +1,9 @@
-"""Tests for aria.embeddings — HashEmbedder determinism/normalization + SemanticMemory."""
+"""Tests for mente.embeddings — HashEmbedder determinism/normalization + SemanticMemory."""
 from __future__ import annotations
 
 import math
 
-from aria.embeddings import HashEmbedder, SemanticMemory, _cosine
+from mente.embeddings import HashEmbedder, SemanticMemory, _cosine
 
 
 def test_hash_embedder_deterministic():

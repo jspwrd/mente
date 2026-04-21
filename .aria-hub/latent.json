@@ -1,0 +1,21 @@
+{
+  "last_digest": {
+    "total_responses": 0,
+    "by_reasoner": {},
+    "accept_rate": 1.0,
+    "avg_verdict_score": 0.0,
+    "note_count": 0,
+    "recent_notes": [],
+    "summary": {
+      "total": 1,
+      "by_kind": {
+        "state": 1
+      },
+      "by_actor": {
+        "world_model": 1
+      },
+      "first_ts": 1776804206.2717388,
+      "last_ts": 1776804206.2717388
+    }
+  }
+}

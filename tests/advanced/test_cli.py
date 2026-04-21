@@ -1,7 +1,7 @@
 """Tests for the CLI dispatch surface.
 
 We don't exercise the interactive REPL; we verify build_parser() is sane,
-that `main(["reset"])` wipes .aria* directories, that `main(["test"])`
+that `main(["reset"])` wipes .mente* directories, that `main(["test"])`
 runs the smoke tests and returns 0, and that --help exits cleanly.
 """
 from __future__ import annotations
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from aria import cli
+from mente import cli
 
 
 def test_build_parser_has_expected_subcommands() -> None:
@@ -38,24 +38,24 @@ def test_parser_help_exits_cleanly() -> None:
     assert excinfo.value.code == 0
 
 
-def test_main_reset_removes_aria_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_main_reset_removes_mente_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     # Redirect _root() to the tmp area so reset only touches the sandbox.
     monkeypatch.setattr(cli, "_root", lambda: tmp_path)
 
-    (tmp_path / ".aria").mkdir()
-    (tmp_path / ".aria" / "latent.json").write_text("{}")
-    (tmp_path / ".aria-test").mkdir()
-    (tmp_path / ".aria-hub").mkdir()
-    (tmp_path / "not-aria").mkdir()
+    (tmp_path / ".mente").mkdir()
+    (tmp_path / ".mente" / "latent.json").write_text("{}")
+    (tmp_path / ".mente-test").mkdir()
+    (tmp_path / ".mente-hub").mkdir()
+    (tmp_path / "not-mente").mkdir()
 
     rc = cli.main(["reset"])
     assert rc == 0
 
-    assert not (tmp_path / ".aria").exists()
-    assert not (tmp_path / ".aria-test").exists()
-    assert not (tmp_path / ".aria-hub").exists()
-    # A non-.aria-prefixed dir must survive.
-    assert (tmp_path / "not-aria").exists()
+    assert not (tmp_path / ".mente").exists()
+    assert not (tmp_path / ".mente-test").exists()
+    assert not (tmp_path / ".mente-hub").exists()
+    # A non-.mente-prefixed dir must survive.
+    assert (tmp_path / "not-mente").exists()
 
 
 def test_main_reset_with_nothing_to_remove_succeeds(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -65,15 +65,15 @@ def test_main_reset_with_nothing_to_remove_succeeds(tmp_path: Path, monkeypatch:
 
 
 def test_main_test_runs_smoke_tests_returns_zero(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    # The CLI's smoke path writes/uses .aria-test under _root(); point that at
+    # The CLI's smoke path writes/uses .mente-test under _root(); point that at
     # tmp_path so we don't stomp on anything in the worktree.
     monkeypatch.setattr(cli, "_root", lambda: tmp_path)
 
     rc = cli.main(["test"])
     assert rc == 0
 
-    # _smoke_tests() cleans up .aria-test on success; confirm.
-    assert not (tmp_path / ".aria-test").exists()
+    # _smoke_tests() cleans up .mente-test on success; confirm.
+    assert not (tmp_path / ".mente-test").exists()
 
 
 def test_main_unknown_subcommand_exits_nonzero() -> None:

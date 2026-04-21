@@ -1,10 +1,10 @@
-"""Tests for aria.router.Router — decide() argmax + route() escalation."""
+"""Tests for mente.router.Router — decide() argmax + route() escalation."""
 from __future__ import annotations
 
-from aria.metacog import Metacog
-from aria.router import Router
-from aria.tools import ToolRegistry
-from aria.types import Intent, Response
+from mente.metacog import Metacog
+from mente.router import Router
+from mente.tools import ToolRegistry
+from mente.types import Intent, Response
 
 from fixtures.cognition_helpers import StubReasoner, make_world
 

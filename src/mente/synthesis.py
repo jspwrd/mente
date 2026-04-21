@@ -4,7 +4,7 @@ A reasoner that, for computation-shaped intents, synthesizes a small Python
 function, executes it in a subprocess sandbox, validates the output, and —
 on repeated success — promotes the verified snippet into the ToolRegistry.
 
-The synthesis step itself is pluggable: see ``aria.synthesizers`` for the
+The synthesis step itself is pluggable: see ``mente.synthesizers`` for the
 ``Synthesizer`` Protocol and the two shipped backends (template, LLM). The
 subprocess + AST-gate machinery below is the trust boundary — every
 synthesized function, regardless of author, runs through it.

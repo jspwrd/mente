@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from aria.types import Event
+from mente.types import Event
 
 
 @dataclass

@@ -1,12 +1,12 @@
-"""Tests for aria.transport: InProcessTransport no-op + TCP hub/spoke flow."""
+"""Tests for mente.transport: InProcessTransport no-op + TCP hub/spoke flow."""
 from __future__ import annotations
 
 import asyncio
 
 import pytest
 
-from aria.transport import InProcessTransport, TCPTransport
-from aria.types import Event
+from mente.transport import InProcessTransport, TCPTransport
+from mente.types import Event
 
 from tests.fixtures.core_events import EventCapture
 from tests.fixtures.core_net import find_unused_port

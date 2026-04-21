@@ -1,14 +1,14 @@
 """Template synthesizer — regex-driven cases carried over from the original
-in-place tests in ``aria.synthesis``."""
+in-place tests in ``mente.synthesis``."""
 from __future__ import annotations
 
-from aria.synthesis import TemplateSynthesizer as ReexportedTemplateSynthesizer
-from aria.synthesizers import Synthesizer
-from aria.synthesizers.template import TemplateSynthesizer
+from mente.synthesis import TemplateSynthesizer as ReexportedTemplateSynthesizer
+from mente.synthesizers import Synthesizer
+from mente.synthesizers.template import TemplateSynthesizer
 
 
 def test_reexport_is_same_class() -> None:
-    # Back-compat: `from aria.synthesis import TemplateSynthesizer` must
+    # Back-compat: `from mente.synthesis import TemplateSynthesizer` must
     # resolve to the same class as the new canonical location.
     assert ReexportedTemplateSynthesizer is TemplateSynthesizer
 

@@ -15,7 +15,7 @@ import pytest
 
 def _ensure_voyage_absent() -> None:
     sys.modules.pop("voyageai", None)
-    sys.modules.pop("aria.embedders.voyage", None)
+    sys.modules.pop("mente.embedders.voyage", None)
 
 
 def _install_fake_voyageai(embeddings_vec: list[float]) -> MagicMock:
@@ -32,7 +32,7 @@ def _install_fake_voyageai(embeddings_vec: list[float]) -> MagicMock:
     sys.modules["voyageai"] = fake
     # Force re-import so the lazy `import voyageai` inside __init__ sees
     # the fake.
-    sys.modules.pop("aria.embedders.voyage", None)
+    sys.modules.pop("mente.embedders.voyage", None)
     return client_class
 
 
@@ -43,8 +43,8 @@ def test_voyage_embedder_raises_clean_import_error_when_missing() -> None:
     # depending on whether voyageai is actually installed.
     sys.modules["voyageai"] = None  # type: ignore[assignment]
     try:
-        sys.modules.pop("aria.embedders.voyage", None)
-        from aria.embedders.voyage import VoyageEmbedder
+        sys.modules.pop("mente.embedders.voyage", None)
+        from mente.embedders.voyage import VoyageEmbedder
 
         with pytest.raises(ImportError) as excinfo:
             VoyageEmbedder(api_key="fake")
@@ -53,14 +53,14 @@ def test_voyage_embedder_raises_clean_import_error_when_missing() -> None:
         assert "pip install" in msg
     finally:
         sys.modules.pop("voyageai", None)
-        sys.modules.pop("aria.embedders.voyage", None)
+        sys.modules.pop("mente.embedders.voyage", None)
 
 
 def test_voyage_embedder_embed_returns_canned_vector() -> None:
     canned = [0.1, 0.2, 0.3, 0.4]
     try:
         client_class = _install_fake_voyageai(canned)
-        from aria.embedders.voyage import VoyageEmbedder
+        from mente.embedders.voyage import VoyageEmbedder
 
         emb = VoyageEmbedder(api_key="fake-key", model="voyage-3", dim=4)
         out = emb.embed("hello")
@@ -71,14 +71,14 @@ def test_voyage_embedder_embed_returns_canned_vector() -> None:
         client_instance.embed.assert_called_once_with(["hello"], model="voyage-3")
     finally:
         sys.modules.pop("voyageai", None)
-        sys.modules.pop("aria.embedders.voyage", None)
+        sys.modules.pop("mente.embedders.voyage", None)
 
 
 def test_voyage_embedder_lru_cache_hit_skips_client() -> None:
     canned = [1.0, 0.0, 0.0, 0.0]
     try:
         client_class = _install_fake_voyageai(canned)
-        from aria.embedders.voyage import VoyageEmbedder
+        from mente.embedders.voyage import VoyageEmbedder
 
         emb = VoyageEmbedder(api_key="fake-key")
         client_instance = client_class.return_value
@@ -92,7 +92,7 @@ def test_voyage_embedder_lru_cache_hit_skips_client() -> None:
         assert client_instance.embed.call_count == 2
     finally:
         sys.modules.pop("voyageai", None)
-        sys.modules.pop("aria.embedders.voyage", None)
+        sys.modules.pop("mente.embedders.voyage", None)
 
 
 def test_voyage_embedder_falls_back_to_env_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -100,14 +100,14 @@ def test_voyage_embedder_falls_back_to_env_api_key(monkeypatch: pytest.MonkeyPat
     try:
         client_class = _install_fake_voyageai(canned)
         monkeypatch.setenv("VOYAGE_API_KEY", "from-env")
-        from aria.embedders.voyage import VoyageEmbedder
+        from mente.embedders.voyage import VoyageEmbedder
 
         emb = VoyageEmbedder()
         client_class.assert_called_once_with(api_key="from-env")
         _ = emb.embed("x")
     finally:
         sys.modules.pop("voyageai", None)
-        sys.modules.pop("aria.embedders.voyage", None)
+        sys.modules.pop("mente.embedders.voyage", None)
 
 
 def test_voyage_embedder_embed_batch_caches_and_reuses() -> None:
@@ -125,7 +125,7 @@ def test_voyage_embedder_embed_batch_caches_and_reuses() -> None:
 
         client_instance.embed.side_effect = _fake_embed
 
-        from aria.embedders.voyage import VoyageEmbedder
+        from mente.embedders.voyage import VoyageEmbedder
 
         emb = VoyageEmbedder(api_key="k")
         out = emb.embed_batch(["a", "b"])
@@ -137,7 +137,7 @@ def test_voyage_embedder_embed_batch_caches_and_reuses() -> None:
         assert client_instance.embed.call_count == calls_before
     finally:
         sys.modules.pop("voyageai", None)
-        sys.modules.pop("aria.embedders.voyage", None)
+        sys.modules.pop("mente.embedders.voyage", None)
 
 
 @pytest.mark.skipif(
@@ -146,7 +146,7 @@ def test_voyage_embedder_embed_batch_caches_and_reuses() -> None:
 )
 def test_voyage_embedder_live_api_smoke() -> None:
     # Only runs when VOYAGE_API_KEY is set and voyageai is installed.
-    from aria.embedders.voyage import VoyageEmbedder
+    from mente.embedders.voyage import VoyageEmbedder
 
     emb = VoyageEmbedder()
     vec = emb.embed("hello world")

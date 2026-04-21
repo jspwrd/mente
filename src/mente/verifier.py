@@ -1,7 +1,7 @@
 """Back-compat shim for the verifier module.
 
-The implementation moved to ``aria.verifiers``. This file preserves the
-legacy import path so ``from aria.verifier import Verifier, Verdict`` keeps
+The implementation moved to ``mente.verifiers``. This file preserves the
+legacy import path so ``from mente.verifier import Verifier, Verdict`` keeps
 working for the Router/Runtime and any external code.
 """
 from __future__ import annotations

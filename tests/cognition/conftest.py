@@ -9,7 +9,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Guarantee `import aria.*` and `import fixtures.*` resolve without install.
+# Guarantee `import mente.*` and `import fixtures.*` resolve without install.
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SRC = _REPO_ROOT / "src"
 _TESTS = _REPO_ROOT / "tests"

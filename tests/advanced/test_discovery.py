@@ -11,19 +11,19 @@ import socket
 
 import pytest
 
-from aria.bus import EventBus
-from aria.discovery import (
+from mente.bus import EventBus
+from mente.discovery import (
     Announcer,
     Directory,
     PeerCapability,
     RemoteReasoner,
     RemoteRequestHandler,
 )
-from aria.reasoners import FastHeuristicReasoner
-from aria.tools import ToolRegistry
-from aria.transport import TCPTransport
-from aria.types import Event, Intent
-from aria.world_model import WorldModel
+from mente.reasoners import FastHeuristicReasoner
+from mente.tools import ToolRegistry
+from mente.transport import TCPTransport
+from mente.types import Event, Intent
+from mente.world_model import WorldModel
 
 from fixtures.advanced_helpers import EchoReasoner
 

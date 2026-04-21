@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# ARIA launcher — one command, no install required.
+# MENTE launcher — one command, no install required.
 #
-# Usage: ./aria [run|demo|federated|peer|test|reset]
-#        ./aria --help
+# Usage: ./mente [run|demo|federated|peer|test|reset]
+#        ./mente --help
 #
 # Defaults to interactive REPL if no subcommand is given.
 set -euo pipefail
@@ -10,7 +10,7 @@ set -euo pipefail
 DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # Prefer python3.11+ if available, otherwise fall back.
-PY="${ARIA_PYTHON:-}"
+PY="${MENTE_PYTHON:-}"
 if [ -z "$PY" ]; then
   for cand in python3.13 python3.12 python3.11 python3; do
     if command -v "$cand" >/dev/null 2>&1; then
@@ -32,4 +32,4 @@ if [ "$maj" -lt 3 ] || { [ "$maj" -eq 3 ] && [ "$min" -lt 11 ]; }; then
 fi
 
 export PYTHONPATH="$DIR/src${PYTHONPATH:+:$PYTHONPATH}"
-exec "$PY" -u -m aria.cli "$@"
+exec "$PY" -u -m mente.cli "$@"

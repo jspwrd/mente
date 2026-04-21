@@ -1,4 +1,4 @@
-"""Tests for aria.logging."""
+"""Tests for mente.logging."""
 from __future__ import annotations
 
 import asyncio
@@ -9,8 +9,8 @@ import sys
 
 import pytest
 
-from aria import logging as aria_logging
-from aria.logging import (
+from mente import logging as mente_logging
+from mente.logging import (
     JsonFormatter,
     bind,
     configure,
@@ -24,17 +24,17 @@ def _reset_logging_state():
     """Ensure each test starts from a clean configuration.
 
     The module guards ``configure()`` with a module-level flag and attaches a
-    named handler to the ``aria`` logger. Tear both down between tests so
+    named handler to the ``mente`` logger. Tear both down between tests so
     assertions don't leak.
     """
     yield
-    aria_logging._configured = False
-    root = stdlog.getLogger("aria")
+    mente_logging._configured = False
+    root = stdlog.getLogger("mente")
     for h in list(root.handlers):
-        if getattr(h, "name", None) == "aria._default_handler":
+        if getattr(h, "name", None) == "mente._default_handler":
             root.removeHandler(h)
     # Clear context var to the empty default.
-    aria_logging._context.set({})
+    mente_logging._context.set({})
 
 
 # ---------------------------------------------------------------------------
@@ -42,17 +42,17 @@ def _reset_logging_state():
 # ---------------------------------------------------------------------------
 
 
-def test_get_logger_returns_child_under_aria_tree():
+def test_get_logger_returns_child_under_mente_tree():
     # Touch the root first so Python's logger tree materializes the parent.
-    aria_root = stdlog.getLogger("aria")
+    mente_root = stdlog.getLogger("mente")
     logger = get_logger("runtime")
-    assert logger.name == "aria.runtime"
-    assert logger.parent is aria_root
+    assert logger.name == "mente.runtime"
+    assert logger.parent is mente_root
 
 
 def test_get_logger_empty_name_returns_root():
     logger = get_logger("")
-    assert logger.name == "aria"
+    assert logger.name == "mente"
 
 
 # ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ def test_configure_json_emits_expected_keys():
     payload = json.loads(line)
     assert payload["msg"] == "hello world"
     assert payload["level"] == "INFO"
-    assert payload["logger"] == "aria.example"
+    assert payload["logger"] == "mente.example"
     assert "ts" in payload
     assert payload["user"] == "alice"
 
@@ -85,7 +85,7 @@ def test_configure_writes_json_to_stream():
     line = stream.getvalue().strip().splitlines()[0]
     payload = json.loads(line)
     assert payload["msg"] == "line one"
-    assert payload["logger"] == "aria.stream"
+    assert payload["logger"] == "mente.stream"
 
 
 def test_configure_twice_does_not_double_install_handlers():
@@ -94,10 +94,10 @@ def test_configure_twice_does_not_double_install_handlers():
     configure(level="INFO", json=True, stream=stream)
     configure(level="DEBUG", json=False, stream=stream)
 
-    root = stdlog.getLogger("aria")
+    root = stdlog.getLogger("mente")
     named = [
         h for h in root.handlers
-        if getattr(h, "name", None) == "aria._default_handler"
+        if getattr(h, "name", None) == "mente._default_handler"
     ]
     assert len(named) == 1
 

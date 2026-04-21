@@ -10,7 +10,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from aria.memory import SlowMemory  # noqa: E402
+from mente.memory import SlowMemory  # noqa: E402
 
 
 def test_summarize_empty_db(tmp_path: Path) -> None:

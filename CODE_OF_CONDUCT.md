@@ -11,6 +11,6 @@ discussions on this repository.
 
 ## Intent
 
-ARIA aims to be a welcoming place for people of all backgrounds and
+mente aims to be a welcoming place for people of all backgrounds and
 experience levels. Be kind, assume good faith, and focus feedback on code
 and ideas rather than people.

@@ -1,4 +1,4 @@
-"""Shared fixtures for ARIA core tests.
+"""Shared fixtures for MENTE core tests.
 
 Provides:
 - ``tmp_root``: a temporary directory (wraps pytest's ``tmp_path``) that tests
@@ -24,7 +24,7 @@ SRC = REPO_ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from aria.bus import EventBus  # noqa: E402
+from mente.bus import EventBus  # noqa: E402
 
 from tests.fixtures.core_events import EventCapture  # noqa: E402
 

@@ -1,8 +1,8 @@
 """Math specialist — safe arithmetic evaluation.
 
 Moved verbatim from the previous monolithic `specialists.py` so that
-imports like `from aria.specialists import MathSpecialist` keep working
-(the package `__init__` re-exports, and `aria/specialists.py` is now
+imports like `from mente.specialists import MathSpecialist` keep working
+(the package `__init__` re-exports, and `mente/specialists.py` is now
 a thin shim for legacy consumers).
 """
 from __future__ import annotations

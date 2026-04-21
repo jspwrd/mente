@@ -1,9 +1,9 @@
-"""Tests for aria.specialists.MathSpecialist — arithmetic pattern recognition + safe AST eval."""
+"""Tests for mente.specialists.MathSpecialist — arithmetic pattern recognition + safe AST eval."""
 from __future__ import annotations
 
-from aria.specialists import MathSpecialist, _safe_eval
-from aria.tools import ToolRegistry
-from aria.types import Intent
+from mente.specialists import MathSpecialist, _safe_eval
+from mente.tools import ToolRegistry
+from mente.types import Intent
 
 import ast
 

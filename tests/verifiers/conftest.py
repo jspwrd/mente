@@ -11,15 +11,15 @@ from pathlib import Path
 
 import pytest
 
-# Ensure src/ is on the path so ``import aria`` works when pytest is run from
+# Ensure src/ is on the path so ``import mente`` works when pytest is run from
 # the project root (the package isn't installed in dev).
 _SRC = Path(__file__).resolve().parents[2] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from aria.bus import EventBus  # noqa: E402
-from aria.types import Belief, Intent, Response  # noqa: E402
-from aria.world_model import WorldModel  # noqa: E402
+from mente.bus import EventBus  # noqa: E402
+from mente.types import Belief, Intent, Response  # noqa: E402
+from mente.world_model import WorldModel  # noqa: E402
 
 
 @pytest.fixture

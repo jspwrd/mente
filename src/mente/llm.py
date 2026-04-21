@@ -9,7 +9,7 @@ Activity guidance (§4 of the architecture — native tool binding): we serializ
 the registered tool catalogue and the current world-model snapshot into the
 system prompt so the model answers grounded in real state. This is NOT yet
 true latent-space tool binding — it's the text-serialized baseline. The real
-next step is invoking the Claude tool runner so the model can call ARIA's
+next step is invoking the Claude tool runner so the model can call MENTE's
 tools directly; left as a follow-up.
 """
 from __future__ import annotations
@@ -41,7 +41,7 @@ else:  # pragma: no cover
     _LLM_RETRY_ON = (ConnectionError, TimeoutError)
 
 
-_SYSTEM_PROMPT = """You are ARIA, a persistent, event-driven reasoning process.
+_SYSTEM_PROMPT = """You are MENTE, a persistent, event-driven reasoning process.
 
 You are the 'deep' tier of a heterogeneous cognitive architecture. You are
 called when the fast heuristic tier cannot confidently answer. Answer
@@ -71,7 +71,7 @@ class AnthropicReasoner:
     def __post_init__(self) -> None:
         if not _ANTHROPIC_AVAILABLE:
             raise RuntimeError(
-                "anthropic SDK not installed. Install with: pip install 'aria[llm]'"
+                "anthropic SDK not installed. Install with: pip install 'mente[llm]'"
             )
         if not os.environ.get("ANTHROPIC_API_KEY"):
             raise RuntimeError("ANTHROPIC_API_KEY not set")

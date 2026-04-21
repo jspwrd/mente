@@ -34,10 +34,10 @@ jobs:
         run: ruff check .
 
       - name: Type-check (mypy, soft)
-        run: mypy src/aria || true
+        run: mypy src/mente || true
 
       - name: Unit tests (pytest)
         run: pytest -q
 
       - name: Smoke tests
-        run: ./aria test
+        run: ./mente test

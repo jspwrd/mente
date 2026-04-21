@@ -1,11 +1,11 @@
-"""Tests for aria.tools.ToolRegistry: register, signature, invoke, ToolResult."""
+"""Tests for mente.tools.ToolRegistry: register, signature, invoke, ToolResult."""
 from __future__ import annotations
 
 import asyncio
 
 import pytest
 
-from aria.tools import ToolRegistry, ToolResult, ToolSpec
+from mente.tools import ToolRegistry, ToolResult, ToolSpec
 
 
 @pytest.mark.asyncio

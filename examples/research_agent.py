@@ -1,6 +1,6 @@
 """Research agent example: semantic memory ingestion + search.
 
-Demonstrates ARIA's semantic memory: a hash-embedder (character n-gram
+Demonstrates MENTE's semantic memory: a hash-embedder (character n-gram
 feature hashing, stdlib-only) backs cosine-similarity search over a
 corpus of notes. It is not a transformer embedding — 'car' and
 'automobile' won't cluster — but shared morphology ('deploy' vs
@@ -24,11 +24,11 @@ from pathlib import Path
 _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT / "src"))
 
-from aria.runtime import Runtime  # noqa: E402
-from aria.types import Intent  # noqa: E402
+from mente.runtime import Runtime  # noqa: E402
+from mente.types import Intent  # noqa: E402
 
 
-DATA_DIR = _ROOT / ".aria-example-research"
+DATA_DIR = _ROOT / ".mente-example-research"
 
 
 # Ten fake research notes across a few clustered topics.
@@ -67,7 +67,7 @@ async def main() -> None:
     await rt.start()
 
     print("=" * 60)
-    print("ARIA research agent — semantic memory ingestion + search")
+    print("MENTE research agent — semantic memory ingestion + search")
     print("=" * 60)
 
     # Half of the notes go through the intent path (so they also show up

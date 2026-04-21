@@ -1,6 +1,6 @@
 """Shared types for the verifiers package.
 
-``Verdict`` lives here (rather than in ``aria.types``) because it is the
+``Verdict`` lives here (rather than in ``mente.types``) because it is the
 sole data carrier between the verifier pipeline and consumers; keeping it
 adjacent to the implementations avoids polluting the top-level types module.
 """

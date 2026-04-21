@@ -2,7 +2,7 @@
 
 Regex-driven; no LLM involved. Recognizes "fibonacci of N", "factorial of N",
 "A to the power of B" (and a handful of phrasings), and emits a pure Python
-function plus call args. Moved verbatim from ``aria.synthesis`` so the main
+function plus call args. Moved verbatim from ``mente.synthesis`` so the main
 module can expose it as a re-export shim.
 """
 from __future__ import annotations

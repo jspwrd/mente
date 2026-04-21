@@ -8,13 +8,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from aria.runtime import Runtime
-from aria.tools import ToolRegistry
-from aria.types import Intent, ReasonerTier, Response
-from aria.world_model import WorldModel
+from mente.runtime import Runtime
+from mente.tools import ToolRegistry
+from mente.types import Intent, ReasonerTier, Response
+from mente.world_model import WorldModel
 
 
-async def make_runtime(tmp_path: Path, node_id: str = "aria.test") -> Runtime:
+async def make_runtime(tmp_path: Path, node_id: str = "mente.test") -> Runtime:
     """Build a Runtime rooted under `tmp_path` and start the bus."""
     rt = Runtime(root=tmp_path / "state", node_id=node_id)
     await rt.start()

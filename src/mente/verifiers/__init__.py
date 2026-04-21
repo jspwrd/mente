@@ -1,8 +1,8 @@
 """Verifier package.
 
 Exposes a ``StructuredVerifier`` Protocol plus concrete implementations.
-Downstream code should import from here (``aria.verifiers``) rather than
-from the legacy ``aria.verifier`` shim.
+Downstream code should import from here (``mente.verifiers``) rather than
+from the legacy ``mente.verifier`` shim.
 """
 from __future__ import annotations
 

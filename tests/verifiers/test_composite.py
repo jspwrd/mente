@@ -5,9 +5,9 @@ from dataclasses import dataclass
 
 import pytest
 
-from aria.types import Intent, Response
-from aria.verifiers import CompositeVerifier, HeuristicVerifier, Verdict
-from aria.world_model import WorldModel
+from mente.types import Intent, Response
+from mente.verifiers import CompositeVerifier, HeuristicVerifier, Verdict
+from mente.world_model import WorldModel
 
 
 @dataclass

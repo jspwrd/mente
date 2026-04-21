@@ -1,11 +1,11 @@
-"""Tests for aria.resilience."""
+"""Tests for mente.resilience."""
 from __future__ import annotations
 
 import asyncio
 
 import pytest
 
-from aria.resilience import CircuitBreaker, CircuitOpenError, retry_async, timeout
+from mente.resilience import CircuitBreaker, CircuitOpenError, retry_async, timeout
 
 
 # --- retry_async ----------------------------------------------------------

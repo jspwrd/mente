@@ -1,6 +1,6 @@
 """Coding agent example: synthesis + library reuse.
 
-Demonstrates one of ARIA's distinctive capabilities: when an intent has a
+Demonstrates one of MENTE's distinctive capabilities: when an intent has a
 "computation shape" the synthesis reasoner writes a small Python function,
 validates it (AST gate + sandbox execution), and on success *promotes* the
 function into a persistent library. The next time a same-shape intent
@@ -17,17 +17,17 @@ import shutil
 import sys
 from pathlib import Path
 
-# Make the in-tree `aria` package importable without `pip install`.
+# Make the in-tree `mente` package importable without `pip install`.
 _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT / "src"))
 
-from aria.runtime import Runtime  # noqa: E402
-from aria.types import Intent  # noqa: E402
+from mente.runtime import Runtime  # noqa: E402
+from mente.types import Intent  # noqa: E402
 
 
 # Each example uses a dedicated data dir so its state doesn't collide with
-# the main REPL's `.aria/` or other examples.
-DATA_DIR = _ROOT / ".aria-example-coding"
+# the main REPL's `.mente/` or other examples.
+DATA_DIR = _ROOT / ".mente-example-coding"
 
 
 # Scripted conversation. Each "round" hits a different computation shape; the
@@ -75,7 +75,7 @@ async def main() -> None:
     await rt.start()
 
     print("=" * 60)
-    print("ARIA coding agent — synthesis + library reuse")
+    print("MENTE coding agent — synthesis + library reuse")
     print("=" * 60)
 
     print("\n-- round 1: first time we see each shape (synthesis path) --")

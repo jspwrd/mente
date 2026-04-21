@@ -24,11 +24,11 @@ from pathlib import Path
 _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT / "src"))
 
-from aria.runtime import Runtime  # noqa: E402
-from aria.types import Belief, Intent  # noqa: E402
+from mente.runtime import Runtime  # noqa: E402
+from mente.types import Belief, Intent  # noqa: E402
 
 
-DATA_DIR = _ROOT / ".aria-example-personal"
+DATA_DIR = _ROOT / ".mente-example-personal"
 
 
 async def main() -> None:
@@ -38,7 +38,7 @@ async def main() -> None:
     await rt.start()
 
     print("=" * 60)
-    print("ARIA personal organizer — world model + memory + curiosity")
+    print("MENTE personal organizer — world model + memory + curiosity")
     print("=" * 60)
 
     # -- 1. seed the world model -------------------------------------------
@@ -50,7 +50,7 @@ async def main() -> None:
         Belief(entity="user", attribute="name", value="Alex"),
         Belief(entity="user", attribute="timezone", value="America/Los_Angeles"),
         Belief(entity="calendar", attribute="next_event", value="standup 10am"),
-        Belief(entity="projects", attribute="active", value="aria-launch"),
+        Belief(entity="projects", attribute="active", value="mente-launch"),
     ]:
         await rt.world.assert_belief(belief)
         print(f"  {belief.entity}.{belief.attribute} = {belief.value}")

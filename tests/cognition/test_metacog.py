@@ -1,10 +1,10 @@
-"""Tests for aria.metacog.Metacog.estimate — pattern coverage + specialist bumps."""
+"""Tests for mente.metacog.Metacog.estimate — pattern coverage + specialist bumps."""
 from __future__ import annotations
 
-from aria.metacog import Metacog
-from aria.reasoners import DeepSimulatedReasoner, FastHeuristicReasoner
-from aria.specialists import MathSpecialist
-from aria.types import Intent
+from mente.metacog import Metacog
+from mente.reasoners import DeepSimulatedReasoner, FastHeuristicReasoner
+from mente.specialists import MathSpecialist
+from mente.types import Intent
 
 
 def _estimates_by_reasoner(metacog: Metacog, text: str) -> dict[str, float]:

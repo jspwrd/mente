@@ -1,6 +1,6 @@
 """Shared pytest configuration for the advanced-layer suite.
 
-Puts the aria package + tests/fixtures on sys.path so the suite runs in a
+Puts the mente package + tests/fixtures on sys.path so the suite runs in a
 fresh worktree without an editable install.
 """
 from __future__ import annotations

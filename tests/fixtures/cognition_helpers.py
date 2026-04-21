@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from aria.bus import EventBus
-from aria.tools import ToolRegistry
-from aria.types import Belief, Intent, ReasonerTier, Response
-from aria.world_model import WorldModel
+from mente.bus import EventBus
+from mente.tools import ToolRegistry
+from mente.types import Belief, Intent, ReasonerTier, Response
+from mente.world_model import WorldModel
 
 
 async def make_world(beliefs: list[Belief] | None = None) -> WorldModel:

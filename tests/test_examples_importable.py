@@ -31,7 +31,7 @@ def test_example_importable(script_name: str) -> None:
     assert path.exists(), f"missing example: {path}"
 
     spec = importlib.util.spec_from_file_location(
-        f"aria_examples.{path.stem}", path
+        f"mente_examples.{path.stem}", path
     )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)

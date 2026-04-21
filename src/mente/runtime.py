@@ -35,7 +35,7 @@ from .world_model import WorldModel
 @dataclass
 class Runtime:
     root: Path
-    node_id: str = "aria.local"
+    node_id: str = "mente.local"
     bus: EventBus = field(default_factory=EventBus)
     world: WorldModel = field(init=False)
     fast_mem: FastMemory = field(default_factory=FastMemory)
