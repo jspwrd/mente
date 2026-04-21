@@ -2,11 +2,49 @@
 name = "aria"
 version = "0.1.0"
 description = "Seed of a persistent, heterogeneous, event-driven reasoning process."
+readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.11"
+authors = [{name = "Jasper Reed", email = "jaspermreed@gmail.com"}]
+keywords = [
+    "agent",
+    "ai",
+    "llm",
+    "framework",
+    "cognitive-architecture",
+    "event-driven",
+    "python",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS",
+    "Framework :: AsyncIO",
+]
 dependencies = []
 
 [project.optional-dependencies]
 llm = ["anthropic>=0.40.0"]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.5",
+    "mypy>=1.10",
+    "pre-commit>=3.7",
+]
+
+[project.urls]
+Homepage = "https://github.com/jasperreed/aria"
+Repository = "https://github.com/jasperreed/aria"
+Issues = "https://github.com/jasperreed/aria/issues"
+Documentation = "https://github.com/jasperreed/aria"
 
 [build-system]
 requires = ["hatchling"]
@@ -17,3 +55,33 @@ packages = ["src/aria"]
 
 [project.scripts]
 aria = "aria.cli:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["aria"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+explicit_package_bases = true
+mypy_path = "src"
+namespace_packages = true
+
+[[tool.mypy.overrides]]
+module = "anthropic.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "voyageai.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
