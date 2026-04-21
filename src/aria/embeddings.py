@@ -1,9 +1,8 @@
-"""Pluggable embeddings + semantic memory.
+"""Semantic memory backed by a pluggable Embedder.
 
-Phase 1 ships a stdlib-only hashing embedder (random projection over token
-hashes — fast, deterministic, no deps). Phase 2 swaps in a real embedding
-provider (Voyage / local sentence-transformers / OpenAI) behind the same
-Embedder protocol.
+The Embedder Protocol and HashEmbedder implementation now live in
+`aria.embedders`; they are re-exported here for backward compatibility so
+callers can still `from aria.embeddings import HashEmbedder, Embedder`.
 
 SemanticMemory stores (text, vector, metadata) rows and serves cosine-
 similarity queries. Vectors are stored base64-encoded in SQLite to stay in
@@ -13,53 +12,15 @@ from __future__ import annotations
 
 import array
 import base64
-import hashlib
-import math
-import re
 import sqlite3
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any
 
+from .embedders.hashing import Embedder, HashEmbedder
 
-class Embedder(Protocol):
-    dim: int
-
-    def embed(self, text: str) -> list[float]: ...
-
-
-@dataclass
-class HashEmbedder:
-    """Feature-hashing embedder over character n-grams.
-
-    Character 3- and 4-grams give us fuzzy lexical similarity: 'deploy' and
-    'deployment' share most of their trigrams, so cosine similarity is non-
-    trivial without a language model. Not semantic — 'car' and 'automobile'
-    still miss — but enough to demonstrate the architecture. Swap the
-    Embedder protocol for a real model in Phase 2.
-    """
-    dim: int = 256
-    ngram_sizes: tuple[int, ...] = (3, 4)
-
-    def embed(self, text: str) -> list[float]:
-        vec = [0.0] * self.dim
-        tokens = re.findall(r"[a-z0-9]+", text.lower())
-        if not tokens:
-            return vec
-        for tok in tokens:
-            padded = f" {tok} "
-            for n in self.ngram_sizes:
-                if len(padded) < n:
-                    continue
-                for i in range(len(padded) - n + 1):
-                    gram = padded[i:i + n]
-                    h = hashlib.blake2b(gram.encode(), digest_size=8).digest()
-                    idx = int.from_bytes(h[:4], "little") % self.dim
-                    sign = 1.0 if h[4] & 1 else -1.0
-                    vec[idx] += sign
-        norm = math.sqrt(sum(x * x for x in vec)) or 1.0
-        return [x / norm for x in vec]
+__all__ = ["Embedder", "HashEmbedder", "SemanticMemory"]
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
