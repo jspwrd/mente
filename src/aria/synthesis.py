@@ -24,6 +24,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .resilience import retry_async
 from .tools import ToolRegistry
 from .types import Intent, ReasonerTier, Response
 from .world_model import WorldModel
@@ -72,7 +73,9 @@ try:
 except Exception as e:
     print(json.dumps({{"ok": False, "error": f"{{type(e).__name__}}: {{e}}"}}))
 """
-    proc = await asyncio.create_subprocess_exec(
+    proc = await retry_async(
+        attempts=2, retry_on=(OSError, ChildProcessError),
+    )(asyncio.create_subprocess_exec)(
         sys.executable, "-S", "-I", "-c", driver,
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
