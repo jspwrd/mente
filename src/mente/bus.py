@@ -49,7 +49,7 @@ class EventBus:
         await self._dispatch(event)
 
     async def _dispatch(self, event: Event) -> None:
-        tasks = [
+        tasks: list[asyncio.Task[None]] = [
             asyncio.create_task(s.handler(event))
             for s in self._subs
             if fnmatch.fnmatchcase(event.topic, s.pattern)

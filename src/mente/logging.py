@@ -95,6 +95,25 @@ def redact_secrets(text: str) -> str:
     return out
 
 
+class _RedactFilter(stdlog.Filter):
+    """Filter that scrubs API-key-like substrings from the formatted message.
+
+    Applied by ``configure()`` on the default handler so ``logger.info("key %s", sk_ant_key)``
+    and similar emit a redacted line rather than the raw secret.
+    """
+
+    def filter(self, record: stdlog.LogRecord) -> bool:
+        # Redact the interpolated message. getMessage() does % formatting, so
+        # we set .msg to the redacted result and clear .args — the formatter
+        # won't re-interpolate over it.
+        msg = record.getMessage()
+        redacted = redact_secrets(msg)
+        if redacted != msg:
+            record.msg = redacted
+            record.args = None
+        return True
+
+
 # ---------------------------------------------------------------------------
 # formatter
 # ---------------------------------------------------------------------------
@@ -201,6 +220,7 @@ def configure(
     handler = stdlog.StreamHandler(stream)
     handler.name = _HANDLER_NAME
     handler.setLevel(level)
+    handler.addFilter(_RedactFilter())
 
     formatter: stdlog.Formatter
     if json:

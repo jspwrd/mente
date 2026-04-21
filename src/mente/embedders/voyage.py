@@ -29,7 +29,7 @@ class VoyageEmbedder:
         dim: int = 1024,
     ) -> None:
         try:
-            import voyageai  # type: ignore
+            import voyageai
         except ImportError as e:
             raise ImportError(_INSTALL_HINT) from e
 

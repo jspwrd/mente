@@ -1,5 +1,11 @@
 # mente
 
+[![PyPI version](https://img.shields.io/pypi/v/mente.svg)](https://pypi.org/project/mente/)
+[![Python versions](https://img.shields.io/pypi/pyversions/mente.svg)](https://pypi.org/project/mente/)
+[![CI](https://github.com/jspwrd/mente/actions/workflows/ci.yml/badge.svg)](https://github.com/jspwrd/mente/actions/workflows/ci.yml)
+[![Docs](https://github.com/jspwrd/mente/actions/workflows/docs.yml/badge.svg)](https://jspwrd.github.io/mente/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > *mente* (n., Latin / Italian / Spanish): **mind**.
 
 A minimalist cognitive-architecture framework for Python. Build persistent,
@@ -168,50 +174,38 @@ MENTE_BUS_ROLE=hub MENTE_BUS_PORT=7722 ./mente run
 
 ## Architecture
 
-```
-     ┌──────────────────────────────────────┐
-     │       Event Bus (async pub/sub)      │
-     │    in-process / TCP / (NATS later)   │
-     └───┬────────────────────┬─────────────┘
-         │                    │
-    ┌────▼──────┐      ┌──────▼──────┐
-    │  World    │      │  Discovery  │ ◄── remote specialists
-    │  Model    │      │  (peers)    │
-    └────┬──────┘      └──────┬──────┘
-         │                    │
-    ┌────▼────────────────────▼─────────┐
-    │   Runtime (event loop)            │
-    │   ┌─────────────────────────────┐ │
-    │   │  Metacog → Router           │ │
-    │   └──────┬──────────────────────┘ │
-    │          ▼                        │
-    │  ┌──────────┬──────────┬────────┐ │
-    │  │   Fast   │Specialist│  Deep  │ │
-    │  │heuristic │  (math,  │ (LLM)  │ │
-    │  │          │ code, …) │        │ │
-    │  └────┬─────┴─────┬────┴───┬────┘ │
-    │       └───────────┼────────┘      │
-    │                   ▼                │
-    │             ┌─────────┐            │
-    │             │Verifier │            │
-    │             └────┬────┘            │
-    └──────────────────┼─────────────────┘
-                       ▼
-         ┌─────────┬──────────┬─────────┐
-         │ Memory  │ Latent   │Synthesis│
-         │ fast/   │ state    │ library │
-         │ slow/   │          │         │
-         │semantic │          │         │
-         └─────────┴──────────┴─────────┘
-                       ▲
-         ┌─────────────┴───────────┐
-         │ Curiosity  Consolidator │
-         │ (idle-time self-prompt) │
-         │ (sleep-cycle digest)    │
-         └─────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Bus["Event Bus · async pub/sub · in-proc / TCP"]
+    end
+
+    Bus --> World[World Model]
+    Bus --> Discovery[Discovery · remote peers]
+
+    subgraph Runtime["Runtime · event loop"]
+        direction TB
+        Metacog[Metacog] --> Router
+        Router --> Fast[Fast heuristic]
+        Router --> Spec[Specialists · math · code]
+        Router --> Deep[Deep · LLM]
+        Fast --> Verifier
+        Spec --> Verifier
+        Deep --> Verifier
+    end
+
+    World --> Runtime
+    Discovery --> Runtime
+
+    Verifier --> Memory[Memory · fast · slow · semantic]
+    Verifier --> Latent[Latent state]
+    Verifier --> Lib[Synthesis library]
+
+    Curiosity[Curiosity · idle self-prompt] --> Bus
+    Consolidator[Consolidator · sleep-cycle digest] --> Memory
+    Memory --> Consolidator
 ```
 
-Full walkthrough: [`docs/architecture.md`](docs/architecture.md).
+Full walkthrough: [`docs/architecture.md`](docs/architecture.md) (with the same diagram).
 
 ---
 

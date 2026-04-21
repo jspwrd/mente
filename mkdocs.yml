@@ -1,8 +1,10 @@
-site_name: MENTE
-site_description: Seed of a persistent, heterogeneous, event-driven reasoning process.
-site_url: https://example.github.io/mente/
-repo_url: https://github.com/example/mente
+site_name: mente
+site_description: A minimalist cognitive-architecture framework for Python.
+site_url: https://jspwrd.github.io/mente/
+repo_url: https://github.com/jspwrd/mente
 edit_uri: edit/main/docs/
+exclude_docs: |
+  launch-post.md
 
 theme:
   name: material

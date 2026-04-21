@@ -319,6 +319,6 @@ fresh on every turn.
 ## Where to go next
 
 - [Architecture](architecture.md) — why the surfaces are shaped this way
-- [API reference](reference/) — every public symbol with its signature
+- [API reference](reference/index.md) — every public symbol with its signature
 - [Build an agent](tutorials/build-an-agent.md) — a complete example
   that registers a tool and subscribes to intents

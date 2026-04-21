@@ -235,3 +235,37 @@ def test_json_formatter_includes_exception_info():
     assert payload["msg"] == "explosion"
     assert "ValueError" in payload["exc_info"]
     assert "boom" in payload["exc_info"]
+
+
+# ---------------------------------------------------------------------------
+# redaction filter on the default handler
+# ---------------------------------------------------------------------------
+
+
+def test_configure_installs_redaction_filter() -> None:
+    stream = io.StringIO()
+    configure(level="INFO", stream=stream)
+    logger = get_logger("redact")
+    logger.info("api_key=sk-ant-1234567890abcdef should be masked")
+    text = stream.getvalue()
+    assert "sk-ant-1234567890abcdef" not in text
+    assert "sk-a***REDACTED***" in text
+
+
+def test_redaction_filter_also_applied_to_json_output() -> None:
+    stream = io.StringIO()
+    configure(level="INFO", json=True, stream=stream)
+    logger = get_logger("redact.json")
+    logger.info("gh token ghp_abc1234567890 leaked")
+    line = stream.getvalue().strip().splitlines()[-1]
+    payload = json.loads(line)
+    assert "ghp_abc1234567890" not in payload["msg"]
+    assert "***REDACTED***" in payload["msg"]
+
+
+def test_redaction_filter_preserves_clean_messages() -> None:
+    stream = io.StringIO()
+    configure(level="INFO", stream=stream)
+    logger = get_logger("clean")
+    logger.info("a normal message with no secrets")
+    assert "a normal message with no secrets" in stream.getvalue()

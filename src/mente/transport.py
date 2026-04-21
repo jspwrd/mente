@@ -94,7 +94,7 @@ class TCPTransport:
     _hub_reader: asyncio.StreamReader | None = None
     _hub_writer: asyncio.StreamWriter | None = None
     _on_remote: RemoteHandler | None = None
-    _listen_tasks: list[asyncio.Task] = field(default_factory=list)
+    _listen_tasks: list[asyncio.Task[None]] = field(default_factory=list)
 
     async def start(self, on_remote: RemoteHandler) -> None:
         self._on_remote = on_remote

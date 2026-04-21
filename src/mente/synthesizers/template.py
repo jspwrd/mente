@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import Any
 
 _FIB_RE = re.compile(r"(?:fib(?:onacci)?\D+(\d+)|(\d+)\D+fib(?:onacci)?)", re.I)
 _POW_RE = re.compile(r"(\d+)\s*(?:\*\*|\^|to the power of|to the)\s*(\d+)", re.I)
@@ -21,7 +22,7 @@ class TemplateSynthesizer:
     source to compute them. No LLM involved — replace with an LLM call in
     Phase 2."""
 
-    def synthesize(self, intent_text: str) -> tuple[str, str, dict] | None:
+    def synthesize(self, intent_text: str) -> tuple[str, str, dict[str, Any]] | None:
         """Return (source, entrypoint, args) or None if we can't synthesize."""
         m = _FIB_RE.search(intent_text)
         if m:

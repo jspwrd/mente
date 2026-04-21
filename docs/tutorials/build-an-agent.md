@@ -173,4 +173,4 @@ for this user) and inherit the rest.
 - [Extending MENTE](../extending.md) — if you want to plug in a real
   reasoner, embedder, or verifier, these are the protocol shapes.
 - [Architecture](../architecture.md) — how the pieces fit together.
-- [API reference](../reference/) — full signatures for every surface.
+- [API reference](../reference/index.md) — full signatures for every surface.

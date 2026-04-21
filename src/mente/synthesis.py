@@ -20,6 +20,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from .resilience import retry_async
 from .synthesizers import Synthesizer, TemplateSynthesizer
@@ -53,8 +54,8 @@ def _validate_ast(source: str) -> None:
                 raise ValueError(f"dunder access: {attr}")
 
 
-async def _run_sandboxed(source: str, entrypoint: str, args: dict,
-                         timeout_s: float = 2.0) -> dict:
+async def _run_sandboxed(source: str, entrypoint: str, args: dict[str, Any],
+                         timeout_s: float = 2.0) -> dict[str, Any]:
     """Run `source` in a subprocess with -S (no site), returning {ok, value|error}."""
     _validate_ast(source)
 

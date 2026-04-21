@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from .bus import EventBus
 from .config import MenteConfig
@@ -139,7 +140,7 @@ class Runtime:
             return [r["payload"]["fact"] for r in rows]
 
         @self.tools.register("memory.search", "Semantic search over notes.", returns="list[dict]", est_cost_ms=5.0)
-        async def _memory_search(query: str, k: int = 3) -> list[dict]:
+        async def _memory_search(query: str, k: int = 3) -> list[dict[str, Any]]:
             return self.semantic_mem.search(query, k=k, kind="note")
 
     # -- subscribers --------------------------------------------------------
@@ -204,7 +205,7 @@ class Runtime:
         """Activate the bus transport (no-op for in-process)."""
         await self.bus.start()
 
-    def start_background(self) -> list[asyncio.Task]:
+    def start_background(self) -> list[asyncio.Task[None]]:
         """Start the consolidation + curiosity loops as background tasks."""
         self._consolidator_stop.clear()
         self._curiosity_stop.clear()

@@ -189,4 +189,4 @@ This removes every `.mente*` directory in the project root.
   implementations for adding your own reasoners, tools, specialists,
   embedders, synthesizers, and verifiers.
 - [Architecture](../architecture.md) — why the system is shaped this way.
-- [API reference](../reference/) — every public symbol.
+- [API reference](../reference/index.md) — every public symbol.

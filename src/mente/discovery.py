@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 from dataclasses import dataclass, field
+from typing import Any
 
 from .bus import EventBus
 from .reasoners import Reasoner
@@ -105,7 +106,7 @@ class RemoteReasoner:
     node_id: str  # our node_id (for the origin field)
     target: PeerCapability
     timeout_s: float = 30.0
-    _pending: dict[str, asyncio.Future] = field(default_factory=dict)
+    _pending: dict[str, asyncio.Future[dict[str, Any]]] = field(default_factory=dict)
     _wired: bool = False
 
     @property
@@ -136,7 +137,7 @@ class RemoteReasoner:
     ) -> Response:
         self._wire()
         request_id = uuid.uuid4().hex
-        fut: asyncio.Future = asyncio.get_event_loop().create_future()
+        fut: asyncio.Future[dict[str, Any]] = asyncio.get_event_loop().create_future()
         self._pending[request_id] = fut
         await self.bus.publish(
             Event(

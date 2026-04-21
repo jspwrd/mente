@@ -39,7 +39,7 @@ def retry_async(
             for i in range(attempts):
                 try:
                     return await fn(*args, **kwargs)
-                except retry_on as e:  # type: ignore[misc]
+                except retry_on as e:
                     last_exc = e
                     if i == attempts - 1:
                         break

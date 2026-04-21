@@ -32,8 +32,8 @@ except ImportError:  # pragma: no cover
 
 if _ANTHROPIC_AVAILABLE:
     _LLM_RETRY_ON: tuple[type[BaseException], ...] = (
-        anthropic.APIConnectionError,  # type: ignore[attr-defined]
-        anthropic.APIStatusError,  # type: ignore[attr-defined]
+        anthropic.APIConnectionError,
+        anthropic.APIStatusError,
         ConnectionError,
         TimeoutError,
     )

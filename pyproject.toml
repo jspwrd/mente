@@ -99,6 +99,12 @@ ignore_missing_imports = true
 module = "sentence_transformers.*"
 ignore_missing_imports = true
 
+# Modules cleaned up to strict mypy. Add entries here as they're polished
+# (see ROADMAP.md "Type-check ratchet").
+[[tool.mypy.overrides]]
+module = ["mente.types", "mente.state"]
+strict = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
