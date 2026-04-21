@@ -11,6 +11,6 @@ Phase 1 includes:
 from __future__ import annotations
 
 from .code import CodeSpecialist
-from .math import MathSpecialist
+from .math import MathSpecialist, _safe_eval
 
-__all__ = ["MathSpecialist", "CodeSpecialist"]
+__all__ = ["MathSpecialist", "CodeSpecialist", "_safe_eval"]
