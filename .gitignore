@@ -6,6 +6,9 @@ venv/
 dist/
 build/
 .mente/
+.mente-*/
+.aria/
+.aria-*/
 *.sqlite
 *.sqlite-journal
 .DS_Store
