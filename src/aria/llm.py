@@ -18,6 +18,7 @@ import asyncio
 import os
 from dataclasses import dataclass
 
+from .resilience import retry_async
 from .tools import ToolRegistry
 from .types import Intent, ReasonerTier, Response
 from .world_model import WorldModel
@@ -28,6 +29,16 @@ try:
 except ImportError:  # pragma: no cover
     anthropic = None  # type: ignore[assignment]
     _ANTHROPIC_AVAILABLE = False
+
+if _ANTHROPIC_AVAILABLE:
+    _LLM_RETRY_ON: tuple[type[BaseException], ...] = (
+        anthropic.APIConnectionError,  # type: ignore[attr-defined]
+        anthropic.APIStatusError,  # type: ignore[attr-defined]
+        ConnectionError,
+        TimeoutError,
+    )
+else:  # pragma: no cover
+    _LLM_RETRY_ON = (ConnectionError, TimeoutError)
 
 
 _SYSTEM_PROMPT = """You are ARIA, a persistent, event-driven reasoning process.
@@ -101,7 +112,9 @@ class AnthropicReasoner:
 
         t0 = asyncio.get_event_loop().time()
         try:
-            message = await self._client.messages.create(
+            message = await retry_async(retry_on=_LLM_RETRY_ON)(
+                self._client.messages.create
+            )(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 thinking={"type": "adaptive"},
