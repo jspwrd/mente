@@ -12,6 +12,23 @@ Phase 1 ships two stubs:
 
 Phase 2: add AnthropicReasoner (Claude API, prompt caching), LocalReasoner
 (llama.cpp), and specialist reasoners (code, math, retrieval).
+
+Drop-in implementation example::
+
+    from dataclasses import dataclass
+    from mente.types import Intent, ReasonerTier, Response
+    from mente.tools import ToolRegistry
+    from mente.world_model import WorldModel
+
+    @dataclass
+    class EchoReasoner:
+        name: str = "echo"
+        tier: ReasonerTier = "fast"
+        est_cost_ms: float = 1.0
+
+        async def answer(self, intent: Intent, world: WorldModel, tools: ToolRegistry) -> Response:
+            return Response(text=intent.text, reasoner=self.name, tier=self.tier,
+                            confidence=0.5, cost_ms=self.est_cost_ms)
 """
 from __future__ import annotations
 
@@ -36,13 +53,56 @@ def set_self_model_hook(fn) -> None:  # type: ignore[no-untyped-def]
 
 
 class Reasoner(Protocol):
+    """A pluggable reasoner tier that produces a Response for an Intent.
+
+    Reasoners are dispatched by the Router based on predicted confidence and
+    cost (see ``mente.metacog.Metacog.estimate``). A Reasoner SHOULD:
+
+      * return a ``Response`` with ``confidence=0.0`` when it does not
+        recognize the intent — the Router then escalates to the next tier.
+      * never raise for a routine "couldn't answer"; surface that as low
+        confidence instead so the pipeline stays observable.
+      * be async-safe: mente calls ``answer`` from an event-loop task and may
+        run reasoners concurrently.
+
+    Attributes:
+        name: Short stable identifier used in logs, verdicts, and traces.
+            Convention: ``"<tier>.<impl>"`` (e.g. ``"fast.heuristic"``).
+        tier: One of ``"fast"``, ``"specialist"``, ``"deep"``. Controls
+            dispatch priority and escalation ordering.
+        est_cost_ms: Rough p50 latency estimate in milliseconds. The Router
+            uses this to trade off cost vs. confidence — not a hard bound.
+    """
+
     name: str
     tier: ReasonerTier
     est_cost_ms: float
 
     async def answer(
         self, intent: Intent, world: WorldModel, tools: ToolRegistry
-    ) -> Response: ...
+    ) -> Response:
+        """Produce a Response for the given Intent.
+
+        Args:
+            intent: The parsed user/system intent to handle. ``intent.text``
+                holds the natural-language payload.
+            world: Read-only snapshot of the current world model. Reasoners
+                may query it for context but should not mutate it directly.
+            tools: Typed tool registry. Reasoners may invoke tools during
+                reasoning (``await tools.invoke("clock.now")``).
+
+        Returns:
+            A ``Response`` carrying the answer text, the emitting reasoner's
+            ``name``/``tier``, a ``confidence`` in ``[0.0, 1.0]``, an actual
+            ``cost_ms``, and any ``tools_used``. Set ``confidence=0.0`` to
+            signal "don't use mine" so the Router escalates.
+
+        Raises:
+            Exception: Only for genuine infrastructure failures (network,
+                tool-registry misuse, etc.). Routine "I don't know" is
+                expressed via ``confidence=0.0``, not exceptions.
+        """
+        ...
 
 
 # --- Stubs ------------------------------------------------------------------
