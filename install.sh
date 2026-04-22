@@ -37,6 +37,34 @@ log()  { printf '\033[1;34m[mente]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[mente]\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31m[mente]\033[0m %s\n' "$*" >&2; exit 1; }
 
+die_with_python_hint() {
+  warn "$*"
+  warn ""
+  warn "mente needs Python 3.11+. Install it with:"
+  case "$(uname -s 2>/dev/null || echo '')" in
+    Darwin)
+      warn "  brew install python@3.13"
+      warn "  # or: https://www.python.org/downloads/"
+      ;;
+    Linux)
+      if command -v apt-get >/dev/null 2>&1; then
+        warn "  sudo apt-get install python3.13 python3.13-venv"
+      elif command -v dnf >/dev/null 2>&1; then
+        warn "  sudo dnf install python3.13"
+      elif command -v pacman >/dev/null 2>&1; then
+        warn "  sudo pacman -S python"
+      else
+        warn "  (install via your distro's package manager)"
+      fi
+      warn "  # or: curl https://pyenv.run | bash && pyenv install 3.13"
+      ;;
+    *)
+      warn "  https://www.python.org/downloads/"
+      ;;
+  esac
+  exit 1
+}
+
 show_help() {
   sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'
   exit 0
@@ -77,12 +105,14 @@ find_python() {
 }
 
 PY="$(find_python || true)"
-[ -n "$PY" ] || die "no python3 interpreter found. install Python 3.11+ and retry."
+if [ -z "$PY" ]; then
+  die_with_python_hint "no python3 interpreter found on PATH."
+fi
 
 ver="$("$PY" -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")')"
 maj="${ver%.*}"; min="${ver#*.}"
 if [ "$maj" -lt 3 ] || { [ "$maj" -eq 3 ] && [ "$min" -lt 11 ]; }; then
-  die "Python 3.11+ required; found $ver ($PY)."
+  die_with_python_hint "found Python $ver at $PY — mente needs 3.11 or newer."
 fi
 log "using Python $ver at $(command -v "$PY")"
 

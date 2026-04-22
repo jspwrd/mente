@@ -1,7 +1,7 @@
 [project]
 name = "mente"
-version = "0.1.0"
-description = "Seed of a persistent, heterogeneous, event-driven reasoning process."
+version = "0.2.0"
+description = "A minimalist cognitive-architecture framework for Python."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.11"

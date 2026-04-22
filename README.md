@@ -16,6 +16,8 @@ peers.
 
 Stdlib-only core. ~3,000 lines. No abstractions you can't read in an afternoon.
 
+![mente demo](docs/assets/demo.gif)
+
 ```bash
 ./mente
 ```

@@ -1,6 +1,6 @@
-# MENTE example gallery
+# mente example gallery
 
-Three self-contained scripts showcasing MENTE's distinctive capabilities.
+Three self-contained scripts showcasing mente's distinctive capabilities.
 Each script uses its own `.mente-example-*` state directory, so they do not
 stomp on each other or on the main REPL's `.mente/`.
 

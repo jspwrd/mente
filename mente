@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# MENTE launcher — one command, no install required.
+# mente launcher — one command, no install required.
 #
 # Usage: ./mente [run|demo|federated|peer|test|reset]
 #        ./mente --help
@@ -9,9 +9,53 @@ set -euo pipefail
 
 DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
+# Platform-specific hint for how to install Python 3.11+. Best effort; if we
+# can't match the host, we just print the generic advice.
+python_install_hint() {
+  local os
+  os="$(uname -s 2>/dev/null || echo '')"
+  case "$os" in
+    Darwin)
+      echo "  brew install python@3.13"
+      echo "  # or: pyenv install 3.13 && pyenv global 3.13"
+      echo "  # or: https://www.python.org/downloads/"
+      ;;
+    Linux)
+      if command -v apt-get >/dev/null 2>&1; then
+        echo "  sudo apt-get install python3.13 python3.13-venv"
+        echo "  # (your distro may need deadsnakes PPA for 3.13 — or install 3.12)"
+      elif command -v dnf >/dev/null 2>&1; then
+        echo "  sudo dnf install python3.13"
+      elif command -v pacman >/dev/null 2>&1; then
+        echo "  sudo pacman -S python"
+      elif command -v apk >/dev/null 2>&1; then
+        echo "  apk add python3"
+      else
+        echo "  # install python 3.11+ via your distro's package manager"
+        echo "  # or: curl https://pyenv.run | bash && pyenv install 3.13"
+      fi
+      ;;
+    *)
+      echo "  # install python 3.11+ for your platform"
+      echo "  # https://www.python.org/downloads/"
+      ;;
+  esac
+  echo ""
+  echo "  Or pin a specific interpreter for mente only:"
+  echo "    export MENTE_PYTHON=/path/to/python3.11"
+}
+
 # Prefer python3.11+ if available, otherwise fall back.
 PY="${MENTE_PYTHON:-}"
-if [ -z "$PY" ]; then
+if [ -n "$PY" ]; then
+  # If the user pinned MENTE_PYTHON, verify it's executable now — spares
+  # them a confusing "No such file or directory" later.
+  if ! command -v "$PY" >/dev/null 2>&1 && ! [ -x "$PY" ]; then
+    echo "error: MENTE_PYTHON=$PY is not executable." >&2
+    echo "unset MENTE_PYTHON to auto-detect, or point it at a real Python 3.11+ binary." >&2
+    exit 1
+  fi
+else
   for cand in python3.13 python3.12 python3.11 python3; do
     if command -v "$cand" >/dev/null 2>&1; then
       PY="$cand"; break
@@ -19,15 +63,26 @@ if [ -z "$PY" ]; then
   done
 fi
 if [ -z "$PY" ]; then
-  echo "error: no python3 interpreter found. install python 3.11+ and retry." >&2
+  cat >&2 <<EOF
+error: no python3 interpreter found on PATH.
+
+mente needs Python 3.11 or newer. Install it with:
+
+$(python_install_hint)
+EOF
   exit 1
 fi
 
-# Check version >= 3.11.
 ver=$("$PY" -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")')
 maj=${ver%.*}; min=${ver#*.}
 if [ "$maj" -lt 3 ] || { [ "$maj" -eq 3 ] && [ "$min" -lt 11 ]; }; then
-  echo "error: python 3.11+ required; found $ver ($PY)." >&2
+  cat >&2 <<EOF
+error: mente needs Python 3.11+, but found $ver at $PY.
+
+Install a newer Python with:
+
+$(python_install_hint)
+EOF
   exit 1
 fi
 

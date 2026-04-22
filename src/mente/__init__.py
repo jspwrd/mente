@@ -1,2 +1,2 @@
-"""MENTE — a persistent, heterogeneous, event-driven reasoning process."""
-__version__ = "0.1.0"
+"""mente — a minimalist cognitive-architecture framework for Python."""
+__version__ = "0.2.0"
