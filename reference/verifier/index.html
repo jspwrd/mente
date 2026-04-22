@@ -324,6 +324,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../../federation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Federation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../../faq/" class="md-tabs__link">
         
   
@@ -1110,6 +1129,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Federation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../faq/" class="md-nav__link">
         
   
@@ -1527,8 +1573,7 @@ NOT be mutated by the verifier.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/mente/verifiers/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-45">45</a></span>
-<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-46">46</a></span>
 <span class="normal"><a href="#__codelineno-0-47">47</a></span>
 <span class="normal"><a href="#__codelineno-0-48">48</a></span>
 <span class="normal"><a href="#__codelineno-0-49">49</a></span>
@@ -1549,29 +1594,30 @@ NOT be mutated by the verifier.</p>
 <span class="normal"><a href="#__codelineno-0-64">64</a></span>
 <span class="normal"><a href="#__codelineno-0-65">65</a></span>
 <span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">WorldModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span><span class="p">:</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Score a candidate response and decide whether to accept it.</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a>
-<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">        intent: The original ``Intent`` that produced ``response``.</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">            Verifiers use it to compare what was asked with what was</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">            answered.</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">        response: The candidate ``Response`` from a Reasoner. Already</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">            carries its own self-assessed confidence.</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">        world: Read-only snapshot of the current world model. MUST</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">            NOT be mutated by the verifier.</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">        A ``Verdict`` with ``accept`` (bool), ``score`` in</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">        ``[0.0, 1.0]``, and a list of short human-readable ``reasons``</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">        strings recorded in the trace.</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">    Raises:</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">        Exception: Only for genuine implementation bugs. Normal</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">            &quot;this response is bad&quot; outcomes are signalled with</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">            ``accept=False`` and reasons, not exceptions.</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="o">...</span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">WorldModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span><span class="p">:</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Score a candidate response and decide whether to accept it.</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">        intent: The original ``Intent`` that produced ``response``.</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">            Verifiers use it to compare what was asked with what was</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">            answered.</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">        response: The candidate ``Response`` from a Reasoner. Already</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">            carries its own self-assessed confidence.</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">        world: Read-only snapshot of the current world model. MUST</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">            NOT be mutated by the verifier.</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">        A ``Verdict`` with ``accept`` (bool), ``score`` in</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">        ``[0.0, 1.0]``, and a list of short human-readable ``reasons``</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">        strings recorded in the trace.</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">    Raises:</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">        Exception: Only for genuine implementation bugs. Normal</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">            &quot;this response is bad&quot; outcomes are signalled with</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">            ``accept=False`` and reasons, not exceptions.</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="o">...</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

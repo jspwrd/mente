@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://jspwrd.github.io/mente/reference/">
+        <link rel="canonical" href="https://jspwrd.github.io/mente/federation/">
       
       
-        <link rel="prev" href="../extending/">
+        <link rel="prev" href="../performance/">
       
       
-        <link rel="next" href="bus/">
+        <link rel="next" href="../faq/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Overview - mente</title>
+        <title>Federation - mente</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api-reference" class="md-skip">
+        <a href="#federation" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              Federation
             
           </span>
         </div>
@@ -281,13 +281,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../reference/" class="md-tabs__link">
           
   
   
@@ -322,9 +320,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../federation/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -602,31 +602,26 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -644,7 +639,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -659,19 +654,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
         
   
   
@@ -687,7 +673,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -700,7 +685,7 @@
   
   
     <li class="md-nav__item">
-      <a href="bus/" class="md-nav__link">
+      <a href="../reference/bus/" class="md-nav__link">
         
   
   
@@ -728,7 +713,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runtime/" class="md-nav__link">
+      <a href="../reference/runtime/" class="md-nav__link">
         
   
   
@@ -756,7 +741,7 @@
   
   
     <li class="md-nav__item">
-      <a href="router/" class="md-nav__link">
+      <a href="../reference/router/" class="md-nav__link">
         
   
   
@@ -784,7 +769,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reasoners/" class="md-nav__link">
+      <a href="../reference/reasoners/" class="md-nav__link">
         
   
   
@@ -812,7 +797,7 @@
   
   
     <li class="md-nav__item">
-      <a href="memory/" class="md-nav__link">
+      <a href="../reference/memory/" class="md-nav__link">
         
   
   
@@ -840,7 +825,7 @@
   
   
     <li class="md-nav__item">
-      <a href="embeddings/" class="md-nav__link">
+      <a href="../reference/embeddings/" class="md-nav__link">
         
   
   
@@ -868,7 +853,7 @@
   
   
     <li class="md-nav__item">
-      <a href="synthesis/" class="md-nav__link">
+      <a href="../reference/synthesis/" class="md-nav__link">
         
   
   
@@ -896,7 +881,7 @@
   
   
     <li class="md-nav__item">
-      <a href="verifier/" class="md-nav__link">
+      <a href="../reference/verifier/" class="md-nav__link">
         
   
   
@@ -924,7 +909,7 @@
   
   
     <li class="md-nav__item">
-      <a href="tools/" class="md-nav__link">
+      <a href="../reference/tools/" class="md-nav__link">
         
   
   
@@ -952,7 +937,7 @@
   
   
     <li class="md-nav__item">
-      <a href="discovery/" class="md-nav__link">
+      <a href="../reference/discovery/" class="md-nav__link">
         
   
   
@@ -980,7 +965,7 @@
   
   
     <li class="md-nav__item">
-      <a href="types/" class="md-nav__link">
+      <a href="../reference/types/" class="md-nav__link">
         
   
   
@@ -1039,10 +1024,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../federation/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Federation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1058,6 +1070,81 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-federation-is-good-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What federation is good for
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#minimal-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minimal setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concrete-walkthrough-tailscale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concrete walkthrough (Tailscale)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-breaks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What breaks
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1109,6 +1196,69 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-federation-is-good-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What federation is good for
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#minimal-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minimal setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concrete-walkthrough-tailscale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concrete walkthrough (Tailscale)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-breaks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What breaks
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1127,63 +1277,78 @@
   
 
 
-<h1 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h1>
-<p>Auto-generated from source docstrings via
-<a href="https://mkdocstrings.github.io/">mkdocstrings</a>.</p>
-<table>
-<thead>
-<tr>
-<th>Module</th>
-<th>What it does</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="bus/">bus</a></td>
-<td>Async pub/sub with wildcard topics.</td>
-</tr>
-<tr>
-<td><a href="runtime/">runtime</a></td>
-<td>The long-lived event loop that owns the stack.</td>
-</tr>
-<tr>
-<td><a href="router/">router</a></td>
-<td>Dispatches intents to reasoners by predicted cost/confidence.</td>
-</tr>
-<tr>
-<td><a href="reasoners/">reasoners</a></td>
-<td>Fast heuristic tier, deep stub, and reasoner protocol.</td>
-</tr>
-<tr>
-<td><a href="memory/">memory</a></td>
-<td>TTL working memory and SQLite episodic store.</td>
-</tr>
-<tr>
-<td><a href="embeddings/">embeddings</a></td>
-<td>Semantic memory with cosine search.</td>
-</tr>
-<tr>
-<td><a href="synthesis/">synthesis</a></td>
-<td>Program synthesis and the verified-primitive library.</td>
-</tr>
-<tr>
-<td><a href="verifier/">verifier</a></td>
-<td>Step-wise verdicts with structured reasons.</td>
-</tr>
-<tr>
-<td><a href="tools/">tools</a></td>
-<td>Typed tool registry.</td>
-</tr>
-<tr>
-<td><a href="discovery/">discovery</a></td>
-<td>Peer capability announcements and federated routing.</td>
-</tr>
-<tr>
-<td><a href="types/">types</a></td>
-<td>Shared dataclasses and type aliases.</td>
-</tr>
-</tbody>
-</table>
+<h1 id="federation">Federation<a class="headerlink" href="#federation" title="Permanent link">&para;</a></h1>
+<p>MENTE's bus can stretch across machines. This page is a practical guide to a
+two-host deployment: one laptop running the coordinator, one GPU box running a
+heavy reasoner, both on the same LAN (or a VPN like Tailscale / ZeroTier).</p>
+<h2 id="what-federation-is-good-for">What federation is good for<a class="headerlink" href="#what-federation-is-good-for" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Keep a deep, slow reasoner pinned to the box with the GPU while the laptop
+  hosts the coordinator, fast tiers, memory, and REPL.</li>
+<li>Share one specialist across several front-ends — a single math or code
+  specialist can serve every peer that discovers it.</li>
+<li>Colocate reasoners with the data they need (private docs, local LLM, etc.)
+  without shipping secrets off-box.</li>
+</ul>
+<p>Federation is not a replacement for a job queue. It is a pub/sub seam: every
+peer sees the announcement topic, and direct requests are routed by
+<code>target_node</code>.</p>
+<h2 id="minimal-setup">Minimal setup<a class="headerlink" href="#minimal-setup" title="Permanent link">&para;</a></h2>
+<p>You need:</p>
+<ul>
+<li>Both hosts reachable over TCP on one port (default <code>7722</code>).</li>
+<li><code>MENTE_BUS_SECRET</code> set to the <em>same</em> string on both sides. Any non-empty
+  value turns on the HMAC handshake; an empty/unset value disables auth
+  entirely — fine for localhost, not fine for a VPN.</li>
+<li>One host designated <code>hub</code> (binds the port). Every other host is a <code>spoke</code>
+  and connects to the hub.</li>
+</ul>
+<p>The env vars are read by <code>tcp_from_env</code> in <code>mente.transport</code>: <code>MENTE_BUS_ROLE</code>,
+<code>MENTE_BUS_HOST</code>, <code>MENTE_BUS_PORT</code>, <code>MENTE_BUS_SECRET</code>. Nothing else is new.</p>
+<h2 id="concrete-walkthrough-tailscale">Concrete walkthrough (Tailscale)<a class="headerlink" href="#concrete-walkthrough-tailscale" title="Permanent link">&para;</a></h2>
+<p>Install Tailscale on both hosts and bring it up. On the hub:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>tailscale<span class="w"> </span>ip<span class="w"> </span>-4<span class="w">        </span><span class="c1"># e.g. 100.88.12.34</span>
+</code></pre></div>
+<p>Start the hub:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">MENTE_BUS_SECRET</span><span class="o">=</span><span class="k">$(</span>head<span class="w"> </span>-c32<span class="w"> </span>/dev/urandom<span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="k">)</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nv">MENTE_BUS_ROLE</span><span class="o">=</span>hub<span class="w"> </span><span class="nv">MENTE_BUS_PORT</span><span class="o">=</span><span class="m">7722</span><span class="w"> </span>mente<span class="w"> </span>run
+</code></pre></div>
+<p>Copy the secret to the spoke's shell (paste into <code>MENTE_BUS_SECRET</code>) and
+start the spoke:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">MENTE_BUS_ROLE</span><span class="o">=</span>spoke<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nv">MENTE_BUS_HOST</span><span class="o">=</span><span class="m">100</span>.88.12.34<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nv">MENTE_BUS_PORT</span><span class="o">=</span><span class="m">7722</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nv">MENTE_BUS_SECRET</span><span class="o">=</span>&lt;same-secret&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>mente<span class="w"> </span>peer
+</code></pre></div>
+<p>Within one announcement interval (2s) each side's <code>Directory</code> contains the
+other's reasoners, and the coordinator's router will dispatch matching intents
+over the bus.</p>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Firewall.</strong> On Ubuntu: <code>sudo ufw allow 7722/tcp</code>. Without this the spoke
+  hangs on <code>open_connection</code>.</li>
+<li><strong>Wrong secret.</strong> The hub logs <code>transport.auth.reject reason=bad-hmac</code> and
+  drops the spoke. Check both shells — secrets with embedded <code>$</code> in a script
+  are the usual culprit.</li>
+<li><strong>Clock skew.</strong> The handshake rejects timestamps more than <code>±60s</code> out of
+  date (<code>_AUTH_MAX_SKEW_S</code>). Run <code>chronyc tracking</code> or equivalent if the two
+  hosts disagree.</li>
+<li><strong>Stale peer.</strong> A spoke that crashed won't vanish from the hub's directory
+  immediately; the periodic announcement is the liveness signal. Spokes that
+  never re-announce are evicted by the background sweep.</li>
+</ul>
+<h2 id="what-breaks">What breaks<a class="headerlink" href="#what-breaks" title="Permanent link">&para;</a></h2>
+<ul>
+<li>One peer disappearing — the remaining nodes keep serving their own
+  reasoners; in-flight remote requests to the dead peer time out and return a
+  fallback response.</li>
+<li>Wrong secret on either side — connection refused at handshake time, no
+  events cross.</li>
+<li>Clock drift past the skew window — same as wrong secret.</li>
+<li>VPN MTU too small — JSON lines longer than the path MTU can wedge. If
+  <code>publish_remote</code> stalls, drop Tailscale MTU to 1280 on both ends.</li>
+</ul>
 
 
 
