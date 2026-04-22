@@ -51,6 +51,8 @@ nav:
       - tools: reference/tools.md
       - discovery: reference/discovery.md
       - types: reference/types.md
+  - Performance: performance.md
+  - FAQ: faq.md
 
 markdown_extensions:
   - admonition

@@ -9,6 +9,21 @@ code, and confirm that its state survives a restart.
 - A checkout of the repository (no dependencies required — MENTE's Phase 1
   runs on the stdlib)
 
+## Run without installing
+
+The fastest path from zero to a working REPL is cloning and launching:
+
+```bash
+git clone https://github.com/jspwrd/mente
+cd mente
+./mente
+```
+
+The `./mente` launcher shell-script resolves a Python 3.11+ interpreter
+automatically (checking `MENTE_PYTHON`, then `python3.13`, `python3.12`,
+`python3.11`, then `python3`) and runs the CLI straight out of the checkout.
+No venv, no `pip install`, no dependencies — the core is stdlib-only.
+
 ## Install
 
 Two ways to get started, from least to most permanent:
@@ -17,7 +32,7 @@ Two ways to get started, from least to most permanent:
 # Option A — no install, use the launcher in the checkout
 ./mente --help
 
-# Option B — install from PyPI (coming with the first release)
+# Option B — install from PyPI
 pip install mente
 mente --help
 ```
