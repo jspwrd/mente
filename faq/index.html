@@ -1167,6 +1167,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-do-i-upgrade-my-mente-state-after-a-mente-version-bump" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How do I upgrade my .mente/ state after a mente version bump?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#whats-the-license" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1267,6 +1278,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-do-i-upgrade-my-mente-state-after-a-mente-version-bump" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How do I upgrade my .mente/ state after a mente version bump?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#whats-the-license" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1348,6 +1370,12 @@ library, a CPU-heavy helper), wrap it with <code>asyncio.to_thread</code>:</p>
 <p>The opposite direction — calling async MENTE code from a sync caller — is
 what <code>asyncio.run(main())</code> handles in the README's ten-line example. Don't
 call <code>asyncio.run</code> from inside a running loop; reuse the loop you're in.</p>
+<h2 id="how-do-i-upgrade-my-mente-state-after-a-mente-version-bump">How do I upgrade my .mente/ state after a mente version bump?<a class="headerlink" href="#how-do-i-upgrade-my-mente-state-after-a-mente-version-bump" title="Permanent link">&para;</a></h2>
+<p>Run: <code>mente migrate [--data-dir PATH]</code></p>
+<p>The migrator reads every JSON file under your data dir, converts it to the
+current schema version, and writes it back atomically. Use <code>--dry-run</code> to
+preview. Safe to run against a newer-version directory — already-current
+files are untouched.</p>
 <h2 id="whats-the-license">What's the license?<a class="headerlink" href="#whats-the-license" title="Permanent link">&para;</a></h2>
 <p>MIT. See <a href="https://github.com/jspwrd/mente/blob/main/LICENSE">LICENSE</a> for
 the full text. Use it, fork it, ship it — attribution appreciated, not
