@@ -20,6 +20,7 @@ from typing import Any
 from .bus import EventBus
 from .logging import get_logger
 from .reasoners import Reasoner
+from .resilience import CircuitBreaker, CircuitOpenError
 from .tools import ToolRegistry
 from .types import Event, Intent, ReasonerTier, Response
 from .world_model import WorldModel
@@ -74,9 +75,15 @@ class Announcer:
 
 @dataclass
 class Directory:
-    """Remote capability directory. Updated from `meta.capability.announce`."""
+    """Remote capability directory. Updated from `meta.capability.announce`.
+
+    Peers are evicted after ``stale_after_s`` seconds without a fresh
+    announcement. Eviction runs on every ``specialists()`` call and can also
+    be driven proactively via the background ``run()`` sweep.
+    """
     bus: EventBus
     self_node_id: str
+    stale_after_s: float = 6.0
     peers: dict[tuple[str, str], PeerCapability] = field(default_factory=dict)
 
     def wire(self) -> None:
@@ -101,8 +108,38 @@ class Directory:
             )
         self.bus.subscribe("meta.capability.announce", _on_announce, name="directory.ingest")
 
+    def _evict_stale(self) -> None:
+        """Drop peers whose ``last_seen`` is older than ``stale_after_s``.
+
+        Silent when nothing is stale — only logs when at least one peer is
+        actually evicted, so healthy steady-state sweeps don't spam the log.
+        """
+        cutoff = time.time() - self.stale_after_s
+        stale = [k for k, p in self.peers.items() if p.last_seen < cutoff]
+        for key in stale:
+            peer = self.peers.pop(key)
+            _log.info(
+                "discovery.peer.evict",
+                extra={
+                    "node_id": peer.node_id,
+                    "reasoner": peer.reasoner,
+                    "last_seen": peer.last_seen,
+                    "stale_after_s": self.stale_after_s,
+                },
+            )
+
     def specialists(self) -> list[PeerCapability]:
+        self._evict_stale()
         return [p for p in self.peers.values() if p.tier == "specialist"]
+
+    async def run(self, stop: asyncio.Event, interval_s: float = 2.0) -> None:
+        """Proactive stale-peer sweep. Mirrors ``Announcer.run`` cadence."""
+        while not stop.is_set():
+            self._evict_stale()
+            try:
+                await asyncio.wait_for(stop.wait(), timeout=interval_s)
+            except TimeoutError:
+                continue
 
 
 @dataclass
@@ -128,6 +165,8 @@ class RemoteReasoner:
     node_id: str  # our node_id (for the origin field)
     target: PeerCapability
     timeout_s: float = 30.0
+    breaker_failure_threshold: int = 3
+    breaker_recovery_s: float = 30.0
     _pending: dict[str, _PendingFuture] = field(default_factory=dict)
     _wired: bool = False
     # Computed from ``target`` in ``__post_init__`` — storing them as real
@@ -136,12 +175,17 @@ class RemoteReasoner:
     name: str = field(init=False)
     tier: ReasonerTier = field(init=False)
     est_cost_ms: float = field(init=False)
+    _breaker: CircuitBreaker = field(init=False)
 
     def __post_init__(self) -> None:
         self.name = f"remote:{self.target.node_id}:{self.target.reasoner}"
         self.tier = self.target.tier
         # +20ms accounts for transport overhead vs the peer's local cost.
         self.est_cost_ms = self.target.est_cost_ms + 20.0
+        self._breaker = CircuitBreaker(
+            failure_threshold=self.breaker_failure_threshold,
+            recovery_s=self.breaker_recovery_s,
+        )
 
     def _wire(self) -> None:
         if self._wired:
@@ -175,11 +219,12 @@ class RemoteReasoner:
                 extra={"dropped": len(stale), "target": self.target.node_id},
             )
 
-    async def answer(
-        self, intent: Intent, world: WorldModel, tools: ToolRegistry
-    ) -> Response:
-        self._wire()
-        self._prune_stale()
+    async def _dispatch(self, intent: Intent) -> dict[str, Any]:
+        """Publish one remote request and await its matching response.
+
+        Raises ``TimeoutError`` if no response arrives within ``timeout_s`` so
+        the surrounding ``CircuitBreaker`` can count the failure.
+        """
         request_id = uuid.uuid4().hex
         fut: asyncio.Future[dict[str, Any]] = asyncio.get_running_loop().create_future()
         self._pending[request_id] = _PendingFuture(future=fut, created_at=time.monotonic())
@@ -196,18 +241,32 @@ class RemoteReasoner:
             )
         )
         try:
-            try:
-                data = await asyncio.wait_for(fut, timeout=self.timeout_s)
-            except TimeoutError:
-                return Response(
-                    text=f"[timeout from {self.target.node_id}]",
-                    reasoner=self.name, tier=self.tier,
-                    confidence=0.0, cost_ms=self.timeout_s * 1000,
-                )
+            return await asyncio.wait_for(fut, timeout=self.timeout_s)
         finally:
             # Cover every exit (resolved, timeout, cancel, exception) so a
             # leaked future can never accumulate here.
             self._pending.pop(request_id, None)
+
+    async def answer(
+        self, intent: Intent, world: WorldModel, tools: ToolRegistry
+    ) -> Response:
+        self._wire()
+        self._prune_stale()
+        try:
+            data = await self._breaker.call(lambda: self._dispatch(intent))
+        except CircuitOpenError:
+            # Breaker tripped — fail fast instead of waiting another timeout.
+            return Response(
+                text="[peer unavailable]",
+                reasoner=self.name, tier=self.tier,
+                confidence=0.0, cost_ms=0.0,
+            )
+        except TimeoutError:
+            return Response(
+                text=f"[timeout from {self.target.node_id}]",
+                reasoner=self.name, tier=self.tier,
+                confidence=0.0, cost_ms=self.timeout_s * 1000,
+            )
         return Response(
             text=data.get("text", ""),
             reasoner=self.name, tier=self.tier,

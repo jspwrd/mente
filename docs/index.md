@@ -85,3 +85,4 @@ mente> what do you remember?
   customized agent.
 - [Reference](reference/index.md) — every module, auto-generated from
   docstrings.
+- [Federation](federation.md) — two-host LAN deployment, auth, troubleshooting.

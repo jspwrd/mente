@@ -9,6 +9,18 @@ The synthesis step itself is pluggable: see ``mente.synthesizers`` for the
 subprocess + AST-gate machinery below is the trust boundary — every
 synthesized function, regardless of author, runs through it.
 
+LibraryStore on-disk schema
+---------------------------
+The serialized form is an envelope::
+
+    {"_schema": <int>, "primitives": {<name>: {<field>: <value>, ...}, ...}}
+
+``_SCHEMA_VERSION`` is the version ``save()`` writes today. ``__post_init__``
+reads the envelope, dispatches through ``_MIGRATIONS`` to bring older payloads
+forward, and starts empty on unknown future versions. Per-primitive payloads
+are filtered to the dataclass's declared fields before construction so a
+future schema that adds columns doesn't crash a downgraded client.
+
 Threat model
 ------------
 The sandbox is a defence-in-depth wrapper around synthesized (template- or
@@ -48,12 +60,14 @@ from __future__ import annotations
 import ast
 import asyncio
 import contextlib
+import dataclasses
 import hashlib
 import inspect
 import json
 import logging
 import subprocess
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -214,6 +228,36 @@ class Primitive:
     invocations: int = 0
 
 
+_SCHEMA_VERSION: int = 1
+
+
+def _migrate_library_v0_to_v1(raw: dict[str, Any]) -> dict[str, Any]:
+    """v0 was a bare ``{name: payload}`` dict; wrap it in the v1 envelope."""
+    return {"_schema": 1, "primitives": dict(raw)}
+
+
+_MIGRATIONS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {
+    0: _migrate_library_v0_to_v1,
+}
+
+
+def _migrate_library(data: dict[str, Any], *, from_version: int) -> dict[str, Any]:
+    """Run ``data`` through the migration chain up to ``_SCHEMA_VERSION``."""
+    current = data
+    version = from_version
+    while version < _SCHEMA_VERSION:
+        step = _MIGRATIONS.get(version)
+        if step is None:
+            _log.warning(
+                "no library migration from v%d to v%d; starting empty",
+                version, version + 1,
+            )
+            return {"_schema": _SCHEMA_VERSION, "primitives": {}}
+        current = step(current)
+        version += 1
+    return current
+
+
 @dataclass
 class LibraryStore:
     """Persistent library of verified primitives."""
@@ -232,20 +276,61 @@ class LibraryStore:
         if not isinstance(data, dict):
             _log.warning("library file %s has unexpected shape; starting empty", self.path)
             return
-        for name, payload in data.items():
+
+        version = data.get("_schema")
+        if version is None:
+            # Pre-versioning format: bare {name: payload} dict.
+            _log.warning(
+                "library file %s is pre-versioning (v0); migrating to v%d",
+                self.path, _SCHEMA_VERSION,
+            )
+            data = _migrate_library(data, from_version=0)
+        elif not isinstance(version, int):
+            _log.warning(
+                "library file %s has non-integer _schema %r; starting empty",
+                self.path, version,
+            )
+            return
+        elif version < _SCHEMA_VERSION:
+            _log.info(
+                "library file %s is schema v%d; migrating to v%d",
+                self.path, version, _SCHEMA_VERSION,
+            )
+            data = _migrate_library(data, from_version=version)
+        elif version > _SCHEMA_VERSION:
+            _log.warning(
+                "library file %s is schema v%d (newer than supported v%d); starting empty",
+                self.path, version, _SCHEMA_VERSION,
+            )
+            return
+
+        primitives = data.get("primitives")
+        if not isinstance(primitives, dict):
+            _log.warning("library file %s envelope missing 'primitives' dict; starting empty", self.path)
+            return
+
+        known_fields = {f.name for f in dataclasses.fields(Primitive)}
+        for name, payload in primitives.items():
             if not isinstance(payload, dict):
                 _log.warning("library entry %r is not an object; skipping", name)
                 continue
+            # Drop unknown fields so future schemas with extra columns don't
+            # crash older clients; missing required fields still raise below.
+            filtered = {k: v for k, v in payload.items() if k in known_fields}
             try:
-                self._primitives[name] = Primitive(**payload)
+                self._primitives[name] = Primitive(**filtered)
             except TypeError as e:
-                # Missing/extra fields — log and skip rather than brick the runtime.
+                # Missing required fields — log and skip rather than brick the runtime.
                 _log.warning("library entry %r is malformed; skipping (%s)", name, e)
 
     def save(self) -> None:
         # Atomic write: a crash mid-save leaves either the old file or the
         # new file, never a half-written one. Matches LatentState.checkpoint.
-        payload = json.dumps({k: v.__dict__ for k, v in self._primitives.items()}, indent=2)
+        envelope = {
+            "_schema": _SCHEMA_VERSION,
+            "primitives": {k: v.__dict__ for k, v in self._primitives.items()},
+        }
+        payload = json.dumps(envelope, indent=2)
         tmp = self.path.with_suffix(self.path.suffix + ".tmp")
         tmp.write_text(payload)
         tmp.replace(self.path)

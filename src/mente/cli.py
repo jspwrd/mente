@@ -503,6 +503,82 @@ def _reset() -> None:
 
 
 # ---------------------------------------------------------------------------
+# train-verifier
+# ---------------------------------------------------------------------------
+
+_VERIFIER_ML_HINT = (
+    "mente[verifier-ml] not installed. Run: pip install 'mente[verifier-ml]'"
+)
+
+
+def _train_verifier(data_dir: str, output: str, min_samples: int) -> int:
+    """Train the baseline verifier from episodic traces and persist it.
+
+    Defensive imports: ``mente.verifiers.baseline`` (unit 5) and ``joblib``
+    are optional. If either is missing, print the install hint to stderr
+    and exit 1 rather than crash with ``ImportError``.
+    """
+    log = get_logger("cli")
+
+    try:
+        from .verifiers import baseline as baseline_mod  # type: ignore[attr-defined]
+    except ImportError:
+        print(_VERIFIER_ML_HINT, file=sys.stderr)
+        return 1
+
+    try:
+        import joblib
+    except ImportError:
+        print(_VERIFIER_ML_HINT, file=sys.stderr)
+        return 1
+
+    from .memory import SlowMemory
+
+    db_path = _data_root(data_dir) / "episodic.sqlite"
+    if not db_path.exists():
+        print(f"no episodic log at {db_path}; run mente first to collect traces",
+              file=sys.stderr)
+        return 1
+
+    slow_mem = SlowMemory(db_path=db_path)
+    try:
+        result = baseline_mod.train_baseline(slow_mem, min_samples=min_samples)
+    except ValueError as exc:
+        print(f"train-verifier: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        slow_mem.close()
+
+    # ``train_baseline`` is expected to return an object with (at minimum) a
+    # ``scorer`` callable, a ``coefficients`` mapping, a ``n_samples`` count,
+    # and a ``train_accuracy`` float. Treat those as optional for robustness.
+    scorer = getattr(result, "scorer", result)
+    n_samples = getattr(result, "n_samples", None)
+    coefficients = getattr(result, "coefficients", None)
+    train_acc = getattr(result, "train_accuracy", None)
+
+    out_path = Path(output)
+    joblib.dump(scorer, out_path)
+
+    log.info("trained verifier", extra={
+        "output": str(out_path),
+        "n_samples": n_samples,
+        "train_accuracy": train_acc,
+    })
+
+    print(f"trained verifier -> {out_path}")
+    if n_samples is not None:
+        print(f"  training rows: {n_samples}")
+    if train_acc is not None:
+        print(f"  training accuracy: {train_acc:.3f}")
+    if coefficients:
+        print("  coefficients:")
+        for name, coef in coefficients.items():
+            print(f"    {name:24s} {coef:+.4f}")
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # dispatch
 # ---------------------------------------------------------------------------
 
@@ -566,6 +642,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="report what would change without touching any files",
     )
 
+    p_tv = sub.add_parser(
+        "train-verifier",
+        help="train the baseline trained verifier from episodic traces",
+    )
+    p_tv.add_argument("--data-dir", default=".mente", help="state directory")
+    p_tv.add_argument("--output", default="verifier.joblib",
+                      help="where to write the trained scorer")
+    p_tv.add_argument("--min-samples", type=int, default=50,
+                      help="minimum training rows required")
+
     return p
 
 
@@ -594,6 +680,8 @@ def main(argv: list[str] | None = None) -> int:
         _reset()
     elif cmd == "migrate":
         return _migrate(args.data_dir, dry_run=args.dry_run)
+    elif cmd == "train-verifier":
+        return _train_verifier(args.data_dir, args.output, args.min_samples)
     else:
         build_parser().print_help()
         return 2
