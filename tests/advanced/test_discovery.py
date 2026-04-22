@@ -166,6 +166,91 @@ async def test_remote_reasoner_timeout_returns_fallback() -> None:
 
 
 @pytest.mark.asyncio
+async def test_remote_reasoner_timeout_clears_pending() -> None:
+    """After a timeout, the request must not remain in `_pending` — the
+    finally block is the backstop against long-running leaks."""
+    bus = EventBus()
+    await bus.start()
+    try:
+        target = PeerCapability(
+            node_id="node.gone", reasoner="echo.specialist",
+            tier="specialist", est_cost_ms=1.0,
+        )
+        remote = RemoteReasoner(bus=bus, node_id="node.self", target=target, timeout_s=0.02)
+        world = WorldModel(bus=bus)
+        tools = ToolRegistry()
+
+        await remote.answer(Intent(text="first"), world, tools)
+        await remote.answer(Intent(text="second"), world, tools)
+        assert remote._pending == {}
+    finally:
+        await bus.close()
+
+
+@pytest.mark.asyncio
+async def test_remote_reasoner_resolves_clears_pending() -> None:
+    """Successful resolution must also clean up `_pending`."""
+    bus = EventBus()
+    await bus.start()
+    try:
+        target = PeerCapability(
+            node_id="node.peer", reasoner="echo.specialist",
+            tier="specialist", est_cost_ms=1.0,
+        )
+        remote = RemoteReasoner(bus=bus, node_id="node.self", target=target, timeout_s=5.0)
+
+        async def on_request(e: Event) -> None:
+            await bus.publish(
+                Event(
+                    topic="remote.reason.response",
+                    origin="node.peer",
+                    payload={
+                        "request_id": e.payload["request_id"],
+                        "text": "ok",
+                        "confidence": 0.8,
+                        "cost_ms": 1.0,
+                    },
+                )
+            )
+
+        bus.subscribe("remote.reason.request", on_request, name="test.peer.responder")
+        await remote.answer(Intent(text="hi"), world=WorldModel(bus=bus), tools=ToolRegistry())
+        assert remote._pending == {}
+    finally:
+        await bus.close()
+
+
+@pytest.mark.asyncio
+async def test_remote_reasoner_prune_stale_drops_abandoned_futures() -> None:
+    """Synthetic stale entry older than 2*timeout_s is pruned on next answer."""
+    bus = EventBus()
+    await bus.start()
+    try:
+        target = PeerCapability(
+            node_id="node.peer", reasoner="echo.specialist",
+            tier="specialist", est_cost_ms=1.0,
+        )
+        remote = RemoteReasoner(bus=bus, node_id="node.self", target=target, timeout_s=0.02)
+
+        from mente.discovery import _PendingFuture
+        stale_fut: asyncio.Future[dict[str, object]] = asyncio.get_event_loop().create_future()
+        remote._wire()
+        remote._pending["stale-id"] = _PendingFuture(
+            future=stale_fut,
+            created_at=0.0,  # ancient: monotonic clock starts near 0 but grows; cutoff is now - 2*timeout
+        )
+        assert "stale-id" in remote._pending
+
+        # Run an answer — it will time out, and the prune step (on entry)
+        # should evict the synthetic stale entry first.
+        await remote.answer(Intent(text="trigger"), WorldModel(bus=bus), ToolRegistry())
+        assert "stale-id" not in remote._pending
+        assert stale_fut.cancelled()
+    finally:
+        await bus.close()
+
+
+@pytest.mark.asyncio
 async def test_remote_request_handler_dispatches_and_publishes_response() -> None:
     """RemoteRequestHandler receives remote.reason.request, delegates to a
     matching local reasoner, and publishes remote.reason.response."""
