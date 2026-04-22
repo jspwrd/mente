@@ -176,6 +176,71 @@ async def test_tcp_event_fields_preserved_across_wire():
 
 
 @pytest.mark.asyncio
+async def test_tcp_auth_handshake_round_trip_with_matching_secret():
+    """Matching secret on hub + spoke: events flow end-to-end."""
+    port = find_unused_port()
+    hub = TCPTransport(node_id="hub", port=port, role="hub", auth_secret="s3cr3t")
+    spoke = TCPTransport(node_id="spoke", port=port, role="spoke", auth_secret="s3cr3t")
+
+    hub_rx = EventCapture()
+    await hub.start(hub_rx.handler)
+    try:
+        await spoke.start(_noop)
+        try:
+            await spoke.publish_remote(Event(topic="auth.ok", payload={}, origin="spoke"))
+            await asyncio.sleep(0.1)
+            assert "auth.ok" in hub_rx.topics()
+        finally:
+            await spoke.close()
+    finally:
+        await hub.close()
+
+
+@pytest.mark.asyncio
+async def test_tcp_auth_handshake_rejects_wrong_secret():
+    """Spoke with the wrong secret must not be able to deliver events."""
+    port = find_unused_port()
+    hub = TCPTransport(node_id="hub", port=port, role="hub", auth_secret="correct")
+    spoke = TCPTransport(node_id="spoke", port=port, role="spoke", auth_secret="WRONG")
+
+    hub_rx = EventCapture()
+    await hub.start(hub_rx.handler)
+    try:
+        # Connecting succeeds at the TCP layer; the hub drops the stream after
+        # the handshake fails, so the subsequent publish never lands.
+        await spoke.start(_noop)
+        try:
+            await spoke.publish_remote(Event(topic="auth.bad", payload={}, origin="spoke"))
+            await asyncio.sleep(0.15)
+            assert "auth.bad" not in hub_rx.topics()
+        finally:
+            await spoke.close()
+    finally:
+        await hub.close()
+
+
+@pytest.mark.asyncio
+async def test_tcp_auth_handshake_rejects_missing_secret():
+    """Hub requires a secret; spoke with no secret is rejected."""
+    port = find_unused_port()
+    hub = TCPTransport(node_id="hub", port=port, role="hub", auth_secret="needed")
+    spoke = TCPTransport(node_id="spoke", port=port, role="spoke")  # no secret
+
+    hub_rx = EventCapture()
+    await hub.start(hub_rx.handler)
+    try:
+        await spoke.start(_noop)
+        try:
+            await spoke.publish_remote(Event(topic="auth.none", payload={}, origin="spoke"))
+            await asyncio.sleep(0.15)
+            assert "auth.none" not in hub_rx.topics()
+        finally:
+            await spoke.close()
+    finally:
+        await hub.close()
+
+
+@pytest.mark.asyncio
 async def test_tcp_hub_rebroadcast_excludes_sender():
     """Two spokes; one sends; only the other should receive (sender is excluded)."""
     port = find_unused_port()

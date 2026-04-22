@@ -12,15 +12,19 @@ peers, trained routing from verifier feedback.
 from __future__ import annotations
 
 import asyncio
+import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
 from .bus import EventBus
+from .logging import get_logger
 from .reasoners import Reasoner
 from .tools import ToolRegistry
 from .types import Event, Intent, ReasonerTier, Response
 from .world_model import WorldModel
+
+_log = get_logger("discovery")
 
 
 @dataclass
@@ -78,12 +82,18 @@ class Directory:
     def wire(self) -> None:
         async def _on_announce(event: Event) -> None:
             p = event.payload
-            if p.get("node_id") == self.self_node_id:
+            try:
+                peer_node = p["node_id"]
+                reasoner_name = p["reasoner"]
+            except KeyError:
+                # Malformed announcement; ignore quietly.
                 return
-            key = (p["node_id"], p["reasoner"])
+            if peer_node == self.self_node_id:
+                return
+            key = (peer_node, reasoner_name)
             self.peers[key] = PeerCapability(
-                node_id=p["node_id"],
-                reasoner=p["reasoner"],
+                node_id=peer_node,
+                reasoner=reasoner_name,
                 tier=p.get("tier", "specialist"),
                 est_cost_ms=p.get("est_cost_ms", 1000.0),
                 specialization=p.get("specialization", ""),
@@ -96,17 +106,29 @@ class Directory:
 
 
 @dataclass
+class _PendingFuture:
+    """Tracks one in-flight remote request so `_prune_stale` can evict it."""
+    future: asyncio.Future[dict[str, Any]]
+    created_at: float
+
+
+@dataclass
 class RemoteReasoner:
     """Reasoner proxy that dispatches to a remote peer over the bus.
 
     `answer()` publishes a `remote.reason.request` with a unique request_id
     and awaits a `remote.reason.response` matching that id.
+
+    Backpressure: `_pending` is a request-id keyed registry of futures; every
+    exit path of `answer()` pops its own id, and `_prune_stale()` drops any
+    futures older than `2 * timeout_s` on each call — so a peer that never
+    responds cannot leak memory.
     """
     bus: EventBus
     node_id: str  # our node_id (for the origin field)
     target: PeerCapability
     timeout_s: float = 30.0
-    _pending: dict[str, asyncio.Future[dict[str, Any]]] = field(default_factory=dict)
+    _pending: dict[str, _PendingFuture] = field(default_factory=dict)
     _wired: bool = False
 
     @property
@@ -126,19 +148,41 @@ class RemoteReasoner:
             return
         async def _on_response(event: Event) -> None:
             rid = event.payload.get("request_id")
-            fut = self._pending.pop(rid, None)
-            if fut and not fut.done():
-                fut.set_result(event.payload)
+            if not isinstance(rid, str):
+                return
+            entry = self._pending.pop(rid, None)
+            if entry is not None and not entry.future.done():
+                entry.future.set_result(event.payload)
         self.bus.subscribe("remote.reason.response", _on_response, name=f"remote.in.{self.target.node_id}")
         self._wired = True
+
+    def _prune_stale(self) -> None:
+        """Drop any pending futures older than `2 * timeout_s`.
+
+        Defensive backstop for the rare case where `answer()`'s finally
+        clause never runs (e.g. cancellation at an unusual moment) — keeps
+        `_pending` bounded over long sessions.
+        """
+        cutoff = time.monotonic() - (2.0 * self.timeout_s)
+        stale = [rid for rid, entry in self._pending.items() if entry.created_at < cutoff]
+        for rid in stale:
+            entry = self._pending.pop(rid, None)
+            if entry is not None and not entry.future.done():
+                entry.future.cancel()
+        if stale:
+            _log.info(
+                "discovery.prune_stale",
+                extra={"dropped": len(stale), "target": self.target.node_id},
+            )
 
     async def answer(
         self, intent: Intent, world: WorldModel, tools: ToolRegistry
     ) -> Response:
         self._wire()
+        self._prune_stale()
         request_id = uuid.uuid4().hex
         fut: asyncio.Future[dict[str, Any]] = asyncio.get_event_loop().create_future()
-        self._pending[request_id] = fut
+        self._pending[request_id] = _PendingFuture(future=fut, created_at=time.monotonic())
         await self.bus.publish(
             Event(
                 topic="remote.reason.request",
@@ -152,14 +196,18 @@ class RemoteReasoner:
             )
         )
         try:
-            data = await asyncio.wait_for(fut, timeout=self.timeout_s)
-        except TimeoutError:
+            try:
+                data = await asyncio.wait_for(fut, timeout=self.timeout_s)
+            except TimeoutError:
+                return Response(
+                    text=f"[timeout from {self.target.node_id}]",
+                    reasoner=self.name, tier=self.tier,
+                    confidence=0.0, cost_ms=self.timeout_s * 1000,
+                )
+        finally:
+            # Cover every exit (resolved, timeout, cancel, exception) so a
+            # leaked future can never accumulate here.
             self._pending.pop(request_id, None)
-            return Response(
-                text=f"[timeout from {self.target.node_id}]",
-                reasoner=self.name, tier=self.tier,
-                confidence=0.0, cost_ms=self.timeout_s * 1000,
-            )
         return Response(
             text=data.get("text", ""),
             reasoner=self.name, tier=self.tier,
