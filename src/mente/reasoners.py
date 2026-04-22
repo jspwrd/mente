@@ -244,14 +244,32 @@ class FastHeuristicReasoner:
         )
 
 
+_DEEP_INSTALL_HINT = (
+    "(deep-sim fallback; install `mente[llm-ollama]` or set "
+    "`ANTHROPIC_API_KEY` for a real LLM)"
+)
+
+# "what do you know about X" — we use this to decide whether to reach for
+# memory.search. Mirrors the shape FastHeuristicReasoner matches, but we only
+# get here when Fast declined (or the router jumped straight to deep).
+_DEEP_KNOW_ABOUT = re.compile(r"\bwhat do you know about (.+)$", re.I)
+_DEEP_TIME_HINT = re.compile(r"\b(when|what time|current time|today|now)\b", re.I)
+
+
 @dataclass
 class DeepSimulatedReasoner:
-    """Stand-in for a heavyweight LLM. Artificial latency; pretends to reason.
+    """Stand-in for a heavyweight LLM; composes a useful offline fallback.
 
     Replace with ``AnthropicReasoner`` or ``LocalReasoner`` in Phase 2
     without touching anything that depends on the Reasoner protocol. Useful
     for tests and demos that need a deep-tier response shape without
     hitting a real model.
+
+    The fallback is intentionally more than a canned echo: it surfaces
+    matching world-model entities, runs ``memory.search`` for
+    "what do you know about X" shapes, and invokes relevant tools (e.g.
+    ``clock.now`` on temporal intents). Every reply ends with an install
+    hint so users know they're hitting the stub, not a real LLM.
 
     Attributes:
         name: Reasoner identifier used by the router.
@@ -266,40 +284,123 @@ class DeepSimulatedReasoner:
     async def answer(
         self, intent: Intent, world: WorldModel, tools: ToolRegistry
     ) -> Response:
-        """Sleep for a jittered fraction of ``est_cost_ms`` then reply.
+        """Compose a thoughtful offline reply from world model + tools.
 
-        The reply echoes the intent plus a snapshot of every entity in the
-        world model, so callers can see that context propagated through.
-        Confidence is middling (``0.55``) — enough to pass a lax verifier,
-        low enough to be overwritten by a real LLM once wired.
+        The fallback assembles up to three evidence fragments, in priority
+        order: matching world-model entities, a ``memory.search`` top hit
+        (for "what do you know about X" shapes), and a ``clock.now``
+        reading when the intent smells temporal. If nothing useful
+        surfaces, the reply degrades to a brief acknowledgement. The
+        install hint is always appended so the caller knows this is a
+        stub, not a real LLM.
+
+        Confidence stays at ``0.55`` and ``est_cost_ms`` at ``400`` so
+        router escalation semantics are unchanged. The artificial sleep is
+        preserved so metrics match a real heavyweight call.
 
         Args:
             intent: The incoming user intent.
-            world: Current world-model snapshot; entities are included in
-                the reply text when present.
-            tools: Tool registry (unused in the stub).
+            world: Current world-model snapshot; scanned for entity names
+                that appear in ``intent.text`` (substring match).
+            tools: Tool registry; ``memory.search`` and ``clock.now`` are
+                invoked when relevant. Malformed tool outputs degrade
+                silently.
 
         Returns:
-            A :class:`Response` carrying the simulated reply and a fixed
-            middling confidence.
+            A :class:`Response` whose text ends with the install hint and
+            whose ``confidence`` is a steady ``0.55``.
         """
         # Simulate a forward pass + thinking budget.
         await asyncio.sleep(self.est_cost_ms / 1000.0 * random.uniform(0.8, 1.2))
-        snapshot = {e: world.entity(e) for e in world.entities()}
-        # Incredibly naive "reasoning": acknowledge + echo context.
-        if snapshot:
-            ctx = ", ".join(f"{k}={v}" for k, v in snapshot.items())
-            reply = (
-                f"[deep] I thought about '{intent.text}' with context {{{ctx}}}. "
-                f"I don't have a confident answer yet — wire me to a real LLM."
-            )
+
+        text = intent.text.strip()
+        text_lc = text.lower()
+        fragments: list[str] = []
+        tools_used: list[str] = []
+
+        # 1. World-model entity match (fuzzy substring).
+        entity_hit = self._match_entity(world, text_lc)
+        if entity_hit is not None:
+            ent_name, attrs = entity_hit
+            if attrs:
+                attr_str = ", ".join(f"{k}={v}" for k, v in attrs.items())
+                fragments.append(
+                    f"From the world model, I know '{ent_name}' ({attr_str})."
+                )
+            else:
+                fragments.append(f"I've seen the entity '{ent_name}' before.")
+
+        # 2. Semantic memory search for "what do you know about X".
+        know_match = _DEEP_KNOW_ABOUT.search(text)
+        if know_match and tools.get("memory.search") is not None:
+            topic = know_match.group(1).rstrip(".!?")
+            top = await self._top_memory_hit(tools, topic)
+            if top is not None:
+                tools_used.append("memory.search")
+                fragments.append(
+                    f"Memory recalls: '{top['text']}' (score {top['score']:.2f})."
+                )
+
+        # 3. Clock tool for temporal intents.
+        if _DEEP_TIME_HINT.search(text) and tools.get("clock.now") is not None:
+            clock_value = await self._safe_clock(tools)
+            if clock_value is not None:
+                tools_used.append("clock.now")
+                fragments.append(f"The current time is {clock_value}.")
+
+        if fragments:
+            body = " ".join(fragments)
+            reply = f"[deep] Thinking about '{text}': {body} {_DEEP_INSTALL_HINT}"
         else:
             reply = (
-                f"[deep] I considered '{intent.text}' but have no world-model context. "
-                f"Wire me to a real LLM in Phase 2."
+                f"[deep] I considered '{text}' but couldn't ground it in "
+                f"world-model state or memory. {_DEEP_INSTALL_HINT}"
             )
+
         return Response(
             text=reply,
             reasoner=self.name, tier=self.tier,
             confidence=0.55, cost_ms=self.est_cost_ms,
+            tools_used=tools_used,
         )
+
+    @staticmethod
+    def _match_entity(
+        world: WorldModel, text_lc: str
+    ) -> tuple[str, dict[str, object]] | None:
+        """Return ``(name, attrs)`` for the first world entity mentioned in ``text_lc``.
+
+        Matches case-insensitive substring. Returns ``None`` if the world is
+        empty or no entity name appears in the text.
+        """
+        for name in world.entities():
+            if name and name.lower() in text_lc:
+                return name, world.entity(name)
+        return None
+
+    @staticmethod
+    async def _top_memory_hit(
+        tools: ToolRegistry, topic: str
+    ) -> dict[str, object] | None:
+        """Invoke ``memory.search`` and return the top hit, or ``None`` on miss.
+
+        Swallows malformed tool outputs (missing keys, non-list values) so
+        the fallback never raises for routine degradation.
+        """
+        result = await tools.invoke("memory.search", query=topic)
+        if not result.ok:
+            return None
+        try:
+            hits = list(result.value or [])
+        except TypeError:
+            return None
+        for h in hits:
+            if isinstance(h, dict) and "text" in h and "score" in h:
+                return h
+        return None
+
+    @staticmethod
+    async def _safe_clock(tools: ToolRegistry) -> object | None:
+        """Invoke ``clock.now`` and return the value, or ``None`` on failure."""
+        result = await tools.invoke("clock.now")
+        return result.value if result.ok else None

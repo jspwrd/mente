@@ -134,9 +134,80 @@ async def test_deep_simulated_reasoner_confidence_and_tier():
     assert resp.reasoner == "deep.sim"
 
 
-async def test_deep_simulated_reasoner_echoes_context():
-    world, tools, _ = await _setup([Belief(entity="user", attribute="name", value="Ada")])
+async def test_deep_simulated_reasoner_cites_matching_entity():
+    world, tools, _ = await _setup([
+        Belief(entity="redis", attribute="persistence", value="AOF"),
+        Belief(entity="redis", attribute="kind", value="cache"),
+    ])
     r = DeepSimulatedReasoner(est_cost_ms=5.0)
-    resp = await r.answer(Intent(text="hello"), world, tools)
-    assert "Ada" in resp.text
-    assert "user" in resp.text
+    resp = await r.answer(
+        Intent(text="if I gave you three raspberry pis, could you run redis?"),
+        world,
+        tools,
+    )
+    assert "redis" in resp.text.lower()
+    # Attribute surfaced so the caller sees what the deep fallback "knew".
+    assert "AOF" in resp.text
+    assert "persistence" in resp.text
+
+
+async def test_deep_simulated_reasoner_invokes_memory_search_and_cites_top_hit():
+    world, tools, state = await _setup()
+    state["hits"].extend([
+        {"text": "redis uses AOF", "score": 0.91},
+        {"text": "postgres WAL", "score": 0.40},
+    ])
+    r = DeepSimulatedReasoner(est_cost_ms=5.0)
+    resp = await r.answer(Intent(text="what do you know about redis"), world, tools)
+    assert "redis uses AOF" in resp.text
+    assert "memory.search" in resp.tools_used
+    # Score formatted with two decimals so the reply feels cited, not guessed.
+    assert "0.91" in resp.text
+
+
+async def test_deep_simulated_reasoner_handles_empty_world_gracefully():
+    world, tools, _ = await _setup()
+    r = DeepSimulatedReasoner(est_cost_ms=5.0)
+    resp = await r.answer(Intent(text="ponder something obscure"), world, tools)
+    # No crash, no entity citation, install hint still appended.
+    assert resp.confidence == pytest.approx(0.55)
+    assert "deep-sim fallback" in resp.text
+
+
+async def test_deep_simulated_reasoner_always_appends_install_hint():
+    world, tools, state = await _setup([Belief(entity="redis", attribute="kind", value="cache")])
+    state["hits"].append({"text": "redis uses AOF", "score": 0.9})
+    r = DeepSimulatedReasoner(est_cost_ms=5.0)
+
+    # Empty world / no tool match
+    world_empty, tools_empty, _ = await _setup()
+    resp_empty = await r.answer(Intent(text="just vibes"), world_empty, tools_empty)
+    assert "deep-sim fallback" in resp_empty.text
+    assert "mente[llm-ollama]" in resp_empty.text
+    assert "ANTHROPIC_API_KEY" in resp_empty.text
+
+    # Entity-match path
+    resp_entity = await r.answer(Intent(text="tell me about redis"), world, tools)
+    assert "deep-sim fallback" in resp_entity.text
+
+    # Memory-search path
+    resp_search = await r.answer(Intent(text="what do you know about redis"), world, tools)
+    assert "deep-sim fallback" in resp_search.text
+
+
+async def test_deep_simulated_reasoner_invokes_clock_on_time_intents():
+    world, tools, _ = await _setup()
+    r = DeepSimulatedReasoner(est_cost_ms=5.0)
+    resp = await r.answer(Intent(text="when are you planning to sync?"), world, tools)
+    assert "2026-04-21" in resp.text
+    assert "clock.now" in resp.tools_used
+
+
+async def test_deep_simulated_reasoner_tolerates_malformed_memory_hits():
+    world, tools, state = await _setup()
+    # Malformed entries: missing 'score' + non-dict value. Must not raise.
+    state["hits"].extend([{"text": "partial"}, "not a dict"])
+    r = DeepSimulatedReasoner(est_cost_ms=5.0)
+    resp = await r.answer(Intent(text="what do you know about anything"), world, tools)
+    assert resp.confidence == pytest.approx(0.55)
+    assert "deep-sim fallback" in resp.text
