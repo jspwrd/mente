@@ -1,6 +1,8 @@
 """Tests for mente.router.Router — decide() argmax + route() escalation."""
 from __future__ import annotations
 
+import logging
+
 from fixtures.cognition_helpers import StubReasoner, make_world
 
 from mente.metacog import Metacog
@@ -106,6 +108,54 @@ async def test_route_no_escalation_when_no_deeper_tier_exists():
     assert response.reasoner == "fast.heuristic"
     assert len(attempted) == 1
     assert decision.reasoner == "fast.heuristic"
+
+
+class _RecordCapture(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__(level=logging.DEBUG)
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+async def test_route_logs_dispatch_and_escalation_at_info():
+    """Each dispatch + any escalation emits one INFO-level line.
+
+    ``mente.*`` disables propagation once ``configure()`` runs, so attach
+    directly to the target logger rather than using ``caplog``.
+    """
+    low = Response(text="?", reasoner="fast.heuristic", tier="fast", confidence=0.1, cost_ms=2.0)
+    high = Response(text="ok", reasoner="deep.sim", tier="deep", confidence=0.9, cost_ms=400.0)
+    fast = StubReasoner(name="fast.heuristic", tier="fast", est_cost_ms=2.0, preset=low)
+    deep = StubReasoner(name="deep.sim", tier="deep", est_cost_ms=400.0, preset=high)
+    reasoners = [fast, deep]
+    router = Router(
+        reasoners=reasoners,
+        metacog=Metacog(reasoners=reasoners),
+        min_confidence=0.7,
+    )
+    world = await make_world()
+
+    target = logging.getLogger("mente.router")
+    cap = _RecordCapture()
+    prior_level = target.level
+    target.setLevel(logging.INFO)
+    target.addHandler(cap)
+    try:
+        await router.route(Intent(text="hello", trace_id="in_test"), world, ToolRegistry())
+    finally:
+        target.removeHandler(cap)
+        target.setLevel(prior_level)
+
+    dispatches = [r for r in cap.records if "dispatch" in r.getMessage()]
+    escalations = [r for r in cap.records if "escalate" in r.getMessage()]
+    assert len(dispatches) == 1
+    assert "fast.heuristic" in dispatches[0].getMessage()
+    assert len(escalations) == 1
+    assert "deep.sim" in escalations[0].getMessage()
+    # trace_id propagates via extra=...
+    assert getattr(dispatches[0], "trace_id", None) == "in_test"
 
 
 async def test_route_attempted_contains_original_and_escalation():
