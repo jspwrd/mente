@@ -21,6 +21,7 @@ import time
 from dataclasses import dataclass, field
 
 from .bus import EventBus
+from .config import MenteConfig
 from .state import LatentState
 from .types import Event
 from .world_model import WorldModel
@@ -33,8 +34,21 @@ class Curiosity:
     latent: LatentState
     idle_threshold_s: float = 5.0
     interval_s: float = 3.0
+    config: MenteConfig | None = None
     _last_user_intent_ts: float = field(default_factory=time.time)
     _generated: set[str] = field(default_factory=set)
+
+    def __post_init__(self) -> None:
+        # When a MenteConfig is supplied, it drives loop cadence and idle
+        # threshold. Explicit constructor kwargs still win for back-compat with
+        # Runtime's call site; integrators that only hand in a config pick up
+        # env-driven settings without extra wiring.
+        if self.config is not None:
+            cfg = self.config
+            if self.idle_threshold_s == 5.0:
+                self.idle_threshold_s = cfg.curiosity_idle_threshold_s
+            if self.interval_s == 3.0:
+                self.interval_s = cfg.curiosity_interval_s
 
     def wire(self) -> None:
         async def _on_intent(event: Event) -> None:
