@@ -9,6 +9,7 @@ from mente.synthesis import (
     Primitive,
     SynthesisReasoner,
     TemplateSynthesizer,
+    _run_sandboxed,
     _validate_ast,
 )
 from mente.tools import ToolRegistry
@@ -170,3 +171,38 @@ def test_library_save_is_readable_json(tmp_path):
     data = json.loads(path.read_text())
     assert "lib.demo" in data
     assert data["lib.demo"]["invocations"] == 3
+
+
+# --- Sandbox hardening -----------------------------------------------------
+
+
+async def test_sandbox_kills_infinite_loop():
+    """An intentional infinite loop must be killed by either the CPU rlimit
+    (POSIX) or the asyncio wait_for timeout. Either way, the sandbox must
+    return a failure response in a bounded amount of time."""
+    import time
+
+    source = (
+        "def spin():\n"
+        "    while True:\n"
+        "        pass\n"
+    )
+    t0 = time.perf_counter()
+    # Give wait_for a bit more than the default 2s so we can observe either
+    # rlimit-kill or timeout; the test still enforces an upper bound.
+    result = await _run_sandboxed(source, "spin", {}, timeout_s=3.0)
+    elapsed = time.perf_counter() - t0
+
+    assert result.get("ok") is False, f"expected failure, got: {result}"
+    # Must have been killed quickly — either by RLIMIT_CPU (~2s) or timeout.
+    assert elapsed < 6.0, f"sandbox took too long to kill runaway: {elapsed:.2f}s"
+
+
+async def test_sandbox_runs_with_minimal_env(monkeypatch):
+    """The sandbox scrubs host env vars (passes only PATH). A trivial snippet
+    must still execute — this catches regressions where env scrubbing breaks
+    subprocess launch (e.g. by stripping PATH and failing to find python)."""
+    monkeypatch.setenv("MENTE_TEST_SECRET", "sentinel-value")
+    source = "def echo(x):\n    return x\n"
+    result = await _run_sandboxed(source, "echo", {"x": 42})
+    assert result == {"ok": True, "value": 42}
