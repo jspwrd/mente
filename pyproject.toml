@@ -42,6 +42,10 @@ dev = [
     "mypy>=1.10",
     "pre-commit>=3.7",
 ]
+verifier-ml = [
+    "scikit-learn>=1.3",
+    "joblib>=1.3",
+]
 
 [project.urls]
 Homepage = "https://jspwrd.github.io/mente/"

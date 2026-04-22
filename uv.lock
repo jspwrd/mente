@@ -1117,10 +1117,15 @@ embeddings-local = [
 llm = [
     { name = "anthropic" },
 ]
+verifier-ml = [
+    { name = "joblib" },
+    { name = "scikit-learn" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "anthropic", marker = "extra == 'llm'", specifier = ">=0.40.0" },
+    { name = "joblib", marker = "extra == 'verifier-ml'", specifier = ">=1.3" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.5" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.25" },
@@ -1129,10 +1134,11 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5" },
+    { name = "scikit-learn", marker = "extra == 'verifier-ml'", specifier = ">=1.3" },
     { name = "sentence-transformers", marker = "extra == 'embeddings-local'", specifier = ">=3.0" },
     { name = "voyageai", marker = "extra == 'embeddings'", specifier = ">=0.2" },
 ]
-provides-extras = ["llm", "embeddings", "embeddings-local", "docs", "dev"]
+provides-extras = ["llm", "embeddings", "embeddings-local", "docs", "dev", "verifier-ml"]
 
 [[package]]
 name = "mergedeep"
