@@ -2,70 +2,78 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://jspwrd.github.io/mente/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/architecture/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/extending/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
+    </url>
+    <url>
+         <loc>https://jspwrd.github.io/mente/faq/</loc>
+         <lastmod>2026-04-22</lastmod>
+    </url>
+    <url>
+         <loc>https://jspwrd.github.io/mente/performance/</loc>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/reference/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/reference/bus/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/reference/discovery/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/reference/embeddings/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/reference/memory/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/reference/reasoners/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/reference/router/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/reference/runtime/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/reference/synthesis/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/reference/tools/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/reference/types/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/reference/verifier/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/tutorials/build-an-agent/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://jspwrd.github.io/mente/tutorials/quickstart/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
 </urlset>

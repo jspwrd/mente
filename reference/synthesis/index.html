@@ -299,6 +299,44 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../performance/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Performance
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../faq/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  FAQ
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -869,6 +907,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="synthesis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mente.synthesis--threat-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat model
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1032,6 +1087,60 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1066,6 +1175,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="synthesis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mente.synthesis--threat-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat model
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1140,6 +1266,39 @@ on repeated success — promotes the verified snippet into the ToolRegistry.</p>
 <code>Synthesizer</code> Protocol and the two shipped backends (template, LLM). The
 subprocess + AST-gate machinery below is the trust boundary — every
 synthesized function, regardless of author, runs through it.</p>
+<h3 id="mente.synthesis--threat-model">Threat model<a class="headerlink" href="#mente.synthesis--threat-model" title="Permanent link">&para;</a></h3>
+<p>The sandbox is a defence-in-depth wrapper around synthesized (template- or
+LLM-authored) Python snippets. It defends against:</p>
+<ul>
+<li><strong>Accidental imports / filesystem access</strong> — <code>_validate_ast</code> rejects
+  <code>import</code>/<code>from-import</code>, dunder attribute access, and a blocklist of
+  names (<code>open</code>, <code>exec</code>, <code>eval</code>, <code>compile</code>, <code>globals</code>/<code>locals</code>,
+  <code>getattr</code>/<code>setattr</code>, etc.). Code that shouldn't need I/O can't get at
+  it even by reflection.</li>
+<li><strong>Unbounded recursion / runaway CPU</strong> — every call runs in a separate
+  process under <code>asyncio.wait_for(timeout=2s)</code> (belt) and POSIX
+  <code>RLIMIT_CPU</code> / <code>RLIMIT_AS</code> / <code>RLIMIT_NOFILE</code> / <code>RLIMIT_NPROC</code>
+  (braces). If the snippet loops forever or blows up memory, the kernel
+  kills it; asyncio then reaps.</li>
+<li><strong>Environment leakage</strong> — the subprocess is launched with a minimal
+  <code>env={"PATH": "/usr/bin:/bin"}</code> and Python flags <code>-S -I</code> (no site,
+  isolated mode), so host env vars (API keys, LD_PRELOAD, PYTHONPATH, …)
+  don't leak in.</li>
+</ul>
+<p>It does <strong>NOT</strong> defend against:</p>
+<ul>
+<li><strong>Kernel exploits or container escapes</strong> — rlimits are process-local and
+  assume a well-behaved kernel. Running mente on a shared multi-tenant
+  host requires an additional container / seccomp layer.</li>
+<li><strong>Side-channel attacks</strong> — timing, cache, and power channels are out of
+  scope. Don't synthesize cryptographic primitives this way.</li>
+<li><strong>Untrusted, adversarial input</strong> — an LLM-authored synthesis on
+  attacker-controlled prompts is still a reflected code-execution surface.
+  The AST gate is a best-effort list of foot-guns, not a formal proof of
+  memory safety. If your users can steer synthesis (prompt injection or
+  otherwise), review generated snippets out-of-band before promoting into
+  the library, and consider disabling the LLM synthesizer entirely.</li>
+</ul>
 
 
 

@@ -299,6 +299,44 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../performance/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Performance
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../faq/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  FAQ
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -744,10 +782,32 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#mente.runtime.Runtime.handle_intent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        handle_intent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#mente.runtime.Runtime.run" class="md-nav__link">
     <span class="md-ellipsis">
       
         run
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mente.runtime.Runtime.shutdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shutdown
       
     </span>
   </a>
@@ -770,6 +830,17 @@
     <span class="md-ellipsis">
       
         start_background
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mente.runtime.Runtime.stop_background" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stop_background
       
     </span>
   </a>
@@ -1049,6 +1120,60 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1099,10 +1224,32 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#mente.runtime.Runtime.handle_intent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        handle_intent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#mente.runtime.Runtime.run" class="md-nav__link">
     <span class="md-ellipsis">
       
         run
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mente.runtime.Runtime.shutdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shutdown
       
     </span>
   </a>
@@ -1125,6 +1272,17 @@
     <span class="md-ellipsis">
       
         start_background
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mente.runtime.Runtime.stop_background" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stop_background
       
     </span>
   </a>
@@ -1171,6 +1329,14 @@
 It owns the bus, the world model, the memory, the reasoners, and a long-lived
 asyncio loop. Inputs arrive as events (intent.<em>, sense.</em>, tool.<em>, timer.</em>)
 and are routed, reasoned, verified, and emitted as responses.</p>
+<p>Setup is split into six phases (invoked in order by <code>__post_init__</code>):
+<code>_setup_logging_and_storage</code> wires the logger, on-disk state and verifier;
+<code>_setup_reasoners</code> picks the default roster; <code>_setup_router</code> builds the
+metacog + router; <code>_setup_tools_and_subscribers</code> registers builtin tools
+and persistence hooks; <code>_setup_self_model</code> attaches the self-reflection
+answerer; <code>_setup_background_surfaces</code> prepares the consolidator, curiosity
+loop and the curiosity→intent bridge. Read any phase in isolation to find
+what you need.</p>
 <p>Phase 1: single-process, single-agent, in-memory bus.
 Phase 2: multi-process via NATS; multiple agent peers sharing the bus; idle
 timers that trigger consolidation and curiosity-driven self-prompting.</p>
@@ -1214,6 +1380,232 @@ timers that trigger consolidation and curiosity-driven self-prompting.</p>
 
 
 
+        <p>Top-level process object wiring the bus, memories, and reasoners.</p>
+<p>A <code>Runtime</code> owns everything needed to turn an :class:<code>Intent</code> into a
+:class:<code>Response</code>: an event bus, a world model, fast/slow/semantic
+memories, a tool registry, a reasoner roster, a router, a verifier, a
+self-model, and idle-time consolidation + curiosity loops. Construction
+seeds default reasoners (using :class:<code>AnthropicReasoner</code> when an API
+key is available, otherwise :class:<code>DeepSimulatedReasoner</code>), registers
+the default tool set, and wires subscribers that persist <code>state.*</code>
+and <code>response.*</code> events to slow memory.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.root">root</span></code></td>
+            <td>
+                  <code><span title="pathlib.Path">Path</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Filesystem directory where episodic SQLite, semantic SQLite,
+latent state, and the synthesis library are stored. Created if
+it does not exist.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.node_id">node_id</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Identifier for this runtime instance; surfaces in logs
+and (Phase 2) in remote bus messages.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.config">config</span></code></td>
+            <td>
+                  <code><span title="mente.config.MenteConfig">MenteConfig</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Tunables (log level, verifier threshold, router trade-off,
+consolidation/curiosity intervals). Defaults to
+:meth:<code>MenteConfig.default</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.bus">bus</span></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="EventBus
+
+
+  
+      dataclass
+   (mente.bus.EventBus)" href="../bus/#mente.bus.EventBus">EventBus</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The event bus. Replace to swap transports.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.world">world</span></code></td>
+            <td>
+                  <code><span title="mente.world_model.WorldModel">WorldModel</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>World model; constructed from <code>bus</code> in <code>__post_init__</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.fast_mem">fast_mem</span></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="FastMemory
+
+
+  
+      dataclass
+   (mente.memory.FastMemory)" href="../memory/#mente.memory.FastMemory">FastMemory</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>In-process scratchpad.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.slow_mem">slow_mem</span></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="SlowMemory
+
+
+  
+      dataclass
+   (mente.memory.SlowMemory)" href="../memory/#mente.memory.SlowMemory">SlowMemory</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Episodic SQLite log rooted at <code>root</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.semantic_mem">semantic_mem</span></code></td>
+            <td>
+                  <code><span title="mente.embeddings.SemanticMemory">SemanticMemory</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Vector-search memory rooted at <code>root</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.latent">latent</span></code></td>
+            <td>
+                  <code><span title="mente.state.LatentState">LatentState</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Persisted latent summary state at <code>root/latent.json</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.tools">tools</span></code></td>
+            <td>
+                  <code><span title="mente.tools.ToolRegistry">ToolRegistry</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Tool registry; pre-populated with clock + memory tools.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.reasoners">reasoners</span></code></td>
+            <td>
+                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="Reasoner (mente.reasoners.Reasoner)" href="../reasoners/#mente.reasoners.Reasoner">Reasoner</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Ordered reasoner roster considered by the router.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.router">router</span></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="Router
+
+
+  
+      dataclass
+   (mente.router.Router)" href="../router/#mente.router.Router">Router</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dispatcher picking a reasoner per intent.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.verifier">verifier</span></code></td>
+            <td>
+                  <code><span title="mente.verifier.Verifier">Verifier</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Post-hoc acceptance check on every response.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.self_model">self_model</span></code></td>
+            <td>
+                  <code><span title="mente.self_model.SelfModel">SelfModel</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Answers self-referential queries (wired as a hook
+into :class:<code>FastHeuristicReasoner</code>).</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.consolidator">consolidator</span></code></td>
+            <td>
+                  <code><span title="mente.consolidator.Consolidator">Consolidator</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Background task summarising slow memory.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.runtime.Runtime.curiosity">curiosity</span></code></td>
+            <td>
+                  <code><span title="mente.curiosity.Curiosity">Curiosity</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Background task that self-prompts when idle.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
 
 
 
@@ -1238,6 +1630,256 @@ timers that trigger consolidation and curiosity-driven self-prompting.</p>
 <div class="doc doc-object doc-function">
 
 
+<h3 id="mente.runtime.Runtime.handle_intent" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">handle_intent</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#mente.runtime.Runtime.handle_intent" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">handle_intent</span><span class="p">(</span><span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Run one turn of the inference pipeline for <code>intent</code>.</p>
+<p>The pipeline is:</p>
+<ol>
+<li><strong>Publish</strong> an <code>intent.&lt;source&gt;</code> event on the bus so
+   subscribers (persistence, debug taps) see the request.</li>
+<li><strong>Route</strong> the intent through :class:<code>Router</code>, which picks a
+   reasoner (with fall-through on low confidence) and returns the
+   chosen :class:<code>Decision</code>, the final :class:<code>Response</code>, and the
+   list of reasoners that were attempted.</li>
+<li><strong>Verify</strong> the response against the intent and world state via
+   :class:<code>Verifier</code>, yielding an accept/reject verdict with a
+   numeric score and reasons.</li>
+<li><strong>Persist</strong> a latent summary of the turn (turn count, last
+   intent, last reasoner, last confidence, last verdict score)
+   and checkpoint it to disk.</li>
+<li><strong>Publish</strong> a <code>response.&lt;tier&gt;</code> event carrying the response
+   text, tier, tools used, cost, verdict, and the list of
+   attempted reasoners — so subscribers (including the default
+   <code>response.*</code> logger) see the outcome.</li>
+</ol>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>intent</code>
+            </td>
+            <td>
+                  <code><span title="mente.types.Intent">Intent</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The user or system intent to handle.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>The</code></td>            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>class:<code>Response</code> selected by the router (after any</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+<td></td>            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>low-confidence fall-through). The verdict is published on the</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+<td></td>            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>bus but not attached to the return value.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/mente/runtime.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-223">223</a></span>
+<span class="normal"><a href="#__codelineno-0-224">224</a></span>
+<span class="normal"><a href="#__codelineno-0-225">225</a></span>
+<span class="normal"><a href="#__codelineno-0-226">226</a></span>
+<span class="normal"><a href="#__codelineno-0-227">227</a></span>
+<span class="normal"><a href="#__codelineno-0-228">228</a></span>
+<span class="normal"><a href="#__codelineno-0-229">229</a></span>
+<span class="normal"><a href="#__codelineno-0-230">230</a></span>
+<span class="normal"><a href="#__codelineno-0-231">231</a></span>
+<span class="normal"><a href="#__codelineno-0-232">232</a></span>
+<span class="normal"><a href="#__codelineno-0-233">233</a></span>
+<span class="normal"><a href="#__codelineno-0-234">234</a></span>
+<span class="normal"><a href="#__codelineno-0-235">235</a></span>
+<span class="normal"><a href="#__codelineno-0-236">236</a></span>
+<span class="normal"><a href="#__codelineno-0-237">237</a></span>
+<span class="normal"><a href="#__codelineno-0-238">238</a></span>
+<span class="normal"><a href="#__codelineno-0-239">239</a></span>
+<span class="normal"><a href="#__codelineno-0-240">240</a></span>
+<span class="normal"><a href="#__codelineno-0-241">241</a></span>
+<span class="normal"><a href="#__codelineno-0-242">242</a></span>
+<span class="normal"><a href="#__codelineno-0-243">243</a></span>
+<span class="normal"><a href="#__codelineno-0-244">244</a></span>
+<span class="normal"><a href="#__codelineno-0-245">245</a></span>
+<span class="normal"><a href="#__codelineno-0-246">246</a></span>
+<span class="normal"><a href="#__codelineno-0-247">247</a></span>
+<span class="normal"><a href="#__codelineno-0-248">248</a></span>
+<span class="normal"><a href="#__codelineno-0-249">249</a></span>
+<span class="normal"><a href="#__codelineno-0-250">250</a></span>
+<span class="normal"><a href="#__codelineno-0-251">251</a></span>
+<span class="normal"><a href="#__codelineno-0-252">252</a></span>
+<span class="normal"><a href="#__codelineno-0-253">253</a></span>
+<span class="normal"><a href="#__codelineno-0-254">254</a></span>
+<span class="normal"><a href="#__codelineno-0-255">255</a></span>
+<span class="normal"><a href="#__codelineno-0-256">256</a></span>
+<span class="normal"><a href="#__codelineno-0-257">257</a></span>
+<span class="normal"><a href="#__codelineno-0-258">258</a></span>
+<span class="normal"><a href="#__codelineno-0-259">259</a></span>
+<span class="normal"><a href="#__codelineno-0-260">260</a></span>
+<span class="normal"><a href="#__codelineno-0-261">261</a></span>
+<span class="normal"><a href="#__codelineno-0-262">262</a></span>
+<span class="normal"><a href="#__codelineno-0-263">263</a></span>
+<span class="normal"><a href="#__codelineno-0-264">264</a></span>
+<span class="normal"><a href="#__codelineno-0-265">265</a></span>
+<span class="normal"><a href="#__codelineno-0-266">266</a></span>
+<span class="normal"><a href="#__codelineno-0-267">267</a></span>
+<span class="normal"><a href="#__codelineno-0-268">268</a></span>
+<span class="normal"><a href="#__codelineno-0-269">269</a></span>
+<span class="normal"><a href="#__codelineno-0-270">270</a></span>
+<span class="normal"><a href="#__codelineno-0-271">271</a></span>
+<span class="normal"><a href="#__codelineno-0-272">272</a></span>
+<span class="normal"><a href="#__codelineno-0-273">273</a></span>
+<span class="normal"><a href="#__codelineno-0-274">274</a></span>
+<span class="normal"><a href="#__codelineno-0-275">275</a></span>
+<span class="normal"><a href="#__codelineno-0-276">276</a></span>
+<span class="normal"><a href="#__codelineno-0-277">277</a></span>
+<span class="normal"><a href="#__codelineno-0-278">278</a></span>
+<span class="normal"><a href="#__codelineno-0-279">279</a></span>
+<span class="normal"><a href="#__codelineno-0-280">280</a></span>
+<span class="normal"><a href="#__codelineno-0-281">281</a></span>
+<span class="normal"><a href="#__codelineno-0-282">282</a></span>
+<span class="normal"><a href="#__codelineno-0-283">283</a></span>
+<span class="normal"><a href="#__codelineno-0-284">284</a></span>
+<span class="normal"><a href="#__codelineno-0-285">285</a></span>
+<span class="normal"><a href="#__codelineno-0-286">286</a></span>
+<span class="normal"><a href="#__codelineno-0-287">287</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_intent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run one turn of the inference pipeline for ``intent``.</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225"></a>
+<a id="__codelineno-0-226" name="__codelineno-0-226"></a><span class="sd">    The pipeline is:</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227"></a>
+<a id="__codelineno-0-228" name="__codelineno-0-228"></a><span class="sd">    1. **Publish** an ``intent.&lt;source&gt;`` event on the bus so</span>
+<a id="__codelineno-0-229" name="__codelineno-0-229"></a><span class="sd">       subscribers (persistence, debug taps) see the request.</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230"></a><span class="sd">    2. **Route** the intent through :class:`Router`, which picks a</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231"></a><span class="sd">       reasoner (with fall-through on low confidence) and returns the</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232"></a><span class="sd">       chosen :class:`Decision`, the final :class:`Response`, and the</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233"></a><span class="sd">       list of reasoners that were attempted.</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234"></a><span class="sd">    3. **Verify** the response against the intent and world state via</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235"></a><span class="sd">       :class:`Verifier`, yielding an accept/reject verdict with a</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236"></a><span class="sd">       numeric score and reasons.</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237"></a><span class="sd">    4. **Persist** a latent summary of the turn (turn count, last</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238"></a><span class="sd">       intent, last reasoner, last confidence, last verdict score)</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239"></a><span class="sd">       and checkpoint it to disk.</span>
+<a id="__codelineno-0-240" name="__codelineno-0-240"></a><span class="sd">    5. **Publish** a ``response.&lt;tier&gt;`` event carrying the response</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241"></a><span class="sd">       text, tier, tools used, cost, verdict, and the list of</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242"></a><span class="sd">       attempted reasoners — so subscribers (including the default</span>
+<a id="__codelineno-0-243" name="__codelineno-0-243"></a><span class="sd">       ``response.*`` logger) see the outcome.</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244"></a>
+<a id="__codelineno-0-245" name="__codelineno-0-245"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246"></a><span class="sd">        intent: The user or system intent to handle.</span>
+<a id="__codelineno-0-247" name="__codelineno-0-247"></a>
+<a id="__codelineno-0-248" name="__codelineno-0-248"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249"></a><span class="sd">        The :class:`Response` selected by the router (after any</span>
+<a id="__codelineno-0-250" name="__codelineno-0-250"></a><span class="sd">        low-confidence fall-through). The verdict is published on the</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251"></a><span class="sd">        bus but not attached to the return value.</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253"></a>    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254"></a>        <span class="n">Event</span><span class="p">(</span><span class="n">topic</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;intent.</span><span class="si">{</span><span class="n">intent</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="n">intent</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">trace_id</span><span class="o">=</span><span class="n">intent</span><span class="o">.</span><span class="n">trace_id</span><span class="p">,</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255"></a>              <span class="n">payload</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">intent</span><span class="o">.</span><span class="n">text</span><span class="p">})</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256"></a>    <span class="p">)</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257"></a>    <span class="n">decision</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">attempted</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">intent</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">)</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258"></a>    <span class="n">verdict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">verifier</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">intent</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="p">)</span>
+<a id="__codelineno-0-259" name="__codelineno-0-259"></a>
+<a id="__codelineno-0-260" name="__codelineno-0-260"></a>    <span class="c1"># Persist latent summary of what happened this turn.</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261"></a>    <span class="n">turn_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">latent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;turns&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">latent</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263"></a>        <span class="n">turns</span><span class="o">=</span><span class="n">turn_count</span><span class="p">,</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264"></a>        <span class="n">last_intent</span><span class="o">=</span><span class="n">intent</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265"></a>        <span class="n">last_reasoner</span><span class="o">=</span><span class="n">decision</span><span class="o">.</span><span class="n">reasoner</span><span class="p">,</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266"></a>        <span class="n">last_confidence</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">confidence</span><span class="p">,</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267"></a>        <span class="n">last_verdict_score</span><span class="o">=</span><span class="n">verdict</span><span class="o">.</span><span class="n">score</span><span class="p">,</span>
+<a id="__codelineno-0-268" name="__codelineno-0-268"></a>    <span class="p">)</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">latent</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">()</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270"></a>
+<a id="__codelineno-0-271" name="__codelineno-0-271"></a>    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272"></a>        <span class="n">Event</span><span class="p">(</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a>            <span class="n">topic</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;response.</span><span class="si">{</span><span class="n">decision</span><span class="o">.</span><span class="n">tier</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274"></a>            <span class="n">origin</span><span class="o">=</span><span class="n">decision</span><span class="o">.</span><span class="n">reasoner</span><span class="p">,</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275"></a>            <span class="n">trace_id</span><span class="o">=</span><span class="n">intent</span><span class="o">.</span><span class="n">trace_id</span><span class="p">,</span>
+<a id="__codelineno-0-276" name="__codelineno-0-276"></a>            <span class="n">confidence</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">confidence</span><span class="p">,</span>
+<a id="__codelineno-0-277" name="__codelineno-0-277"></a>            <span class="n">payload</span><span class="o">=</span><span class="p">{</span>
+<a id="__codelineno-0-278" name="__codelineno-0-278"></a>                <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279"></a>                <span class="s2">&quot;tier&quot;</span><span class="p">:</span> <span class="n">decision</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280"></a>                <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">tools_used</span><span class="p">,</span>
+<a id="__codelineno-0-281" name="__codelineno-0-281"></a>                <span class="s2">&quot;cost_ms&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">cost_ms</span><span class="p">,</span>
+<a id="__codelineno-0-282" name="__codelineno-0-282"></a>                <span class="s2">&quot;verdict&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;accept&quot;</span><span class="p">:</span> <span class="n">verdict</span><span class="o">.</span><span class="n">accept</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="n">verdict</span><span class="o">.</span><span class="n">score</span><span class="p">,</span> <span class="s2">&quot;reasons&quot;</span><span class="p">:</span> <span class="n">verdict</span><span class="o">.</span><span class="n">reasons</span><span class="p">},</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283"></a>                <span class="s2">&quot;attempted&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">reasoner</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">attempted</span><span class="p">],</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284"></a>            <span class="p">},</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285"></a>        <span class="p">)</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286"></a>    <span class="p">)</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287"></a>    <span class="k">return</span> <span class="n">response</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="mente.runtime.Runtime.run" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">run</span>
 
@@ -1252,24 +1894,124 @@ timers that trigger consolidation and curiosity-driven self-prompting.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Process intents until a None sentinel is received.</p>
+        <p>Process intents from <code>inputs</code> until a <code>None</code> sentinel arrives.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>inputs</code>
+            </td>
+            <td>
+                  <code><span title="asyncio.Queue">Queue</span>[<span title="mente.types.Intent">Intent</span> | None]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Queue of intents to handle. Pushing <code>None</code> cleanly
+terminates the loop.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/mente/runtime.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-196">196</a></span>
-<span class="normal"><a href="#__codelineno-0-197">197</a></span>
-<span class="normal"><a href="#__codelineno-0-198">198</a></span>
-<span class="normal"><a href="#__codelineno-0-199">199</a></span>
-<span class="normal"><a href="#__codelineno-0-200">200</a></span>
-<span class="normal"><a href="#__codelineno-0-201">201</a></span>
-<span class="normal"><a href="#__codelineno-0-202">202</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">[</span><span class="n">Intent</span> <span class="o">|</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Process intents until a None sentinel is received.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198"></a>    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199"></a>        <span class="n">intent</span> <span class="o">=</span> <span class="k">await</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200"></a>        <span class="k">if</span> <span class="n">intent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201"></a>            <span class="k">return</span>
-<a id="__codelineno-0-202" name="__codelineno-0-202"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_intent</span><span class="p">(</span><span class="n">intent</span><span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-290">290</a></span>
+<span class="normal"><a href="#__codelineno-0-291">291</a></span>
+<span class="normal"><a href="#__codelineno-0-292">292</a></span>
+<span class="normal"><a href="#__codelineno-0-293">293</a></span>
+<span class="normal"><a href="#__codelineno-0-294">294</a></span>
+<span class="normal"><a href="#__codelineno-0-295">295</a></span>
+<span class="normal"><a href="#__codelineno-0-296">296</a></span>
+<span class="normal"><a href="#__codelineno-0-297">297</a></span>
+<span class="normal"><a href="#__codelineno-0-298">298</a></span>
+<span class="normal"><a href="#__codelineno-0-299">299</a></span>
+<span class="normal"><a href="#__codelineno-0-300">300</a></span>
+<span class="normal"><a href="#__codelineno-0-301">301</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-290" name="__codelineno-0-290"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">[</span><span class="n">Intent</span> <span class="o">|</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Process intents from ``inputs`` until a ``None`` sentinel arrives.</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292"></a>
+<a id="__codelineno-0-293" name="__codelineno-0-293"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294"></a><span class="sd">        inputs: Queue of intents to handle. Pushing ``None`` cleanly</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295"></a><span class="sd">            terminates the loop.</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297"></a>    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+<a id="__codelineno-0-298" name="__codelineno-0-298"></a>        <span class="n">intent</span> <span class="o">=</span> <span class="k">await</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299"></a>        <span class="k">if</span> <span class="n">intent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300"></a>            <span class="k">return</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_intent</span><span class="p">(</span><span class="n">intent</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="mente.runtime.Runtime.shutdown" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">shutdown</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#mente.runtime.Runtime.shutdown" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">shutdown</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Stop loops, run a final consolidation, then close all resources.</p>
+<p>A terminal consolidation ensures the digest reflects the full
+session before the slow-memory connection is torn down. Safe to
+call even if the background loops were never started.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/mente/runtime.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-334">334</a></span>
+<span class="normal"><a href="#__codelineno-0-335">335</a></span>
+<span class="normal"><a href="#__codelineno-0-336">336</a></span>
+<span class="normal"><a href="#__codelineno-0-337">337</a></span>
+<span class="normal"><a href="#__codelineno-0-338">338</a></span>
+<span class="normal"><a href="#__codelineno-0-339">339</a></span>
+<span class="normal"><a href="#__codelineno-0-340">340</a></span>
+<span class="normal"><a href="#__codelineno-0-341">341</a></span>
+<span class="normal"><a href="#__codelineno-0-342">342</a></span>
+<span class="normal"><a href="#__codelineno-0-343">343</a></span>
+<span class="normal"><a href="#__codelineno-0-344">344</a></span>
+<span class="normal"><a href="#__codelineno-0-345">345</a></span>
+<span class="normal"><a href="#__codelineno-0-346">346</a></span>
+<span class="normal"><a href="#__codelineno-0-347">347</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Stop loops, run a final consolidation, then close all resources.</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336"></a>
+<a id="__codelineno-0-337" name="__codelineno-0-337"></a><span class="sd">    A terminal consolidation ensures the digest reflects the full</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338"></a><span class="sd">    session before the slow-memory connection is torn down. Safe to</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339"></a><span class="sd">    call even if the background loops were never started.</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-341" name="__codelineno-0-341"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">stop_background</span><span class="p">()</span>
+<a id="__codelineno-0-342" name="__codelineno-0-342"></a>    <span class="c1"># Run one final consolidation so the digest reflects the full session.</span>
+<a id="__codelineno-0-343" name="__codelineno-0-343"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">consolidator</span><span class="o">.</span><span class="n">consolidate</span><span class="p">()</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">latent</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">()</span>
+<a id="__codelineno-0-345" name="__codelineno-0-345"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">slow_mem</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<a id="__codelineno-0-346" name="__codelineno-0-346"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">semantic_mem</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347"></a>    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1298,11 +2040,11 @@ timers that trigger consolidation and curiosity-driven self-prompting.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/mente/runtime.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-204">204</a></span>
-<span class="normal"><a href="#__codelineno-0-205">205</a></span>
-<span class="normal"><a href="#__codelineno-0-206">206</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Activate the bus transport (no-op for in-process).&quot;&quot;&quot;</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206"></a>    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-303">303</a></span>
+<span class="normal"><a href="#__codelineno-0-304">304</a></span>
+<span class="normal"><a href="#__codelineno-0-305">305</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-303" name="__codelineno-0-303"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-304" name="__codelineno-0-304"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Activate the bus transport (no-op for in-process).&quot;&quot;&quot;</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305"></a>    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1323,25 +2065,120 @@ timers that trigger consolidation and curiosity-driven self-prompting.</p>
     <div class="doc doc-contents ">
 
         <p>Start the consolidation + curiosity loops as background tasks.</p>
+<p>Resets the internal stop events so the loops can be restarted
+after a previous :meth:<code>stop_background</code> call.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="list">list</span>[<span title="asyncio.Task">Task</span>[None]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The two created :class:<code>asyncio.Task</code> handles, in order:</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="list">list</span>[<span title="asyncio.Task">Task</span>[None]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>consolidator first, curiosity second.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/mente/runtime.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-208">208</a></span>
-<span class="normal"><a href="#__codelineno-0-209">209</a></span>
-<span class="normal"><a href="#__codelineno-0-210">210</a></span>
-<span class="normal"><a href="#__codelineno-0-211">211</a></span>
-<span class="normal"><a href="#__codelineno-0-212">212</a></span>
-<span class="normal"><a href="#__codelineno-0-213">213</a></span>
-<span class="normal"><a href="#__codelineno-0-214">214</a></span>
-<span class="normal"><a href="#__codelineno-0-215">215</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="k">def</span><span class="w"> </span><span class="nf">start_background</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span><span class="p">[</span><span class="kc">None</span><span class="p">]]:</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Start the consolidation + curiosity loops as background tasks.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-210" name="__codelineno-0-210"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_consolidator_stop</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_curiosity_stop</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212"></a>    <span class="k">return</span> <span class="p">[</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213"></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">consolidator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_consolidator_stop</span><span class="p">)),</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214"></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curiosity</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_curiosity_stop</span><span class="p">)),</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215"></a>    <span class="p">]</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-307">307</a></span>
+<span class="normal"><a href="#__codelineno-0-308">308</a></span>
+<span class="normal"><a href="#__codelineno-0-309">309</a></span>
+<span class="normal"><a href="#__codelineno-0-310">310</a></span>
+<span class="normal"><a href="#__codelineno-0-311">311</a></span>
+<span class="normal"><a href="#__codelineno-0-312">312</a></span>
+<span class="normal"><a href="#__codelineno-0-313">313</a></span>
+<span class="normal"><a href="#__codelineno-0-314">314</a></span>
+<span class="normal"><a href="#__codelineno-0-315">315</a></span>
+<span class="normal"><a href="#__codelineno-0-316">316</a></span>
+<span class="normal"><a href="#__codelineno-0-317">317</a></span>
+<span class="normal"><a href="#__codelineno-0-318">318</a></span>
+<span class="normal"><a href="#__codelineno-0-319">319</a></span>
+<span class="normal"><a href="#__codelineno-0-320">320</a></span>
+<span class="normal"><a href="#__codelineno-0-321">321</a></span>
+<span class="normal"><a href="#__codelineno-0-322">322</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-307" name="__codelineno-0-307"></a><span class="k">def</span><span class="w"> </span><span class="nf">start_background</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span><span class="p">[</span><span class="kc">None</span><span class="p">]]:</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Start the consolidation + curiosity loops as background tasks.</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309"></a>
+<a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="sd">    Resets the internal stop events so the loops can be restarted</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311"></a><span class="sd">    after a previous :meth:`stop_background` call.</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312"></a>
+<a id="__codelineno-0-313" name="__codelineno-0-313"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-314" name="__codelineno-0-314"></a><span class="sd">        The two created :class:`asyncio.Task` handles, in order:</span>
+<a id="__codelineno-0-315" name="__codelineno-0-315"></a><span class="sd">        consolidator first, curiosity second.</span>
+<a id="__codelineno-0-316" name="__codelineno-0-316"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-317" name="__codelineno-0-317"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_consolidator_stop</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+<a id="__codelineno-0-318" name="__codelineno-0-318"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_curiosity_stop</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319"></a>    <span class="k">return</span> <span class="p">[</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320"></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">consolidator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_consolidator_stop</span><span class="p">)),</span>
+<a id="__codelineno-0-321" name="__codelineno-0-321"></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curiosity</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_curiosity_stop</span><span class="p">)),</span>
+<a id="__codelineno-0-322" name="__codelineno-0-322"></a>    <span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="mente.runtime.Runtime.stop_background" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">stop_background</span>
+
+
+<a href="#mente.runtime.Runtime.stop_background" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">stop_background</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Signal the consolidation + curiosity loops to exit.</p>
+<p>Sets the stop events but does not await the tasks — callers that
+need to join the tasks should retain the handles from
+:meth:<code>start_background</code>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/mente/runtime.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-324">324</a></span>
+<span class="normal"><a href="#__codelineno-0-325">325</a></span>
+<span class="normal"><a href="#__codelineno-0-326">326</a></span>
+<span class="normal"><a href="#__codelineno-0-327">327</a></span>
+<span class="normal"><a href="#__codelineno-0-328">328</a></span>
+<span class="normal"><a href="#__codelineno-0-329">329</a></span>
+<span class="normal"><a href="#__codelineno-0-330">330</a></span>
+<span class="normal"><a href="#__codelineno-0-331">331</a></span>
+<span class="normal"><a href="#__codelineno-0-332">332</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-324" name="__codelineno-0-324"></a><span class="k">def</span><span class="w"> </span><span class="nf">stop_background</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Signal the consolidation + curiosity loops to exit.</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326"></a>
+<a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="sd">    Sets the stop events but does not await the tasks — callers that</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328"></a><span class="sd">    need to join the tasks should retain the handles from</span>
+<a id="__codelineno-0-329" name="__codelineno-0-329"></a><span class="sd">    :meth:`start_background`.</span>
+<a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_consolidator_stop</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+<a id="__codelineno-0-332" name="__codelineno-0-332"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_curiosity_stop</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

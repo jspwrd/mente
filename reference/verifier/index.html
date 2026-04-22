@@ -299,6 +299,44 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../performance/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Performance
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../faq/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  FAQ
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -919,6 +957,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="StructuredVerifier">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mente.verifier.StructuredVerifier.verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        verify
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1021,6 +1076,60 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1077,6 +1186,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="StructuredVerifier">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mente.verifier.StructuredVerifier.verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        verify
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1205,7 +1331,21 @@ old <code>Verifier</code> class — <code>Router</code>/<code>Runtime</code> ins
 
 
 
-        <p>Anything that can produce a Verdict for an (intent, response, world).</p>
+        <p>Anything that can produce a <code>Verdict</code> for an (intent, response, world).</p>
+<p>Verifiers run after a Reasoner returns a <code>Response</code> but before the
+response is surfaced to the user. mente uses them to gate low-quality
+output, trigger escalation, and attach auditable reasons to each turn.
+Multiple verifiers can be combined via <code>CompositeVerifier</code>.</p>
+<p>Concurrency: <code>verify</code> is synchronous. mente may call verifiers
+sequentially inside a composite or in parallel across independent
+responses; implementations MUST be thread-safe and MUST NOT mutate the
+supplied <code>world</code>. Verifiers SHOULD:</p>
+<ul>
+<li>be fast — they run on every turn.</li>
+<li>return <code>Verdict(accept=False, ...)</code> with concrete <code>reasons</code>
+    strings rather than raising, so the pipeline stays observable.</li>
+<li>keep <code>score</code> in <code>[0.0, 1.0]</code>.</li>
+</ul>
 
 
 
@@ -1227,6 +1367,210 @@ old <code>Verifier</code> class — <code>Router</code>/<code>Runtime</code> ins
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="mente.verifier.StructuredVerifier.verify" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">verify</span>
+
+
+<a href="#mente.verifier.StructuredVerifier.verify" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">verify</span><span class="p">(</span><span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">WorldModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Score a candidate response and decide whether to accept it.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>intent</code>
+            </td>
+            <td>
+                  <code><span title="mente.types.Intent">Intent</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The original <code>Intent</code> that produced <code>response</code>.
+Verifiers use it to compare what was asked with what was
+answered.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>response</code>
+            </td>
+            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The candidate <code>Response</code> from a Reasoner. Already
+carries its own self-assessed confidence.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>world</code>
+            </td>
+            <td>
+                  <code><span title="mente.world_model.WorldModel">WorldModel</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Read-only snapshot of the current world model. MUST
+NOT be mutated by the verifier.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="mente.verifiers.types.Verdict">Verdict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A <code>Verdict</code> with <code>accept</code> (bool), <code>score</code> in</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="mente.verifiers.types.Verdict">Verdict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>[0.0, 1.0]</code>, and a list of short human-readable <code>reasons</code></p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="mente.verifiers.types.Verdict">Verdict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>strings recorded in the trace.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="Exception">Exception</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Only for genuine implementation bugs. Normal
+"this response is bad" outcomes are signalled with
+<code>accept=False</code> and reasons, not exceptions.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/mente/verifiers/__init__.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">WorldModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span><span class="p">:</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Score a candidate response and decide whether to accept it.</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">        intent: The original ``Intent`` that produced ``response``.</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">            Verifiers use it to compare what was asked with what was</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">            answered.</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">        response: The candidate ``Response`` from a Reasoner. Already</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">            carries its own self-assessed confidence.</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">        world: Read-only snapshot of the current world model. MUST</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">            NOT be mutated by the verifier.</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">        A ``Verdict`` with ``accept`` (bool), ``score`` in</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">        ``[0.0, 1.0]``, and a list of short human-readable ``reasons``</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">        strings recorded in the trace.</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">    Raises:</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">        Exception: Only for genuine implementation bugs. Normal</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">            &quot;this response is bad&quot; outcomes are signalled with</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">            ``accept=False`` and reasons, not exceptions.</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="o">...</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 
 

@@ -299,6 +299,44 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../performance/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Performance
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../faq/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  FAQ
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -796,6 +834,79 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="DeepSimulatedReasoner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mente.reasoners.DeepSimulatedReasoner.answer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        answer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mente.reasoners.FastHeuristicReasoner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FastHeuristicReasoner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FastHeuristicReasoner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mente.reasoners.FastHeuristicReasoner.answer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        answer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mente.reasoners.Reasoner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reasoner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reasoner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mente.reasoners.Reasoner.answer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        answer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1021,6 +1132,60 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1066,6 +1231,79 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="DeepSimulatedReasoner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mente.reasoners.DeepSimulatedReasoner.answer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        answer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mente.reasoners.FastHeuristicReasoner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FastHeuristicReasoner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FastHeuristicReasoner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mente.reasoners.FastHeuristicReasoner.answer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        answer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mente.reasoners.Reasoner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reasoner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reasoner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mente.reasoners.Reasoner.answer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        answer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1126,6 +1364,22 @@ specialist models).</p>
 </ul>
 </details>        <p>Phase 2: add AnthropicReasoner (Claude API, prompt caching), LocalReasoner
 (llama.cpp), and specialist reasoners (code, math, retrieval).</p>
+<p>Drop-in implementation example::</p>
+<div class="highlight"><pre><span></span><code>from dataclasses import dataclass
+from mente.types import Intent, ReasonerTier, Response
+from mente.tools import ToolRegistry
+from mente.world_model import WorldModel
+
+@dataclass
+class EchoReasoner:
+    name: str = &quot;echo&quot;
+    tier: ReasonerTier = &quot;fast&quot;
+    est_cost_ms: float = 1.0
+
+    async def answer(self, intent: Intent, world: WorldModel, tools: ToolRegistry) -&gt; Response:
+        return Response(text=intent.text, reasoner=self.name, tier=self.tier,
+                        confidence=0.5, cost_ms=self.est_cost_ms)
+</code></pre></div>
 
 
 
@@ -1167,8 +1421,58 @@ specialist models).</p>
 
 
         <p>Stand-in for a heavyweight LLM. Artificial latency; pretends to reason.</p>
-<p>Replace with AnthropicReasoner or LocalReasoner in Phase 2 without touching
-anything that depends on the Reasoner protocol.</p>
+<p>Replace with <code>AnthropicReasoner</code> or <code>LocalReasoner</code> in Phase 2
+without touching anything that depends on the Reasoner protocol. Useful
+for tests and demos that need a deep-tier response shape without
+hitting a real model.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.reasoners.DeepSimulatedReasoner.name">name</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Reasoner identifier used by the router.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.reasoners.DeepSimulatedReasoner.tier">tier</span></code></td>
+            <td>
+                  <code><span title="mente.types.ReasonerTier">ReasonerTier</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Router tier label; always <code>"deep"</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.reasoners.DeepSimulatedReasoner.est_cost_ms">est_cost_ms</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Simulated latency used by metacog estimates and to
+calibrate the artificial sleep in :meth:<code>answer</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
 
@@ -1190,6 +1494,987 @@ anything that depends on the Reasoner protocol.</p>
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="mente.reasoners.DeepSimulatedReasoner.answer" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">answer</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#mente.reasoners.DeepSimulatedReasoner.answer" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">answer</span><span class="p">(</span><span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">WorldModel</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">ToolRegistry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Sleep for a jittered fraction of <code>est_cost_ms</code> then reply.</p>
+<p>The reply echoes the intent plus a snapshot of every entity in the
+world model, so callers can see that context propagated through.
+Confidence is middling (<code>0.55</code>) — enough to pass a lax verifier,
+low enough to be overwritten by a real LLM once wired.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>intent</code>
+            </td>
+            <td>
+                  <code><span title="mente.types.Intent">Intent</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The incoming user intent.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>world</code>
+            </td>
+            <td>
+                  <code><span title="mente.world_model.WorldModel">WorldModel</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Current world-model snapshot; entities are included in
+the reply text when present.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>tools</code>
+            </td>
+            <td>
+                  <code><span title="mente.tools.ToolRegistry">ToolRegistry</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Tool registry (unused in the stub).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>A</code></td>            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>class:<code>Response</code> carrying the simulated reply and a fixed</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+<td></td>            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>middling confidence.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/mente/reasoners.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-266">266</a></span>
+<span class="normal"><a href="#__codelineno-0-267">267</a></span>
+<span class="normal"><a href="#__codelineno-0-268">268</a></span>
+<span class="normal"><a href="#__codelineno-0-269">269</a></span>
+<span class="normal"><a href="#__codelineno-0-270">270</a></span>
+<span class="normal"><a href="#__codelineno-0-271">271</a></span>
+<span class="normal"><a href="#__codelineno-0-272">272</a></span>
+<span class="normal"><a href="#__codelineno-0-273">273</a></span>
+<span class="normal"><a href="#__codelineno-0-274">274</a></span>
+<span class="normal"><a href="#__codelineno-0-275">275</a></span>
+<span class="normal"><a href="#__codelineno-0-276">276</a></span>
+<span class="normal"><a href="#__codelineno-0-277">277</a></span>
+<span class="normal"><a href="#__codelineno-0-278">278</a></span>
+<span class="normal"><a href="#__codelineno-0-279">279</a></span>
+<span class="normal"><a href="#__codelineno-0-280">280</a></span>
+<span class="normal"><a href="#__codelineno-0-281">281</a></span>
+<span class="normal"><a href="#__codelineno-0-282">282</a></span>
+<span class="normal"><a href="#__codelineno-0-283">283</a></span>
+<span class="normal"><a href="#__codelineno-0-284">284</a></span>
+<span class="normal"><a href="#__codelineno-0-285">285</a></span>
+<span class="normal"><a href="#__codelineno-0-286">286</a></span>
+<span class="normal"><a href="#__codelineno-0-287">287</a></span>
+<span class="normal"><a href="#__codelineno-0-288">288</a></span>
+<span class="normal"><a href="#__codelineno-0-289">289</a></span>
+<span class="normal"><a href="#__codelineno-0-290">290</a></span>
+<span class="normal"><a href="#__codelineno-0-291">291</a></span>
+<span class="normal"><a href="#__codelineno-0-292">292</a></span>
+<span class="normal"><a href="#__codelineno-0-293">293</a></span>
+<span class="normal"><a href="#__codelineno-0-294">294</a></span>
+<span class="normal"><a href="#__codelineno-0-295">295</a></span>
+<span class="normal"><a href="#__codelineno-0-296">296</a></span>
+<span class="normal"><a href="#__codelineno-0-297">297</a></span>
+<span class="normal"><a href="#__codelineno-0-298">298</a></span>
+<span class="normal"><a href="#__codelineno-0-299">299</a></span>
+<span class="normal"><a href="#__codelineno-0-300">300</a></span>
+<span class="normal"><a href="#__codelineno-0-301">301</a></span>
+<span class="normal"><a href="#__codelineno-0-302">302</a></span>
+<span class="normal"><a href="#__codelineno-0-303">303</a></span>
+<span class="normal"><a href="#__codelineno-0-304">304</a></span>
+<span class="normal"><a href="#__codelineno-0-305">305</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-266" name="__codelineno-0-266"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">answer</span><span class="p">(</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267"></a>    <span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">WorldModel</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">ToolRegistry</span>
+<a id="__codelineno-0-268" name="__codelineno-0-268"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Sleep for a jittered fraction of ``est_cost_ms`` then reply.</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270"></a>
+<a id="__codelineno-0-271" name="__codelineno-0-271"></a><span class="sd">    The reply echoes the intent plus a snapshot of every entity in the</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272"></a><span class="sd">    world model, so callers can see that context propagated through.</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="sd">    Confidence is middling (``0.55``) — enough to pass a lax verifier,</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274"></a><span class="sd">    low enough to be overwritten by a real LLM once wired.</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275"></a>
+<a id="__codelineno-0-276" name="__codelineno-0-276"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-277" name="__codelineno-0-277"></a><span class="sd">        intent: The incoming user intent.</span>
+<a id="__codelineno-0-278" name="__codelineno-0-278"></a><span class="sd">        world: Current world-model snapshot; entities are included in</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279"></a><span class="sd">            the reply text when present.</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280"></a><span class="sd">        tools: Tool registry (unused in the stub).</span>
+<a id="__codelineno-0-281" name="__codelineno-0-281"></a>
+<a id="__codelineno-0-282" name="__codelineno-0-282"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283"></a><span class="sd">        A :class:`Response` carrying the simulated reply and a fixed</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284"></a><span class="sd">        middling confidence.</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286"></a>    <span class="c1"># Simulate a forward pass + thinking budget.</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287"></a>    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">est_cost_ms</span> <span class="o">/</span> <span class="mf">1000.0</span> <span class="o">*</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">))</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288"></a>    <span class="n">snapshot</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">:</span> <span class="n">world</span><span class="o">.</span><span class="n">entity</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">world</span><span class="o">.</span><span class="n">entities</span><span class="p">()}</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289"></a>    <span class="c1"># Incredibly naive &quot;reasoning&quot;: acknowledge + echo context.</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290"></a>    <span class="k">if</span> <span class="n">snapshot</span><span class="p">:</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291"></a>        <span class="n">ctx</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">snapshot</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292"></a>        <span class="n">reply</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293"></a>            <span class="sa">f</span><span class="s2">&quot;[deep] I thought about &#39;</span><span class="si">{</span><span class="n">intent</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&#39; with context </span><span class="se">{{</span><span class="si">{</span><span class="n">ctx</span><span class="si">}</span><span class="se">}}</span><span class="s2">. &quot;</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294"></a>            <span class="sa">f</span><span class="s2">&quot;I don&#39;t have a confident answer yet — wire me to a real LLM.&quot;</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295"></a>        <span class="p">)</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297"></a>        <span class="n">reply</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-298" name="__codelineno-0-298"></a>            <span class="sa">f</span><span class="s2">&quot;[deep] I considered &#39;</span><span class="si">{</span><span class="n">intent</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&#39; but have no world-model context. &quot;</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299"></a>            <span class="sa">f</span><span class="s2">&quot;Wire me to a real LLM in Phase 2.&quot;</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300"></a>        <span class="p">)</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301"></a>    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+<a id="__codelineno-0-302" name="__codelineno-0-302"></a>        <span class="n">text</span><span class="o">=</span><span class="n">reply</span><span class="p">,</span>
+<a id="__codelineno-0-303" name="__codelineno-0-303"></a>        <span class="n">reasoner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">tier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+<a id="__codelineno-0-304" name="__codelineno-0-304"></a>        <span class="n">confidence</span><span class="o">=</span><span class="mf">0.55</span><span class="p">,</span> <span class="n">cost_ms</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">est_cost_ms</span><span class="p">,</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305"></a>    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="mente.reasoners.FastHeuristicReasoner" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">FastHeuristicReasoner</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#mente.reasoners.FastHeuristicReasoner" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">FastHeuristicReasoner</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;fast.heuristic&#39;</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="n">ReasonerTier</span> <span class="o">=</span> <span class="s1">&#39;fast&#39;</span><span class="p">,</span> <span class="n">est_cost_ms</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Cheap pattern-matching reasoner for known intent shapes.</p>
+<p>Scans the intent text against a small table of regexes. On a hit it
+either returns a canned reply, dispatches a tool (<code>clock.now</code>,
+<code>memory.note</code>, <code>memory.recall</code>, <code>memory.search</code>), or defers to
+the self-model via the injected hook. On a miss it returns an empty
+response with <code>confidence=0</code>, signalling the router to escalate.</p>
+
+
+<details class="covered-patterns" open>
+  <summary>Covered patterns</summary>
+  <ul>
+<li>Greetings (<code>hi</code>/<code>hello</code>/<code>hey</code>) → fixed reply.</li>
+<li><code>what time is it</code> → <code>clock.now</code> tool.</li>
+<li><code>who am i</code> → lookup via the world model.</li>
+<li><code>remember that &lt;fact&gt;</code> → <code>memory.note</code> tool.</li>
+<li><code>what do you remember</code> → <code>memory.recall</code> tool.</li>
+<li><code>what do you know about &lt;topic&gt;</code> → <code>memory.search</code> tool.</li>
+<li>Self-referential queries (<code>what are you</code>, <code>how many turns</code>,
+  <code>describe yourself</code>, etc.) → self-model hook if attached.</li>
+</ul>
+</details>
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.reasoners.FastHeuristicReasoner.name">name</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Reasoner identifier used by the router.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.reasoners.FastHeuristicReasoner.tier">tier</span></code></td>
+            <td>
+                  <code><span title="mente.types.ReasonerTier">ReasonerTier</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Router tier label; always <code>"fast"</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.reasoners.FastHeuristicReasoner.est_cost_ms">est_cost_ms</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Predicted latency used by metacog estimates.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="mente.reasoners.FastHeuristicReasoner.answer" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">answer</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#mente.reasoners.FastHeuristicReasoner.answer" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">answer</span><span class="p">(</span><span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">WorldModel</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">ToolRegistry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Try each pattern in order; return the first matching reply.</p>
+<p>Self-referential patterns dispatch to the module-level self-model
+hook (set via :func:<code>set_self_model_hook</code>); if no hook is attached
+the reply falls back to a diagnostic string but still reports high
+confidence so the router does not escalate needlessly.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>intent</code>
+            </td>
+            <td>
+                  <code><span title="mente.types.Intent">Intent</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The incoming user intent.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>world</code>
+            </td>
+            <td>
+                  <code><span title="mente.world_model.WorldModel">WorldModel</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Current world-model snapshot (used for <code>who am i</code>).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>tools</code>
+            </td>
+            <td>
+                  <code><span title="mente.tools.ToolRegistry">ToolRegistry</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Tool registry for <code>clock.now</code>, <code>memory.*</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>A</code></td>            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>class:<code>Response</code> with <code>confidence &gt; 0</code> when a pattern</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+<td></td>            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>matched, or an empty response with <code>confidence=0</code> when none</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+<td></td>            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>did (so the router escalates to a deeper tier).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/mente/reasoners.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-150">150</a></span>
+<span class="normal"><a href="#__codelineno-0-151">151</a></span>
+<span class="normal"><a href="#__codelineno-0-152">152</a></span>
+<span class="normal"><a href="#__codelineno-0-153">153</a></span>
+<span class="normal"><a href="#__codelineno-0-154">154</a></span>
+<span class="normal"><a href="#__codelineno-0-155">155</a></span>
+<span class="normal"><a href="#__codelineno-0-156">156</a></span>
+<span class="normal"><a href="#__codelineno-0-157">157</a></span>
+<span class="normal"><a href="#__codelineno-0-158">158</a></span>
+<span class="normal"><a href="#__codelineno-0-159">159</a></span>
+<span class="normal"><a href="#__codelineno-0-160">160</a></span>
+<span class="normal"><a href="#__codelineno-0-161">161</a></span>
+<span class="normal"><a href="#__codelineno-0-162">162</a></span>
+<span class="normal"><a href="#__codelineno-0-163">163</a></span>
+<span class="normal"><a href="#__codelineno-0-164">164</a></span>
+<span class="normal"><a href="#__codelineno-0-165">165</a></span>
+<span class="normal"><a href="#__codelineno-0-166">166</a></span>
+<span class="normal"><a href="#__codelineno-0-167">167</a></span>
+<span class="normal"><a href="#__codelineno-0-168">168</a></span>
+<span class="normal"><a href="#__codelineno-0-169">169</a></span>
+<span class="normal"><a href="#__codelineno-0-170">170</a></span>
+<span class="normal"><a href="#__codelineno-0-171">171</a></span>
+<span class="normal"><a href="#__codelineno-0-172">172</a></span>
+<span class="normal"><a href="#__codelineno-0-173">173</a></span>
+<span class="normal"><a href="#__codelineno-0-174">174</a></span>
+<span class="normal"><a href="#__codelineno-0-175">175</a></span>
+<span class="normal"><a href="#__codelineno-0-176">176</a></span>
+<span class="normal"><a href="#__codelineno-0-177">177</a></span>
+<span class="normal"><a href="#__codelineno-0-178">178</a></span>
+<span class="normal"><a href="#__codelineno-0-179">179</a></span>
+<span class="normal"><a href="#__codelineno-0-180">180</a></span>
+<span class="normal"><a href="#__codelineno-0-181">181</a></span>
+<span class="normal"><a href="#__codelineno-0-182">182</a></span>
+<span class="normal"><a href="#__codelineno-0-183">183</a></span>
+<span class="normal"><a href="#__codelineno-0-184">184</a></span>
+<span class="normal"><a href="#__codelineno-0-185">185</a></span>
+<span class="normal"><a href="#__codelineno-0-186">186</a></span>
+<span class="normal"><a href="#__codelineno-0-187">187</a></span>
+<span class="normal"><a href="#__codelineno-0-188">188</a></span>
+<span class="normal"><a href="#__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#__codelineno-0-192">192</a></span>
+<span class="normal"><a href="#__codelineno-0-193">193</a></span>
+<span class="normal"><a href="#__codelineno-0-194">194</a></span>
+<span class="normal"><a href="#__codelineno-0-195">195</a></span>
+<span class="normal"><a href="#__codelineno-0-196">196</a></span>
+<span class="normal"><a href="#__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#__codelineno-0-198">198</a></span>
+<span class="normal"><a href="#__codelineno-0-199">199</a></span>
+<span class="normal"><a href="#__codelineno-0-200">200</a></span>
+<span class="normal"><a href="#__codelineno-0-201">201</a></span>
+<span class="normal"><a href="#__codelineno-0-202">202</a></span>
+<span class="normal"><a href="#__codelineno-0-203">203</a></span>
+<span class="normal"><a href="#__codelineno-0-204">204</a></span>
+<span class="normal"><a href="#__codelineno-0-205">205</a></span>
+<span class="normal"><a href="#__codelineno-0-206">206</a></span>
+<span class="normal"><a href="#__codelineno-0-207">207</a></span>
+<span class="normal"><a href="#__codelineno-0-208">208</a></span>
+<span class="normal"><a href="#__codelineno-0-209">209</a></span>
+<span class="normal"><a href="#__codelineno-0-210">210</a></span>
+<span class="normal"><a href="#__codelineno-0-211">211</a></span>
+<span class="normal"><a href="#__codelineno-0-212">212</a></span>
+<span class="normal"><a href="#__codelineno-0-213">213</a></span>
+<span class="normal"><a href="#__codelineno-0-214">214</a></span>
+<span class="normal"><a href="#__codelineno-0-215">215</a></span>
+<span class="normal"><a href="#__codelineno-0-216">216</a></span>
+<span class="normal"><a href="#__codelineno-0-217">217</a></span>
+<span class="normal"><a href="#__codelineno-0-218">218</a></span>
+<span class="normal"><a href="#__codelineno-0-219">219</a></span>
+<span class="normal"><a href="#__codelineno-0-220">220</a></span>
+<span class="normal"><a href="#__codelineno-0-221">221</a></span>
+<span class="normal"><a href="#__codelineno-0-222">222</a></span>
+<span class="normal"><a href="#__codelineno-0-223">223</a></span>
+<span class="normal"><a href="#__codelineno-0-224">224</a></span>
+<span class="normal"><a href="#__codelineno-0-225">225</a></span>
+<span class="normal"><a href="#__codelineno-0-226">226</a></span>
+<span class="normal"><a href="#__codelineno-0-227">227</a></span>
+<span class="normal"><a href="#__codelineno-0-228">228</a></span>
+<span class="normal"><a href="#__codelineno-0-229">229</a></span>
+<span class="normal"><a href="#__codelineno-0-230">230</a></span>
+<span class="normal"><a href="#__codelineno-0-231">231</a></span>
+<span class="normal"><a href="#__codelineno-0-232">232</a></span>
+<span class="normal"><a href="#__codelineno-0-233">233</a></span>
+<span class="normal"><a href="#__codelineno-0-234">234</a></span>
+<span class="normal"><a href="#__codelineno-0-235">235</a></span>
+<span class="normal"><a href="#__codelineno-0-236">236</a></span>
+<span class="normal"><a href="#__codelineno-0-237">237</a></span>
+<span class="normal"><a href="#__codelineno-0-238">238</a></span>
+<span class="normal"><a href="#__codelineno-0-239">239</a></span>
+<span class="normal"><a href="#__codelineno-0-240">240</a></span>
+<span class="normal"><a href="#__codelineno-0-241">241</a></span>
+<span class="normal"><a href="#__codelineno-0-242">242</a></span>
+<span class="normal"><a href="#__codelineno-0-243">243</a></span>
+<span class="normal"><a href="#__codelineno-0-244">244</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-150" name="__codelineno-0-150"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">answer</span><span class="p">(</span>
+<a id="__codelineno-0-151" name="__codelineno-0-151"></a>    <span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">WorldModel</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">ToolRegistry</span>
+<a id="__codelineno-0-152" name="__codelineno-0-152"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+<a id="__codelineno-0-153" name="__codelineno-0-153"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Try each pattern in order; return the first matching reply.</span>
+<a id="__codelineno-0-154" name="__codelineno-0-154"></a>
+<a id="__codelineno-0-155" name="__codelineno-0-155"></a><span class="sd">    Self-referential patterns dispatch to the module-level self-model</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156"></a><span class="sd">    hook (set via :func:`set_self_model_hook`); if no hook is attached</span>
+<a id="__codelineno-0-157" name="__codelineno-0-157"></a><span class="sd">    the reply falls back to a diagnostic string but still reports high</span>
+<a id="__codelineno-0-158" name="__codelineno-0-158"></a><span class="sd">    confidence so the router does not escalate needlessly.</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a>
+<a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="sd">        intent: The incoming user intent.</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162"></a><span class="sd">        world: Current world-model snapshot (used for ``who am i``).</span>
+<a id="__codelineno-0-163" name="__codelineno-0-163"></a><span class="sd">        tools: Tool registry for ``clock.now``, ``memory.*``.</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a>
+<a id="__codelineno-0-165" name="__codelineno-0-165"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a><span class="sd">        A :class:`Response` with ``confidence &gt; 0`` when a pattern</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a><span class="sd">        matched, or an empty response with ``confidence=0`` when none</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a><span class="sd">        did (so the router escalates to a deeper tier).</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170"></a>    <span class="n">tools_used</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171"></a>    <span class="n">text</span> <span class="o">=</span> <span class="n">intent</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="k">for</span> <span class="n">pat</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">_SIMPLE_PATTERNS</span><span class="p">:</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a>        <span class="n">m</span> <span class="o">=</span> <span class="n">pat</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a>            <span class="k">continue</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;time:now&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a>            <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">tools</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;clock.now&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a>            <span class="n">tools_used</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;clock.now&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a>            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>                <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;It is </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a>                <span class="n">reasoner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">tier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a>                <span class="n">confidence</span><span class="o">=</span><span class="mf">0.98</span><span class="p">,</span> <span class="n">cost_ms</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">cost_ms</span><span class="p">,</span> <span class="n">tools_used</span><span class="o">=</span><span class="n">tools_used</span><span class="p">,</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a>            <span class="p">)</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;user:lookup&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a>            <span class="n">name</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a>            <span class="n">v</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">name</span> <span class="k">else</span> <span class="s2">&quot;someone I don&#39;t know yet&quot;</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a>            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a>                <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;You are </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a>                <span class="n">reasoner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">tier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a>                <span class="n">confidence</span><span class="o">=</span><span class="mf">0.9</span> <span class="k">if</span> <span class="n">name</span> <span class="k">else</span> <span class="mf">0.4</span><span class="p">,</span> <span class="n">cost_ms</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">est_cost_ms</span><span class="p">,</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>            <span class="p">)</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;remember:capture&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a>            <span class="n">fact</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;.!?&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a>            <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">tools</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;memory.note&quot;</span><span class="p">,</span> <span class="n">fact</span><span class="o">=</span><span class="n">fact</span><span class="p">)</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a>            <span class="n">tools_used</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;memory.note&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a>            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a>                <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Noted: </span><span class="si">{</span><span class="n">fact</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a>                <span class="n">reasoner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">tier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a>                <span class="n">confidence</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">cost_ms</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">cost_ms</span><span class="p">,</span> <span class="n">tools_used</span><span class="o">=</span><span class="n">tools_used</span><span class="p">,</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a>            <span class="p">)</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;semantic:search&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202"></a>            <span class="n">topic</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;.!?&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a>            <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">tools</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;memory.search&quot;</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a>            <span class="n">tools_used</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;memory.search&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205"></a>            <span class="n">hits</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">value</span> <span class="ow">or</span> <span class="p">[]</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">hits</span><span class="p">:</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a>                <span class="n">body</span> <span class="o">=</span> <span class="s2">&quot;nothing relevant&quot;</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208"></a>            <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209"></a>                <span class="n">body</span> <span class="o">=</span> <span class="s2">&quot;; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (score </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)&quot;</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hits</span><span class="p">)</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a>            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a>                <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;About &#39;</span><span class="si">{</span><span class="n">topic</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212"></a>                <span class="n">reasoner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">tier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213"></a>                <span class="n">confidence</span><span class="o">=</span><span class="mf">0.85</span> <span class="k">if</span> <span class="n">hits</span> <span class="k">else</span> <span class="mf">0.4</span><span class="p">,</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214"></a>                <span class="n">cost_ms</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">cost_ms</span><span class="p">,</span> <span class="n">tools_used</span><span class="o">=</span><span class="n">tools_used</span><span class="p">,</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215"></a>            <span class="p">)</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216"></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;self:query&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217"></a>            <span class="n">hook</span> <span class="o">=</span> <span class="n">_SELF_MODEL_HOOK</span><span class="p">[</span><span class="s2">&quot;fn&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218"></a>            <span class="n">reply</span> <span class="o">=</span> <span class="n">hook</span><span class="p">(</span><span class="n">intent</span><span class="o">.</span><span class="n">text</span><span class="p">)</span> <span class="k">if</span> <span class="n">hook</span> <span class="k">else</span> <span class="s2">&quot;self-model not attached&quot;</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219"></a>            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220"></a>                <span class="n">text</span><span class="o">=</span><span class="n">reply</span><span class="p">,</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a>                <span class="n">reasoner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">tier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+<a id="__codelineno-0-222" name="__codelineno-0-222"></a>                <span class="n">confidence</span><span class="o">=</span><span class="mf">0.92</span><span class="p">,</span> <span class="n">cost_ms</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">est_cost_ms</span><span class="p">,</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223"></a>            <span class="p">)</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224"></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;remember:recall&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225"></a>            <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">tools</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;memory.recall&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226"></a>            <span class="n">tools_used</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;memory.recall&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227"></a>            <span class="n">notes</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">value</span> <span class="ow">or</span> <span class="p">[]</span>
+<a id="__codelineno-0-228" name="__codelineno-0-228"></a>            <span class="n">body</span> <span class="o">=</span> <span class="s2">&quot;; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">notes</span><span class="p">)</span> <span class="k">if</span> <span class="n">notes</span> <span class="k">else</span> <span class="s2">&quot;nothing yet&quot;</span>
+<a id="__codelineno-0-229" name="__codelineno-0-229"></a>            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230"></a>                <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;I remember: </span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231"></a>                <span class="n">reasoner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">tier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232"></a>                <span class="n">confidence</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">cost_ms</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">cost_ms</span><span class="p">,</span> <span class="n">tools_used</span><span class="o">=</span><span class="n">tools_used</span><span class="p">,</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233"></a>            <span class="p">)</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234"></a>        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235"></a>            <span class="n">text</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236"></a>            <span class="n">reasoner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">tier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237"></a>            <span class="n">confidence</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">cost_ms</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">est_cost_ms</span><span class="p">,</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238"></a>        <span class="p">)</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239"></a>    <span class="c1"># No pattern matched — low confidence, router should escalate.</span>
+<a id="__codelineno-0-240" name="__codelineno-0-240"></a>    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241"></a>        <span class="n">text</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242"></a>        <span class="n">reasoner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">tier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+<a id="__codelineno-0-243" name="__codelineno-0-243"></a>        <span class="n">confidence</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">cost_ms</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">est_cost_ms</span><span class="p">,</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244"></a>    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="mente.reasoners.Reasoner" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">Reasoner</span>
+
+
+<a href="#mente.reasoners.Reasoner" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.Protocol">Protocol</span></code></p>
+
+
+
+        <p>A pluggable reasoner tier that produces a Response for an Intent.</p>
+<p>Reasoners are dispatched by the Router based on predicted confidence and
+cost (see <code>mente.metacog.Metacog.estimate</code>). A Reasoner SHOULD:</p>
+<ul>
+<li>return a <code>Response</code> with <code>confidence=0.0</code> when it does not
+    recognize the intent — the Router then escalates to the next tier.</li>
+<li>never raise for a routine "couldn't answer"; surface that as low
+    confidence instead so the pipeline stays observable.</li>
+<li>be async-safe: mente calls <code>answer</code> from an event-loop task and may
+    run reasoners concurrently.</li>
+</ul>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.reasoners.Reasoner.name">name</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Short stable identifier used in logs, verdicts, and traces.
+Convention: <code>"&lt;tier&gt;.&lt;impl&gt;"</code> (e.g. <code>"fast.heuristic"</code>).</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.reasoners.Reasoner.tier">tier</span></code></td>
+            <td>
+                  <code><span title="mente.types.ReasonerTier">ReasonerTier</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>One of <code>"fast"</code>, <code>"specialist"</code>, <code>"deep"</code>. Controls
+dispatch priority and escalation ordering.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="mente.reasoners.Reasoner.est_cost_ms">est_cost_ms</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Rough p50 latency estimate in milliseconds. The Router
+uses this to trade off cost vs. confidence — not a hard bound.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="mente.reasoners.Reasoner.answer" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">answer</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#mente.reasoners.Reasoner.answer" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">answer</span><span class="p">(</span><span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">WorldModel</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">ToolRegistry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Produce a Response for the given Intent.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>intent</code>
+            </td>
+            <td>
+                  <code><span title="mente.types.Intent">Intent</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The parsed user/system intent to handle. <code>intent.text</code>
+holds the natural-language payload.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>world</code>
+            </td>
+            <td>
+                  <code><span title="mente.world_model.WorldModel">WorldModel</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Read-only snapshot of the current world model. Reasoners
+may query it for context but should not mutate it directly.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>tools</code>
+            </td>
+            <td>
+                  <code><span title="mente.tools.ToolRegistry">ToolRegistry</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Typed tool registry. Reasoners may invoke tools during
+reasoning (<code>await tools.invoke("clock.now")</code>).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A <code>Response</code> carrying the answer text, the emitting reasoner's</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>name</code>/<code>tier</code>, a <code>confidence</code> in <code>[0.0, 1.0]</code>, an actual</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>cost_ms</code>, and any <code>tools_used</code>. Set <code>confidence=0.0</code> to</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="mente.types.Response">Response</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>signal "don't use mine" so the Router escalates.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="Exception">Exception</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Only for genuine infrastructure failures (network,
+tool-registry misuse, etc.). Routine "I don't know" is
+expressed via <code>confidence=0.0</code>, not exceptions.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/mente/reasoners.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-81"> 81</a></span>
+<span class="normal"><a href="#__codelineno-0-82"> 82</a></span>
+<span class="normal"><a href="#__codelineno-0-83"> 83</a></span>
+<span class="normal"><a href="#__codelineno-0-84"> 84</a></span>
+<span class="normal"><a href="#__codelineno-0-85"> 85</a></span>
+<span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
+<span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
+<span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
+<span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
+<span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
+<span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
+<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
+<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
+<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
+<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
+<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
+<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
+<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
+<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">answer</span><span class="p">(</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">WorldModel</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">ToolRegistry</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Produce a Response for the given Intent.</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">        intent: The parsed user/system intent to handle. ``intent.text``</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="sd">            holds the natural-language payload.</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="sd">        world: Read-only snapshot of the current world model. Reasoners</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">            may query it for context but should not mutate it directly.</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="sd">        tools: Typed tool registry. Reasoners may invoke tools during</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">            reasoning (``await tools.invoke(&quot;clock.now&quot;)``).</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">        A ``Response`` carrying the answer text, the emitting reasoner&#39;s</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">        ``name``/``tier``, a ``confidence`` in ``[0.0, 1.0]``, an actual</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">        ``cost_ms``, and any ``tools_used``. Set ``confidence=0.0`` to</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="sd">        signal &quot;don&#39;t use mine&quot; so the Router escalates.</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a>
+<a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">    Raises:</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="sd">        Exception: Only for genuine infrastructure failures (network,</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">            tool-registry misuse, etc.). Routine &quot;I don&#39;t know&quot; is</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="sd">            expressed via ``confidence=0.0``, not exceptions.</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a>    <span class="o">...</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 
 
@@ -1218,11 +2503,11 @@ anything that depends on the Reasoner protocol.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/mente/reasoners.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="k">def</span><span class="w"> </span><span class="nf">set_self_model_hook</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># type: ignore[no-untyped-def]</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Allow runtime to inject a self-model query function.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="n">_SELF_MODEL_HOOK</span><span class="p">[</span><span class="s2">&quot;fn&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fn</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="k">def</span><span class="w"> </span><span class="nf">set_self_model_hook</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># type: ignore[no-untyped-def]</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Allow runtime to inject a self-model query function.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="n">_SELF_MODEL_HOOK</span><span class="p">[</span><span class="s2">&quot;fn&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fn</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

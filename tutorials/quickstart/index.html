@@ -299,6 +299,44 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../performance/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Performance
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../faq/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  FAQ
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -526,6 +564,17 @@
     <span class="md-ellipsis">
       
         Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-without-installing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run without installing
       
     </span>
   </a>
@@ -1115,6 +1164,60 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1146,6 +1249,17 @@
     <span class="md-ellipsis">
       
         Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-without-installing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run without installing
       
     </span>
   </a>
@@ -1297,96 +1411,106 @@ code, and confirm that its state survives a restart.</p>
 <li>A checkout of the repository (no dependencies required — MENTE's Phase 1
   runs on the stdlib)</li>
 </ul>
+<h2 id="run-without-installing">Run without installing<a class="headerlink" href="#run-without-installing" title="Permanent link">&para;</a></h2>
+<p>The fastest path from zero to a working REPL is cloning and launching:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/jspwrd/mente
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>mente
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>./mente
+</code></pre></div>
+<p>The <code>./mente</code> launcher shell-script resolves a Python 3.11+ interpreter
+automatically (checking <code>MENTE_PYTHON</code>, then <code>python3.13</code>, <code>python3.12</code>,
+<code>python3.11</code>, then <code>python3</code>) and runs the CLI straight out of the checkout.
+No venv, no <code>pip install</code>, no dependencies — the core is stdlib-only.</p>
 <h2 id="install">Install<a class="headerlink" href="#install" title="Permanent link">&para;</a></h2>
 <p>Two ways to get started, from least to most permanent:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Option A — no install, use the launcher in the checkout</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>./mente<span class="w"> </span>--help
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Option B — install from PyPI (coming with the first release)</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>pip<span class="w"> </span>install<span class="w"> </span>mente
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>mente<span class="w"> </span>--help
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Option A — no install, use the launcher in the checkout</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>./mente<span class="w"> </span>--help
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Option B — install from PyPI</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>pip<span class="w"> </span>install<span class="w"> </span>mente
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>mente<span class="w"> </span>--help
 </code></pre></div>
 <p>The rest of this page uses <code>./mente</code> since it works immediately after cloning.</p>
 <h2 id="first-session-mente-run">First session: <code>./mente run</code><a class="headerlink" href="#first-session-mente-run" title="Permanent link">&para;</a></h2>
 <p>Launch the interactive REPL:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>./mente<span class="w"> </span>reset<span class="w">      </span><span class="c1"># start clean so output matches below</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>./mente<span class="w"> </span>run
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>./mente<span class="w"> </span>reset<span class="w">      </span><span class="c1"># start clean so output matches below</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>./mente<span class="w"> </span>run
 </code></pre></div>
 <p>You'll see the banner and a prompt:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>   _      ___   ___
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  /_\    | _ \ |_ _|   /_\
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a> / _ \   |   /  | |   / _ \
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>/_/ \_\  |_|_\ |___| /_/ \_\
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  persistent, event-driven reasoning process
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>booted. 3 reasoners, 4 tools.
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>type a message. /help for commands. /quit to exit.
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>you&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>   _      ___   ___
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  /_\    | _ \ |_ _|   /_\
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a> / _ \   |   /  | |   / _ \
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>/_/ \_\  |_|_\ |___| /_/ \_\
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  persistent, event-driven reasoning process
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>booted. 3 reasoners, 4 tools.
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>type a message. /help for commands. /quit to exit.
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>you&gt;
 </code></pre></div>
 <p>Try this scripted sequence. Expected output is shown inline — it's
 deterministic because Phase 1 uses stdlib-only embeddings and templated
 synthesis.</p>
 <h3 id="1-identity-and-clock">1. Identity and clock<a class="headerlink" href="#1-identity-and-clock" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>you&gt; hello
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>mente[fast.heuristic]&gt; Hi — I&#39;m online.
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>you&gt; who am I?
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>mente[fast.heuristic]&gt; You are Jasper.
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>you&gt; what time is it?
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>mente[fast.heuristic]&gt; It is 2026-04-21T15:42:07.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>you&gt; hello
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>mente[fast.heuristic]&gt; Hi — I&#39;m online.
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>you&gt; who am I?
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>mente[fast.heuristic]&gt; You are Jasper.
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>you&gt; what time is it?
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>mente[fast.heuristic]&gt; It is 2026-04-21T15:42:07.
 </code></pre></div>
 <p>The user's name comes from a <code>Belief</code> that the CLI seeds on startup (it
 reads <code>$USER</code>). The clock answer is a real tool call — see <code>/bus</code> to
 verify.</p>
 <h3 id="2-memory">2. Memory<a class="headerlink" href="#2-memory" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>you&gt; remember that redis uses an append-only file for durability
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>mente[fast.heuristic]&gt; Noted: redis uses an append-only file for durability.
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>you&gt; remember that postgres uses write-ahead logging
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>mente[fast.heuristic]&gt; Noted: postgres uses write-ahead logging.
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>you&gt; what do you remember?
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>mente[fast.heuristic]&gt; I remember: redis uses an append-only file for durability;
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>postgres uses write-ahead logging.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>you&gt; remember that redis uses an append-only file for durability
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>mente[fast.heuristic]&gt; Noted: redis uses an append-only file for durability.
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>you&gt; remember that postgres uses write-ahead logging
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>mente[fast.heuristic]&gt; Noted: postgres uses write-ahead logging.
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>you&gt; what do you remember?
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>mente[fast.heuristic]&gt; I remember: redis uses an append-only file for durability;
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>postgres uses write-ahead logging.
 </code></pre></div>
 <p>Notes go to SQLite-backed slow memory and to the semantic-memory vector
 store in one hop.</p>
 <h3 id="3-semantic-search">3. Semantic search<a class="headerlink" href="#3-semantic-search" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>you&gt; what do you know about databases?
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>mente[fast.heuristic]&gt; About &#39;databases&#39;: redis uses an append-only file for
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>durability (score 0.14); postgres uses write-ahead logging (score 0.11).
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>you&gt; what do you know about databases?
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>mente[fast.heuristic]&gt; About &#39;databases&#39;: redis uses an append-only file for
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>durability (score 0.14); postgres uses write-ahead logging (score 0.11).
 </code></pre></div>
 <p>Neither note contains the word "databases". The hits come from
 <code>HashEmbedder</code> — character n-grams that give fuzzy lexical matches
 without a language model.</p>
 <h3 id="4-program-synthesis">4. Program synthesis<a class="headerlink" href="#4-program-synthesis" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>you&gt; compute the 10th fibonacci number
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>mente[specialist.synthesis]&gt; fib(n=10) = 55
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>you&gt; /library
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  lib.fib.3ddeaa  entry=fib  calls=1
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>you&gt; compute the 10th fibonacci number
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>mente[specialist.synthesis]&gt; fib(n=10) = 55
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>you&gt; /library
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>  lib.fib.3ddeaa  entry=fib  calls=1
 </code></pre></div>
 <p>The synthesizer recognized the shape, emitted Python, ran it in a
 subprocess sandbox with a disallowed-AST gate, verified the output, and
 promoted the function to the permanent library. Ask again and it skips
 synthesis — it's a registered tool now.</p>
 <h3 id="5-self-query">5. Self-query<a class="headerlink" href="#5-self-query" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>you&gt; your reasoners
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>mente[fast.heuristic]&gt; I have 3 reasoners loaded: fast.heuristic,
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>specialist.synthesis, deep.sim.
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>you&gt; how many turns have you handled?
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>mente[fast.heuristic]&gt; I have handled 6 turns so far.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>you&gt; your reasoners
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>mente[fast.heuristic]&gt; I have 3 reasoners loaded: fast.heuristic,
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>specialist.synthesis, deep.sim.
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>you&gt; how many turns have you handled?
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>mente[fast.heuristic]&gt; I have handled 6 turns so far.
 </code></pre></div>
 <p>The <code>SelfModel</code> reads <code>LatentState</code> and the reasoner roster. The fast
 reasoner has a pattern that dispatches introspective questions to it.</p>
 <h2 id="mente-demo"><code>./mente demo</code><a class="headerlink" href="#mente-demo" title="Permanent link">&para;</a></h2>
 <p>If you'd rather see everything at once, run:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>./mente<span class="w"> </span>reset
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>./mente<span class="w"> </span>demo
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>./mente<span class="w"> </span>reset
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>./mente<span class="w"> </span>demo
 </code></pre></div>
 <p>This plays an 11-step scripted sequence: greeting, identity, clock,
 memory capture, semantic recall, two computation intents (fibonacci and
@@ -1395,27 +1519,27 @@ two self-queries. At the end it prints the synthesized-primitive library
 so you can see that the functions stuck.</p>
 <h2 id="reset-and-state-persistence">Reset and state persistence<a class="headerlink" href="#reset-and-state-persistence" title="Permanent link">&para;</a></h2>
 <p>MENTE writes everything to <code>.mente/</code> under the project directory:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>.mente/
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  episodic.sqlite    append-only event log
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>  semantic.sqlite    vector store for semantic recall
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>  latent.json        checkpointed latent state (turns, last intent, digest)
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>  library.json       verified synthesized primitives
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>.mente/
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  episodic.sqlite    append-only event log
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>  semantic.sqlite    vector store for semantic recall
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>  latent.json        checkpointed latent state (turns, last intent, digest)
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>  library.json       verified synthesized primitives
 </code></pre></div>
 <p>Latent state survives across invocations. To prove it, run two short
 sessions back-to-back:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Session 1</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>./mente<span class="w"> </span>reset
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="nb">printf</span><span class="w"> </span><span class="s2">&quot;remember that coffee helps my focus\n/quit\n&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>./mente<span class="w"> </span>run
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># =&gt; Noted: coffee helps my focus.</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="c1"># Session 2 — a brand-new process</span>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="nb">printf</span><span class="w"> </span><span class="s2">&quot;what do you remember?\n/quit\n&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>./mente<span class="w"> </span>run
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="c1"># =&gt; I remember: coffee helps my focus.</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Session 1</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>./mente<span class="w"> </span>reset
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="nb">printf</span><span class="w"> </span><span class="s2">&quot;remember that coffee helps my focus\n/quit\n&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>./mente<span class="w"> </span>run
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># =&gt; Noted: coffee helps my focus.</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="c1"># Session 2 — a brand-new process</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="nb">printf</span><span class="w"> </span><span class="s2">&quot;what do you remember?\n/quit\n&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>./mente<span class="w"> </span>run
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="c1"># =&gt; I remember: coffee helps my focus.</span>
 </code></pre></div>
 <p>The second process reloaded <code>latent.json</code>, reopened the SQLite stores,
 and answered correctly. Nothing was in memory between the two runs.</p>
 <p>To wipe state and start over:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>./mente<span class="w"> </span>reset
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>./mente<span class="w"> </span>reset
 </code></pre></div>
 <p>This removes every <code>.mente*</code> directory in the project root.</p>
 <h2 id="next-steps">Next steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
