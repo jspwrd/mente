@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from mente.config import MenteConfig
 from mente.consolidator import Consolidator
 from mente.memory import SlowMemory
 from mente.state import LatentState
@@ -81,5 +82,27 @@ def test_consolidate_records_digest_and_updates_latent(tmp_path: Path) -> None:
         # Checkpoint was written to disk.
         assert latent.path is not None
         assert latent.path.exists()
+    finally:
+        slow.close()
+
+
+def test_consolidator_adopts_config_when_no_explicit_interval(tmp_path: Path) -> None:
+    slow = SlowMemory(db_path=tmp_path / "episodic.sqlite")
+    latent = LatentState(path=tmp_path / "latent.json")
+    cfg = MenteConfig(consolidator_interval_s=0.5)
+    try:
+        c = Consolidator(slow_mem=slow, latent=latent, config=cfg)
+        assert c.interval_s == pytest.approx(0.5)
+    finally:
+        slow.close()
+
+
+def test_consolidator_explicit_interval_beats_config(tmp_path: Path) -> None:
+    slow = SlowMemory(db_path=tmp_path / "episodic.sqlite")
+    latent = LatentState(path=tmp_path / "latent.json")
+    cfg = MenteConfig(consolidator_interval_s=0.5)
+    try:
+        c = Consolidator(slow_mem=slow, latent=latent, interval_s=42.0, config=cfg)
+        assert c.interval_s == pytest.approx(42.0)
     finally:
         slow.close()

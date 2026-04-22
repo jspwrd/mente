@@ -11,6 +11,7 @@ import asyncio
 import pytest
 
 from mente.bus import EventBus
+from mente.config import MenteConfig
 from mente.curiosity import Curiosity
 from mente.state import LatentState
 from mente.types import Belief, Event
@@ -141,5 +142,50 @@ async def test_tick_activity_tracker_ignores_internal_origins() -> None:
             await bus.publish(Event(topic=f"intent.{origin}", origin=origin, payload={"text": "self-prompt"}))
             await asyncio.sleep(0)
             assert cur._last_user_intent_ts == 0.0
+    finally:
+        await bus.close()
+
+
+@pytest.mark.asyncio
+async def test_curiosity_adopts_config_when_no_explicit_kwargs() -> None:
+    """When a MenteConfig is supplied and no overrides, pull cadence + idle from it."""
+    bus = EventBus()
+    await bus.start()
+    try:
+        world = WorldModel(bus=bus)
+        latent = LatentState()
+        cfg = MenteConfig(
+            curiosity_interval_s=0.25,
+            curiosity_idle_threshold_s=1.5,
+        )
+        cur = Curiosity(bus=bus, world=world, latent=latent, config=cfg)
+        assert cur.interval_s == pytest.approx(0.25)
+        assert cur.idle_threshold_s == pytest.approx(1.5)
+    finally:
+        await bus.close()
+
+
+@pytest.mark.asyncio
+async def test_curiosity_explicit_kwargs_beat_config() -> None:
+    """Explicit constructor kwargs must win over a MenteConfig argument."""
+    bus = EventBus()
+    await bus.start()
+    try:
+        world = WorldModel(bus=bus)
+        latent = LatentState()
+        cfg = MenteConfig(
+            curiosity_interval_s=0.25,
+            curiosity_idle_threshold_s=1.5,
+        )
+        cur = Curiosity(
+            bus=bus,
+            world=world,
+            latent=latent,
+            interval_s=9.0,
+            idle_threshold_s=11.0,
+            config=cfg,
+        )
+        assert cur.interval_s == pytest.approx(9.0)
+        assert cur.idle_threshold_s == pytest.approx(11.0)
     finally:
         await bus.close()
