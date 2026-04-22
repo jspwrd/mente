@@ -102,7 +102,7 @@ ignore_missing_imports = true
 # Modules cleaned up to strict mypy. Add entries here as they're polished
 # (see ROADMAP.md "Type-check ratchet").
 [[tool.mypy.overrides]]
-module = ["mente.types", "mente.state"]
+module = ["mente.types", "mente.state", "mente.self_model"]
 strict = true
 
 [tool.pytest.ini_options]
