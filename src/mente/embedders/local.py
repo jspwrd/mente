@@ -38,7 +38,7 @@ class LocalEmbedder:
         dim: int | None = None,
     ) -> None:
         try:
-            from sentence_transformers import SentenceTransformer  # type: ignore
+            from sentence_transformers import SentenceTransformer
         except ImportError as e:
             raise ImportError(_INSTALL_HINT) from e
 

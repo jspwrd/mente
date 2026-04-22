@@ -202,12 +202,12 @@ class AnthropicReasoner:
 
         wrapped_call = retry_async(retry_on=_LLM_RETRY_ON)(_one_shot)
 
-        t0 = asyncio.get_event_loop().time()
+        t0 = asyncio.get_running_loop().time()
         try:
             message = await self._breaker.call(wrapped_call)
         except CircuitOpenError:
             return self._circuit_open_response(
-                intent, cost_ms=(asyncio.get_event_loop().time() - t0) * 1000
+                intent, cost_ms=(asyncio.get_running_loop().time() - t0) * 1000
             )
         except Exception as e:
             _log.error(
@@ -223,10 +223,10 @@ class AnthropicReasoner:
                 reasoner=self.name,
                 tier=self.tier,
                 confidence=0.0,
-                cost_ms=(asyncio.get_event_loop().time() - t0) * 1000,
+                cost_ms=(asyncio.get_running_loop().time() - t0) * 1000,
             )
 
-        cost_ms = (asyncio.get_event_loop().time() - t0) * 1000
+        cost_ms = (asyncio.get_running_loop().time() - t0) * 1000
         text = "".join(b.text for b in message.content if b.type == "text").strip()
 
         # Confidence proxy: end_turn = confident answer; anything else is a signal.

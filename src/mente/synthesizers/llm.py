@@ -70,7 +70,7 @@ def _extract_json_object(text: str) -> dict[str, Any] | None:
     try:
         obj = json.loads(text)
         return obj if isinstance(obj, dict) else None
-    except Exception:
+    except json.JSONDecodeError:
         pass
     # Balanced-brace scan; handles a chatty prefix/suffix from the model.
     start = text.find("{")
@@ -98,7 +98,7 @@ def _extract_json_object(text: str) -> dict[str, Any] | None:
                     try:
                         obj = json.loads(text[start:i + 1])
                         return obj if isinstance(obj, dict) else None
-                    except Exception:
+                    except json.JSONDecodeError:
                         break
         start = text.find("{", start + 1)
     return None

@@ -222,14 +222,33 @@ class LibraryStore:
 
     def __post_init__(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        if self.path.exists():
+        if not self.path.exists():
+            return
+        try:
             data = json.loads(self.path.read_text())
-            self._primitives = {k: Primitive(**v) for k, v in data.items()}
+        except json.JSONDecodeError as e:
+            _log.warning("library file %s is corrupt JSON; starting empty: %s", self.path, e)
+            return
+        if not isinstance(data, dict):
+            _log.warning("library file %s has unexpected shape; starting empty", self.path)
+            return
+        for name, payload in data.items():
+            if not isinstance(payload, dict):
+                _log.warning("library entry %r is not an object; skipping", name)
+                continue
+            try:
+                self._primitives[name] = Primitive(**payload)
+            except TypeError as e:
+                # Missing/extra fields — log and skip rather than brick the runtime.
+                _log.warning("library entry %r is malformed; skipping (%s)", name, e)
 
     def save(self) -> None:
-        self.path.write_text(
-            json.dumps({k: v.__dict__ for k, v in self._primitives.items()}, indent=2)
-        )
+        # Atomic write: a crash mid-save leaves either the old file or the
+        # new file, never a half-written one. Matches LatentState.checkpoint.
+        payload = json.dumps({k: v.__dict__ for k, v in self._primitives.items()}, indent=2)
+        tmp = self.path.with_suffix(self.path.suffix + ".tmp")
+        tmp.write_text(payload)
+        tmp.replace(self.path)
 
     def add(self, p: Primitive) -> None:
         self._primitives[p.name] = p

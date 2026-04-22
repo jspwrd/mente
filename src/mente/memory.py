@@ -94,7 +94,10 @@ class SlowMemory:
 
     def __post_init__(self) -> None:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(self.db_path)
+        # ``check_same_thread=False`` lets callers offload SlowMemory calls
+        # (esp. ``query``/``summarize``) to asyncio.to_thread without
+        # ProgrammingError. mente's event loop is the sole writer.
+        self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS episodes (

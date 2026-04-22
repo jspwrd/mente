@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
 from mente.bus import EventBus
 from mente.synthesis import LibraryStore, Primitive, SynthesisReasoner
 from mente.tools import ToolRegistry
@@ -98,8 +96,8 @@ def test_library_ignores_corrupt_entries_gracefully(tmp_path):
     }
     lib_path.write_text(json.dumps(payload))
 
-    # Current behavior: ``__post_init__`` materializes entries via
-    # ``Primitive(**v)``, so a missing required field surfaces as ``TypeError``.
-    # Pinning this so any future switch to silent-skip is a deliberate change.
-    with pytest.raises(TypeError):
-        LibraryStore(path=lib_path)
+    # Resilient behavior: corrupt entries are logged + skipped so a user's
+    # disk corruption can't brick runtime construction. Good entries load.
+    store = LibraryStore(path=lib_path)
+    assert store.get("lib.good") is not None
+    assert store.get("lib.bad") is None

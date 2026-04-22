@@ -95,13 +95,25 @@ class EventBus:
         await self._dispatch(event)
 
     async def _dispatch(self, event: Event) -> None:
-        tasks: list[asyncio.Task[None]] = [
-            asyncio.create_task(s.handler(event))
-            for s in self._subs
+        matched: list[Subscription] = [
+            s for s in self._subs
             if fnmatch.fnmatchcase(event.topic, s.pattern)
         ]
-        if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
+        if not matched:
+            return
+        tasks: list[asyncio.Task[None]] = [
+            asyncio.create_task(s.handler(event)) for s in matched
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        # ``return_exceptions=True`` means a broken handler can't take down the
+        # bus, but silent-swallow hides real bugs. Log each exception with the
+        # subscriber name that raised so it's greppable.
+        for sub, result in zip(matched, results, strict=True):
+            if isinstance(result, BaseException) and not isinstance(result, asyncio.CancelledError):
+                _log.warning(
+                    "subscriber %s raised on %s: %s: %s",
+                    sub.name, event.topic, type(result).__name__, result,
+                )
 
     async def publish(self, event: Event) -> None:
         """Fan out ``event`` to local subscribers and the remote transport.

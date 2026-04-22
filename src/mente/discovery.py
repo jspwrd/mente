@@ -130,18 +130,18 @@ class RemoteReasoner:
     timeout_s: float = 30.0
     _pending: dict[str, _PendingFuture] = field(default_factory=dict)
     _wired: bool = False
+    # Computed from ``target`` in ``__post_init__`` — storing them as real
+    # dataclass attributes (rather than @property) makes this class satisfy
+    # the Reasoner Protocol under mypy's strict variance.
+    name: str = field(init=False)
+    tier: ReasonerTier = field(init=False)
+    est_cost_ms: float = field(init=False)
 
-    @property
-    def name(self) -> str:
-        return f"remote:{self.target.node_id}:{self.target.reasoner}"
-
-    @property
-    def tier(self) -> ReasonerTier:
-        return self.target.tier
-
-    @property
-    def est_cost_ms(self) -> float:
-        return self.target.est_cost_ms + 20.0  # add transport overhead
+    def __post_init__(self) -> None:
+        self.name = f"remote:{self.target.node_id}:{self.target.reasoner}"
+        self.tier = self.target.tier
+        # +20ms accounts for transport overhead vs the peer's local cost.
+        self.est_cost_ms = self.target.est_cost_ms + 20.0
 
     def _wire(self) -> None:
         if self._wired:
@@ -181,7 +181,7 @@ class RemoteReasoner:
         self._wire()
         self._prune_stale()
         request_id = uuid.uuid4().hex
-        fut: asyncio.Future[dict[str, Any]] = asyncio.get_event_loop().create_future()
+        fut: asyncio.Future[dict[str, Any]] = asyncio.get_running_loop().create_future()
         self._pending[request_id] = _PendingFuture(future=fut, created_at=time.monotonic())
         await self.bus.publish(
             Event(

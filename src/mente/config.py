@@ -42,7 +42,9 @@ def _resolve_type(annotation: Any) -> type:
             return _TYPE_MAP[annotation]
         except KeyError as e:
             raise ValueError(f"unsupported type annotation: {annotation!r}") from e
-    return annotation
+    if isinstance(annotation, type):
+        return annotation
+    raise ValueError(f"unresolvable type annotation: {annotation!r}")
 
 
 def _coerce(value: str, annotation: Any, field_name: str) -> Any:

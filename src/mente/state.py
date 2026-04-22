@@ -10,9 +10,12 @@ the representation swaps in.
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+_log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -22,10 +25,23 @@ class LatentState:
 
     @classmethod
     def load(cls, path: Path) -> LatentState:
-        if path.exists():
+        """Load latent state from ``path``; return an empty state on corruption.
+
+        A corrupt latent.json (bad JSON, non-dict payload) should not brick
+        runtime construction — we log a warning, start fresh, and let the
+        next checkpoint overwrite the bad file.
+        """
+        if not path.exists():
+            return cls(values={}, path=path)
+        try:
             data = json.loads(path.read_text())
-            return cls(values=data, path=path)
-        return cls(values={}, path=path)
+        except json.JSONDecodeError as e:
+            _log.warning("latent file %s is corrupt JSON; starting empty: %s", path, e)
+            return cls(values={}, path=path)
+        if not isinstance(data, dict):
+            _log.warning("latent file %s has unexpected shape; starting empty", path)
+            return cls(values={}, path=path)
+        return cls(values=data, path=path)
 
     def checkpoint(self) -> None:
         if self.path is None:

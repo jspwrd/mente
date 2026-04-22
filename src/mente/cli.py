@@ -21,8 +21,9 @@ import sys
 from pathlib import Path
 
 from .config import MenteConfig
+from .reasoners import Reasoner
 from .runtime import Runtime
-from .types import Belief, Intent
+from .types import Belief, Event, Intent
 
 BANNER = r"""
    _      ___   ___
@@ -61,7 +62,7 @@ async def _run_repl(rt: Runtime) -> None:
     print(f"booted. {len(rt.reasoners)} reasoners, {len(rt.tools.list())} tools.")
     print("type a message. /help for commands. /quit to exit.\n")
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     while True:
         try:
             line = await loop.run_in_executor(None, lambda: input("you> "))
@@ -200,7 +201,7 @@ async def _run_federated(port: int) -> None:
     await peer_bus.start()
     peer_world = WorldModel(bus=peer_bus)
     peer_tools = ToolRegistry()
-    peer_reasoners = [MathSpecialist()]
+    peer_reasoners: list[Reasoner] = [MathSpecialist()]
     RemoteRequestHandler(
         bus=peer_bus, node_id=peer_id,
         reasoners=peer_reasoners, world=peer_world, tools=peer_tools,
@@ -258,7 +259,7 @@ async def _run_peer_only(port: int, node_id: str) -> None:
     await bus.start()
     world = WorldModel(bus=bus)
     tools = ToolRegistry()
-    reasoners = [MathSpecialist()]
+    reasoners: list[Reasoner] = [MathSpecialist()]
     RemoteRequestHandler(bus=bus, node_id=node_id, reasoners=reasoners,
                          world=world, tools=tools).wire()
     stop = asyncio.Event()
@@ -293,10 +294,11 @@ async def _smoke_tests() -> int:
     spoke = EventBus(transport=TCPTransport(node_id="t.spoke", port=port, role="spoke"))
     await hub.start()
     await spoke.start()
-    inbox_hub, inbox_spoke = [], []
-    async def on_hub(e):
+    inbox_hub: list[Event] = []
+    inbox_spoke: list[Event] = []
+    async def on_hub(e: Event) -> None:
         inbox_hub.append(e)
-    async def on_spoke(e):
+    async def on_spoke(e: Event) -> None:
         inbox_spoke.append(e)
     hub.subscribe("t.*", on_hub)
     spoke.subscribe("t.*", on_spoke)

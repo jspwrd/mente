@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import os
 from collections import OrderedDict
+from typing import Any
 
 _INSTALL_HINT = (
     "voyageai is not installed. install the embeddings extra: "
@@ -36,7 +37,10 @@ class VoyageEmbedder:
         self.model = model
         self.dim = dim
         self._api_key = api_key or os.environ.get("VOYAGE_API_KEY")
-        self._client = voyageai.Client(api_key=self._api_key) if self._api_key else voyageai.Client()
+        # ``voyageai`` doesn't ship type stubs; Client exists but mypy
+        # strict can't see it through the dynamic module.
+        client_cls: Any = voyageai.Client  # type: ignore[attr-defined]
+        self._client = client_cls(api_key=self._api_key) if self._api_key else client_cls()
         self._cache: OrderedDict[str, list[float]] = OrderedDict()
 
     def _cache_key(self, text: str) -> str:
@@ -81,7 +85,7 @@ class VoyageEmbedder:
             for slot, text, emb in zip(
                 uncached_idx, uncached_texts, result.embeddings, strict=True
             ):
-                vec = list(emb)
+                vec: list[float] = [float(x) for x in emb]
                 out[slot] = vec
                 self._cache_put(self._cache_key(text), vec)
         return out

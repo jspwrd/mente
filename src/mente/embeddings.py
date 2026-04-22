@@ -43,7 +43,11 @@ class SemanticMemory:
 
     def __post_init__(self) -> None:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(self.db_path)
+        # ``check_same_thread=False`` lets callers offload SemanticMemory
+        # calls to asyncio.to_thread / thread pools. mente's event loop is
+        # the only writer today, so concurrent-write UB is not a concern;
+        # readers are still safe to cross threads.
+        self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS vectors (
@@ -66,7 +70,10 @@ class SemanticMemory:
             (time.time(), text, _encode(vec), kind, _to_json(metadata or {})),
         )
         self._conn.commit()
-        return int(cur.lastrowid)
+        rowid = cur.lastrowid
+        if rowid is None:  # pragma: no cover - only reachable on WITHOUT ROWID tables
+            raise RuntimeError("INSERT produced no rowid; semantic table may be corrupt")
+        return rowid
 
     def search(self, query: str, k: int = 5, kind: str | None = None) -> list[dict[str, Any]]:
         assert self._conn is not None

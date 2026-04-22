@@ -337,15 +337,26 @@ class Runtime:
         A terminal consolidation ensures the digest reflects the full
         session before the slow-memory connection is torn down. Safe to
         call even if the background loops were never started, and
-        idempotent — a second call is a no-op.
+        idempotent — a second call is a no-op. Each close step runs
+        independently: a failure in one step logs and continues so
+        downstream resources still get released.
         """
         if getattr(self, "_shutdown_done", False):
             return
         self.stop_background()
-        # Run one final consolidation so the digest reflects the full session.
-        self.consolidator.consolidate()
-        self.latent.checkpoint()
-        self.slow_mem.close()
-        self.semantic_mem.close()
-        await self.bus.close()
+        # Best-effort terminal consolidation + checkpoint + close sweep.
+        for step_name, step in (
+            ("consolidate", lambda: self.consolidator.consolidate()),
+            ("checkpoint", lambda: self.latent.checkpoint()),
+            ("close.slow_mem", lambda: self.slow_mem.close()),
+            ("close.semantic_mem", lambda: self.semantic_mem.close()),
+        ):
+            try:
+                step()
+            except Exception as e:  # noqa: BLE001 - shutdown must continue
+                _log.warning("shutdown step %s failed: %s: %s", step_name, type(e).__name__, e)
+        try:
+            await self.bus.close()
+        except Exception as e:  # noqa: BLE001
+            _log.warning("shutdown step close.bus failed: %s: %s", type(e).__name__, e)
         self._shutdown_done = True
