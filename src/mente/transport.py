@@ -18,6 +18,11 @@ spoke sends `AUTH <hex(hmac-sha256(secret, node_id + ts))>` as its first
 line, and the hub verifies with `hmac.compare_digest`. Mismatches drop the
 connection. When `auth_secret is None` on either side the handshake is
 skipped entirely — preserves the default inproc/demo experience.
+
+Spoke auto-reconnect: if the hub disconnects mid-stream, the spoke's listen
+loop catches the drop, enters an exponential-backoff reconnect loop (0.5s …
+30s, capped), and re-sends the auth handshake on each attempt. `close()`
+flips `_closing` so the loop exits cleanly even mid-backoff.
 """
 from __future__ import annotations
 
@@ -45,6 +50,24 @@ _AUTH_MAX_SKEW_S: float = 60.0
 # Line length cap for the handshake frame so a rogue client can't exhaust
 # memory by shovelling bytes without a newline.
 _AUTH_MAX_LINE: int = 4096
+
+# Reconnect backoff schedule (seconds). Exponential with a 30s cap; we walk
+# the schedule and then stick on the final entry until give-up.
+_RECONNECT_BACKOFF_S: tuple[float, ...] = (0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 30.0)
+# Max attempts before the spoke gives up and stops trying.
+_RECONNECT_MAX_ATTEMPTS: int = 10
+# How long each open_connection probe may take before we treat it as failed
+# and back off again. Short so close() isn't blocked by a stubborn-down hub.
+_RECONNECT_PROBE_TIMEOUT_S: float = 3.0
+
+# Connection error types we treat as "hub went away, try reconnecting".
+_CONN_ERRORS: tuple[type[BaseException], ...] = (
+    asyncio.IncompleteReadError,
+    ConnectionResetError,
+    BrokenPipeError,
+    ConnectionError,
+    OSError,
+)
 
 
 class Transport(Protocol):
@@ -136,7 +159,7 @@ class TCPTransport:
       - hub: binds the port, accepts spokes, rebroadcasts incoming events
         to every other spoke.
       - spoke: connects to the hub, sends local publishes, receives remote
-        events.
+        events. Auto-reconnects with exponential backoff on hub drop.
 
     The node_id stamps outbound events so a node can ignore its own
     echoes if the hub rebroadcasts them.
@@ -157,6 +180,17 @@ class TCPTransport:
     _hub_writer: asyncio.StreamWriter | None = None
     _on_remote: RemoteHandler | None = None
     _listen_tasks: list[asyncio.Task[None]] = field(default_factory=list)
+    _reconnect_attempts: int = 0
+    _reconnecting: asyncio.Event = field(default_factory=asyncio.Event)
+    _closing: bool = False
+
+    @property
+    def reconnect_attempts(self) -> int:
+        """Total reconnect attempts made since the last successful connection.
+
+        Resets to zero when a reconnect succeeds.
+        """
+        return self._reconnect_attempts
 
     async def start(self, on_remote: RemoteHandler) -> None:
         self._on_remote = on_remote
@@ -244,55 +278,174 @@ class TCPTransport:
             if w in self._writers:
                 self._writers.remove(w)
 
-    async def _start_spoke(self) -> None:
-        self._hub_reader, self._hub_writer = await asyncio.open_connection(self.host, self.port)
+    async def _open_spoke_connection(self) -> None:
+        """Open the TCP stream and send the auth handshake (if configured).
 
-        # Send handshake before any publishes hit the wire.
+        Raises the underlying connection error on failure so the reconnect
+        loop can back off. The caller is responsible for clearing
+        `_reconnecting` on success.
+        """
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(self.host, self.port),
+            timeout=_RECONNECT_PROBE_TIMEOUT_S,
+        )
         if self.auth_secret is not None:
-            self._hub_writer.write(_build_auth_line(self.auth_secret, self.node_id))
+            writer.write(_build_auth_line(self.auth_secret, self.node_id))
             try:
-                await self._hub_writer.drain()
+                await writer.drain()
             except (ConnectionError, BrokenPipeError) as exc:
                 _log.info(
                     "transport.auth.send-failed",
                     extra={"node_id": self.node_id, "reason": type(exc).__name__},
                 )
+                with contextlib.suppress(Exception):
+                    writer.close()
+                    await writer.wait_closed()
                 raise
+        self._hub_reader = reader
+        self._hub_writer = writer
 
-        async def _listen() -> None:
-            assert self._hub_reader is not None
-            while line := await self._hub_reader.readline():
+    async def _start_spoke(self) -> None:
+        await self._open_spoke_connection()
+        self._listen_tasks.append(asyncio.create_task(self._spoke_loop()))
+
+    async def _spoke_loop(self) -> None:
+        """Listen for remote events; on drop, reconnect with backoff.
+
+        Exits cleanly when `close()` sets `_closing` or when the reconnect
+        loop exhausts its attempts.
+        """
+        while not self._closing:
+            try:
+                await self._listen_once()
+            except _CONN_ERRORS as exc:
+                if self._closing:
+                    return
+                _log.info(
+                    "transport.spoke.disconnect",
+                    extra={"node_id": self.node_id, "reason": type(exc).__name__},
+                )
+                if not await self._reconnect():
+                    return
+                continue
+            # readline returning b"" is a clean peer-close — reconnect too.
+            if self._closing:
+                return
+            _log.info(
+                "transport.spoke.disconnect",
+                extra={"node_id": self.node_id, "reason": "eof"},
+            )
+            if not await self._reconnect():
+                return
+
+    async def _listen_once(self) -> None:
+        """Read events from the current hub connection until it closes."""
+        assert self._hub_reader is not None
+        while line := await self._hub_reader.readline():
+            try:
+                event = _decode(line)
+            except (ValueError, KeyError, json.JSONDecodeError):
+                continue
+            # Skip our own echoes.
+            if event.origin == self.node_id:
+                continue
+            if self._on_remote:
+                await self._on_remote(event)
+
+    async def _reconnect(self) -> bool:
+        """Back off and reopen the hub connection. Returns True on success.
+
+        Walks `_RECONNECT_BACKOFF_S` with exponential delays, re-sending the
+        auth handshake each time. Respects `_closing` between each sleep so
+        `close()` can interrupt a long backoff cleanly.
+        """
+        self._reconnecting.set()
+        # Clear the stale writer so publish_remote drops during the gap.
+        if self._hub_writer is not None:
+            with contextlib.suppress(Exception):
+                self._hub_writer.close()
+        self._hub_reader = None
+        self._hub_writer = None
+        try:
+            for attempt in range(1, _RECONNECT_MAX_ATTEMPTS + 1):
+                if self._closing:
+                    return False
+                delay = _RECONNECT_BACKOFF_S[
+                    min(attempt - 1, len(_RECONNECT_BACKOFF_S) - 1)
+                ]
+                _log.info(
+                    "transport.spoke.reconnect.attempt",
+                    extra={
+                        "node_id": self.node_id,
+                        "attempt": attempt,
+                        "delay_s": delay,
+                    },
+                )
+                self._reconnect_attempts = attempt
                 try:
-                    event = _decode(line)
-                except (ValueError, KeyError, json.JSONDecodeError):
+                    await asyncio.sleep(delay)
+                except asyncio.CancelledError:
+                    return False
+                if self._closing:
+                    return False
+                try:
+                    await self._open_spoke_connection()
+                except (TimeoutError, *_CONN_ERRORS) as exc:
+                    _log.info(
+                        "transport.spoke.reconnect.fail",
+                        extra={
+                            "node_id": self.node_id,
+                            "attempt": attempt,
+                            "reason": type(exc).__name__,
+                        },
+                    )
                     continue
-                # Skip our own echoes.
-                if event.origin == self.node_id:
-                    continue
-                if self._on_remote:
-                    await self._on_remote(event)
-
-        self._listen_tasks.append(asyncio.create_task(_listen()))
+                _log.info(
+                    "transport.spoke.reconnect.ok",
+                    extra={"node_id": self.node_id, "attempt": attempt},
+                )
+                self._reconnect_attempts = 0
+                return True
+            _log.warning(
+                "transport.spoke.reconnect.give-up",
+                extra={
+                    "node_id": self.node_id,
+                    "attempts": _RECONNECT_MAX_ATTEMPTS,
+                },
+            )
+            return False
+        finally:
+            self._reconnecting.clear()
 
     async def publish_remote(self, event: Event) -> None:
         if self.role == "hub":
             await self._fanout(event)
-        else:
-            if self._hub_writer is None:
-                return
-            try:
-                self._hub_writer.write(_encode(event))
-                await self._hub_writer.drain()
-            except (ConnectionResetError, BrokenPipeError):
-                pass
+            return
+        # Spoke: during a reconnect gap the writer is None; fast-fail rather
+        # than queueing unboundedly.
+        if self._hub_writer is None or self._reconnecting.is_set():
+            return
+        try:
+            self._hub_writer.write(_encode(event))
+            await self._hub_writer.drain()
+        except (ConnectionResetError, BrokenPipeError):
+            pass
 
     async def close(self) -> None:
+        self._closing = True
         for t in self._listen_tasks:
             t.cancel()
+        # Await cancellation so tests can reliably observe give-up on close.
+        for t in self._listen_tasks:
+            with contextlib.suppress(asyncio.CancelledError):
+                await t
+        self._listen_tasks.clear()
         if self._hub_writer:
             self._hub_writer.close()
             with contextlib.suppress(Exception):
                 await self._hub_writer.wait_closed()
+        self._hub_writer = None
+        self._hub_reader = None
         if self._server is not None:
             self._server.close()
             await self._server.wait_closed()
