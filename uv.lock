@@ -1117,10 +1117,14 @@ embeddings-local = [
 llm = [
     { name = "anthropic" },
 ]
+llm-ollama = [
+    { name = "httpx" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "anthropic", marker = "extra == 'llm'", specifier = ">=0.40.0" },
+    { name = "httpx", marker = "extra == 'llm-ollama'", specifier = ">=0.27" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.5" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.25" },
@@ -1132,7 +1136,7 @@ requires-dist = [
     { name = "sentence-transformers", marker = "extra == 'embeddings-local'", specifier = ">=3.0" },
     { name = "voyageai", marker = "extra == 'embeddings'", specifier = ">=0.2" },
 ]
-provides-extras = ["llm", "embeddings", "embeddings-local", "docs", "dev"]
+provides-extras = ["llm", "llm-ollama", "embeddings", "embeddings-local", "docs", "dev"]
 
 [[package]]
 name = "mergedeep"
