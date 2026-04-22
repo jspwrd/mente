@@ -31,8 +31,11 @@ async def test_start_and_shutdown_leaves_state_on_disk(tmp_path: Path) -> None:
     assert (rt.root / "semantic.sqlite").exists()
     assert (rt.root / "latent.json").exists()
     data = json.loads((rt.root / "latent.json").read_text())
-    assert data.get("turns", 0) >= 1
-    assert data.get("last_intent") == "hello"
+    # latent.json uses the versioned envelope; keys live under "values".
+    assert data.get("_schema") == 1
+    values = data.get("values", {})
+    assert values.get("turns", 0) >= 1
+    assert values.get("last_intent") == "hello"
 
 
 @pytest.mark.asyncio
@@ -126,7 +129,11 @@ async def test_library_store_loaded_from_disk(tmp_path: Path) -> None:
         "signature": {"n": "int"},
         "invocations": 3,
     }
-    lib_path.write_text(json.dumps({primitive["name"]: primitive}))
+    # v1 envelope format: {_schema, primitives}.
+    lib_path.write_text(json.dumps({
+        "_schema": 1,
+        "primitives": {primitive["name"]: primitive},
+    }))
 
     rt = Runtime(root=state_dir)
     try:

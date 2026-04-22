@@ -169,8 +169,10 @@ def test_library_save_is_readable_json(tmp_path):
         invocations=3,
     ))
     data = json.loads(path.read_text())
-    assert "lib.demo" in data
-    assert data["lib.demo"]["invocations"] == 3
+    # v1 envelope: {_schema, primitives}.
+    assert data["_schema"] == 1
+    assert "lib.demo" in data["primitives"]
+    assert data["primitives"]["lib.demo"]["invocations"] == 3
 
 
 # --- Sandbox hardening -----------------------------------------------------
