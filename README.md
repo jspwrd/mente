@@ -54,13 +54,24 @@ framework's worldview.
 
 ## Quickstart
 
+Two ways in — pick whichever feels right.
+
+**No install — run straight from a checkout:**
+
 ```bash
 git clone https://github.com/jspwrd/mente.git
 cd mente
-./mente             # interactive REPL
+./mente             # interactive REPL — resolves Python 3.11+ automatically
 ```
 
-Try:
+**Install from PyPI:**
+
+```bash
+pip install mente
+mente               # same REPL, installed as a script on your PATH
+```
+
+Either way, try:
 
 ```
 you> hello
