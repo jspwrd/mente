@@ -930,6 +930,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#mente.synthesis--librarystore-on-disk-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LibraryStore on-disk schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#mente.synthesis--threat-model" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1226,6 +1237,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#mente.synthesis--librarystore-on-disk-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LibraryStore on-disk schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#mente.synthesis--threat-model" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1312,6 +1334,15 @@ on repeated success — promotes the verified snippet into the ToolRegistry.</p>
 <code>Synthesizer</code> Protocol and the two shipped backends (template, LLM). The
 subprocess + AST-gate machinery below is the trust boundary — every
 synthesized function, regardless of author, runs through it.</p>
+<h3 id="mente.synthesis--librarystore-on-disk-schema">LibraryStore on-disk schema<a class="headerlink" href="#mente.synthesis--librarystore-on-disk-schema" title="Permanent link">&para;</a></h3>
+<p>The serialized form is an envelope::</p>
+<div class="highlight"><pre><span></span><code>{&quot;_schema&quot;: &lt;int&gt;, &quot;primitives&quot;: {&lt;name&gt;: {&lt;field&gt;: &lt;value&gt;, ...}, ...}}
+</code></pre></div>
+<p><code>_SCHEMA_VERSION</code> is the version <code>save()</code> writes today. <code>__post_init__</code>
+reads the envelope, dispatches through <code>_MIGRATIONS</code> to bring older payloads
+forward, and starts empty on unknown future versions. Per-primitive payloads
+are filtered to the dataclass's declared fields before construction so a
+future schema that adds columns doesn't crash a downgraded client.</p>
 <h3 id="mente.synthesis--threat-model">Threat model<a class="headerlink" href="#mente.synthesis--threat-model" title="Permanent link">&para;</a></h3>
 <p>The sandbox is a defence-in-depth wrapper around synthesized (template- or
 LLM-authored) Python snippets. It defends against:</p>

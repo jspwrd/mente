@@ -1032,6 +1032,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Directory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mente.discovery.Directory.run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1238,6 +1255,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Directory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mente.discovery.Directory.run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1384,7 +1418,7 @@ peers, trained routing from verifier feedback.</p>
   </span>
 
 <a href="#mente.discovery.Directory" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">Directory</span><span class="p">(</span><span class="n">bus</span><span class="p">:</span> <span class="n">EventBus</span><span class="p">,</span> <span class="n">self_node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">peers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">PeerCapability</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">())</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">Directory</span><span class="p">(</span><span class="n">bus</span><span class="p">:</span> <span class="n">EventBus</span><span class="p">,</span> <span class="n">self_node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stale_after_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">6.0</span><span class="p">,</span> <span class="n">peers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">PeerCapability</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">())</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -1392,6 +1426,9 @@ peers, trained routing from verifier feedback.</p>
 
 
         <p>Remote capability directory. Updated from <code>meta.capability.announce</code>.</p>
+<p>Peers are evicted after <code>stale_after_s</code> seconds without a fresh
+announcement. Eviction runs on every <code>specialists()</code> call and can also
+be driven proactively via the background <code>run()</code> sweep.</p>
 
 
 
@@ -1414,6 +1451,49 @@ peers, trained routing from verifier feedback.</p>
 
 
 
+<div class="doc doc-object doc-function">
+
+
+<h3 id="mente.discovery.Directory.run" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">run</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#mente.discovery.Directory.run" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">run</span><span class="p">(</span><span class="n">stop</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">interval_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Proactive stale-peer sweep. Mirrors <code>Announcer.run</code> cadence.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/mente/discovery.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-135">135</a></span>
+<span class="normal"><a href="#__codelineno-0-136">136</a></span>
+<span class="normal"><a href="#__codelineno-0-137">137</a></span>
+<span class="normal"><a href="#__codelineno-0-138">138</a></span>
+<span class="normal"><a href="#__codelineno-0-139">139</a></span>
+<span class="normal"><a href="#__codelineno-0-140">140</a></span>
+<span class="normal"><a href="#__codelineno-0-141">141</a></span>
+<span class="normal"><a href="#__codelineno-0-142">142</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-135" name="__codelineno-0-135"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stop</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Event</span><span class="p">,</span> <span class="n">interval_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Proactive stale-peer sweep. Mirrors ``Announcer.run`` cadence.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137"></a>    <span class="k">while</span> <span class="ow">not</span> <span class="n">stop</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_evict_stale</span><span class="p">()</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a>            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">stop</span><span class="o">.</span><span class="n">wait</span><span class="p">(),</span> <span class="n">timeout</span><span class="o">=</span><span class="n">interval_s</span><span class="p">)</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141"></a>        <span class="k">except</span> <span class="ne">TimeoutError</span><span class="p">:</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142"></a>            <span class="k">continue</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
 
 
   </div>
@@ -1435,7 +1515,7 @@ peers, trained routing from verifier feedback.</p>
   </span>
 
 <a href="#mente.discovery.RemoteReasoner" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">RemoteReasoner</span><span class="p">(</span><span class="n">bus</span><span class="p">:</span> <span class="n">EventBus</span><span class="p">,</span> <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">PeerCapability</span><span class="p">,</span> <span class="n">timeout_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span><span class="p">,</span> <span class="n">_pending</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_PendingFuture</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(),</span> <span class="n">_wired</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">RemoteReasoner</span><span class="p">(</span><span class="n">bus</span><span class="p">:</span> <span class="n">EventBus</span><span class="p">,</span> <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">PeerCapability</span><span class="p">,</span> <span class="n">timeout_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span><span class="p">,</span> <span class="n">breaker_failure_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">breaker_recovery_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span><span class="p">,</span> <span class="n">_pending</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_PendingFuture</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(),</span> <span class="n">_wired</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
