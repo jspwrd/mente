@@ -20,6 +20,7 @@ from ..types import Intent, Response
 from ..world_model import WorldModel
 from .composite import CompositeVerifier, MergeStrategy
 from .heuristic import HeuristicVerifier
+from .trained import FeatureVec, Scorer, TrainedVerifier, featurize
 from .types import Verdict
 
 
@@ -69,8 +70,12 @@ class StructuredVerifier(Protocol):
 
 __all__ = [
     "CompositeVerifier",
+    "FeatureVec",
     "HeuristicVerifier",
     "MergeStrategy",
+    "Scorer",
     "StructuredVerifier",
+    "TrainedVerifier",
     "Verdict",
+    "featurize",
 ]
