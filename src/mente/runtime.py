@@ -148,23 +148,27 @@ class Runtime:
         # the anthropic SDK is an optional extra. Keep Runtime importable in
         # every environment and surface a clear error only when a tier the
         # caller explicitly requested is actually missing.
+        ollama_ctor: Any = None
+        ollama_available: Any = lambda *_a, **_kw: False  # noqa: E731
         try:
-            from .llm_ollama import OllamaReasoner, ollama_available
-        except ImportError:
-            OllamaReasoner = None  # type: ignore[assignment]
+            from .llm_ollama import OllamaReasoner as _Ollama
+            from .llm_ollama import ollama_available as _ollama_avail
 
-            def ollama_available(*_a: Any, **_kw: Any) -> bool:
-                return False
+            ollama_ctor = _Ollama
+            ollama_available = _ollama_avail
+        except ImportError:
+            pass
         from .llm import AnthropicReasoner, anthropic_available
 
         tier = self.config.llm_tier
         if tier == "ollama":
-            if OllamaReasoner is None:
+            if ollama_ctor is None:
                 raise RuntimeError(
                     "mente[llm-ollama] not installed; "
                     "run: pip install 'mente[llm-ollama]'"
                 )
-            return OllamaReasoner(url=self.config.ollama_url, model=self.config.ollama_model)
+            reasoner: Reasoner = ollama_ctor(url=self.config.ollama_url, model=self.config.ollama_model)
+            return reasoner
         if tier == "anthropic":
             if not anthropic_available():
                 raise RuntimeError(
@@ -181,8 +185,11 @@ class Runtime:
 
         # Auto mode: ollama -> anthropic -> sim. Probe ollama BEFORE
         # constructing OllamaReasoner because its __init__ hits the server.
-        if OllamaReasoner is not None and ollama_available(self.config.ollama_url):
-            return OllamaReasoner(url=self.config.ollama_url, model=self.config.ollama_model)
+        if ollama_ctor is not None and ollama_available(self.config.ollama_url):
+            reasoner_auto: Reasoner = ollama_ctor(
+                url=self.config.ollama_url, model=self.config.ollama_model
+            )
+            return reasoner_auto
         if anthropic_available():
             return AnthropicReasoner(config=self.config)
         return DeepSimulatedReasoner()

@@ -469,6 +469,7 @@ def _migrate(data_dir: str, *, dry_run: bool) -> int:
             continue
 
         try:
+            assert target is not None  # guarded by needs_upgrade above
             new_payload = _upgrade_payload(payload, target)
             _atomic_write_json(path, new_payload)
         except OSError as e:
@@ -521,13 +522,13 @@ def _train_verifier(data_dir: str, output: str, min_samples: int) -> int:
     log = get_logger("cli")
 
     try:
-        from .verifiers import baseline as baseline_mod  # type: ignore[attr-defined]
+        from .verifiers import baseline as baseline_mod
     except ImportError:
         print(_VERIFIER_ML_HINT, file=sys.stderr)
         return 1
 
     try:
-        import joblib
+        import joblib  # type: ignore[import-untyped]
     except ImportError:
         print(_VERIFIER_ML_HINT, file=sys.stderr)
         return 1

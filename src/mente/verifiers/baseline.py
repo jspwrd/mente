@@ -143,6 +143,13 @@ def train_baseline(
 # ---------------------------------------------------------------------------
 
 
+def _rule_based_score(features: dict[str, float]) -> float:
+    z = _FALLBACK_BIAS
+    for key, weight in _FALLBACK_WEIGHTS.items():
+        z += weight * float(features.get(key, 0.0))
+    return _sigmoid(z)
+
+
 def _rule_based_scorer() -> Scorer:
     """Deterministic fallback: weighted linear combo of features, sigmoided.
 
@@ -150,16 +157,10 @@ def _rule_based_scorer() -> Scorer:
     present. Weights in ``_FALLBACK_WEIGHTS`` approximate the existing
     ``HeuristicVerifier`` signals: high confidence and specialist-tier answers
     push toward accept, deep-tier and tool-heavy answers are slightly
-    penalised (they run longer and warrant extra scrutiny).
+    penalised (they run longer and warrant extra scrutiny). Module-level so
+    joblib.dump can pickle the returned scorer.
     """
-
-    def _score(features: dict[str, float]) -> float:
-        z = _FALLBACK_BIAS
-        for key, weight in _FALLBACK_WEIGHTS.items():
-            z += weight * float(features.get(key, 0.0))
-        return _sigmoid(z)
-
-    return _score
+    return _rule_based_score
 
 
 # ---------------------------------------------------------------------------
@@ -262,7 +263,7 @@ def _lazy_import_logreg() -> Any:
     the trained verifier path don't pay the dependency cost.
     """
     try:
-        from sklearn.linear_model import LogisticRegression
+        from sklearn.linear_model import LogisticRegression  # type: ignore[import-untyped]
     except ImportError as exc:
         raise ImportError(
             "scikit-learn is not installed; install with "

@@ -69,6 +69,8 @@ _CONN_ERRORS: tuple[type[BaseException], ...] = (
     OSError,
 )
 
+_RECONNECT_ERRORS: tuple[type[BaseException], ...] = (TimeoutError, *_CONN_ERRORS)
+
 
 class Transport(Protocol):
     async def start(self, on_remote: RemoteHandler) -> None: ...
@@ -390,7 +392,7 @@ class TCPTransport:
                     return False
                 try:
                     await self._open_spoke_connection()
-                except (TimeoutError, *_CONN_ERRORS) as exc:
+                except _RECONNECT_ERRORS as exc:
                     _log.info(
                         "transport.spoke.reconnect.fail",
                         extra={

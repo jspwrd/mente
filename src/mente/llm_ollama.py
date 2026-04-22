@@ -96,7 +96,7 @@ def ollama_available(url: str = "http://127.0.0.1:11434") -> bool:
         resp = httpx.get(f"{url.rstrip('/')}/api/tags", timeout=1.0)
     except Exception:
         return False
-    return resp.status_code == 200
+    return bool(resp.status_code == 200)
 
 
 @dataclass
