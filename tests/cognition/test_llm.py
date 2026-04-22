@@ -3,6 +3,7 @@ model/thinking params, error path. Never calls the real API.
 """
 from __future__ import annotations
 
+import logging
 import os
 
 import pytest
@@ -10,6 +11,8 @@ from fixtures.cognition_helpers import make_world
 from fixtures.fake_llm import make_fake_anthropic_module
 
 from mente import llm
+from mente.config import MenteConfig
+from mente.resilience import CircuitBreaker
 from mente.tools import ToolRegistry
 from mente.types import Belief, Intent
 
@@ -149,6 +152,145 @@ async def test_api_error_returns_zero_confidence(monkeypatch):
     resp = await r.answer(Intent(text="hi"), world, ToolRegistry())
     assert resp.confidence == 0.0
     assert "error" in resp.text.lower()
+
+
+async def test_config_overrides_defaults(monkeypatch):
+    import dataclasses
+
+    client = _install_fake(monkeypatch)
+    cfg = dataclasses.replace(
+        MenteConfig.default(),
+        llm_model="claude-sonnet-4-5",
+        llm_max_tokens=2048,
+        llm_effort="low",
+    )
+    r = llm.AnthropicReasoner(config=cfg)
+    world = await make_world()
+    await r.answer(Intent(text="hi"), world, ToolRegistry())
+    call = client.calls[0]
+    assert call["model"] == "claude-sonnet-4-5"
+    assert call["max_tokens"] == 2048
+    assert call["output_config"] == {"effort": "low"}
+
+
+async def test_config_absent_keeps_dataclass_defaults(monkeypatch):
+    client = _install_fake(monkeypatch)
+    r = llm.AnthropicReasoner()  # no config
+    world = await make_world()
+    await r.answer(Intent(text="hi"), world, ToolRegistry())
+    call = client.calls[0]
+    assert call["model"] == "claude-opus-4-7"
+    assert call["max_tokens"] == 4096
+    assert call["output_config"] == {"effort": "medium"}
+
+
+async def test_every_reasoner_has_its_own_breaker(monkeypatch):
+    _install_fake(monkeypatch)
+    a = llm.AnthropicReasoner()
+    b = llm.AnthropicReasoner()
+    assert a._breaker is not b._breaker
+    assert isinstance(a._breaker, CircuitBreaker)
+    assert a._breaker.failure_threshold == 5
+    assert a._breaker.recovery_s == 60.0
+
+
+async def test_circuit_breaker_opens_after_repeated_failures(monkeypatch):
+    # Every call raises, and RuntimeError isn't in retry_on, so each
+    # ``answer()`` surfaces exactly one failure to the breaker.
+    _install_fake(monkeypatch, raise_exc=RuntimeError("boom"))
+    r = llm.AnthropicReasoner()
+    world = await make_world()
+
+    # Five failures open the breaker.
+    for _ in range(5):
+        resp = await r.answer(Intent(text="q"), world, ToolRegistry())
+        assert resp.confidence == 0.0
+        assert "error" in resp.text.lower()
+
+    assert r._breaker.state == "open"
+
+    # The sixth call short-circuits: no new call recorded on the fake client.
+    prior_calls = len(r._client.calls)
+    resp = await r.answer(Intent(text="q"), world, ToolRegistry())
+    assert resp.text == "[deep.claude unavailable — circuit open]"
+    assert resp.confidence == 0.0
+    assert len(r._client.calls) == prior_calls
+
+
+async def test_circuit_open_rejection_is_fast(monkeypatch):
+    _install_fake(monkeypatch)
+    r = llm.AnthropicReasoner()
+    # Force the breaker open directly.
+    r._breaker._state = "open"
+    import time as _time
+
+    r._breaker._opened_at = _time.monotonic()
+    world = await make_world()
+
+    resp = await r.answer(Intent(text="q"), world, ToolRegistry())
+    assert resp.text == "[deep.claude unavailable — circuit open]"
+    assert resp.confidence == 0.0
+    # No underlying API call was issued.
+    assert r._client.calls == []
+
+
+def _attach_capture_handler() -> tuple[logging.Handler, list[logging.LogRecord]]:
+    """Attach a fresh capture handler to ``mente.llm``.
+
+    The project's ``logging.configure()`` sets ``propagate=False`` on the
+    ``mente`` logger, which defeats pytest's ``caplog`` when another test
+    has already configured logging. Attaching directly avoids that race.
+    """
+    records: list[logging.LogRecord] = []
+
+    class _ListHandler(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            records.append(record)
+
+    handler = _ListHandler(level=logging.DEBUG)
+    logger = logging.getLogger("mente.llm")
+    # Make sure the logger itself lets DEBUG through regardless of root config.
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    return handler, records
+
+
+async def test_logs_start_and_exhaustion(monkeypatch):
+    _install_fake(monkeypatch, raise_exc=RuntimeError("boom"))
+    handler, records = _attach_capture_handler()
+    try:
+        r = llm.AnthropicReasoner()
+        world = await make_world()
+        await r.answer(Intent(text="abcdef"), world, ToolRegistry())
+    finally:
+        logging.getLogger("mente.llm").removeHandler(handler)
+
+    messages = [(rec.levelno, rec.getMessage()) for rec in records]
+    assert any(lvl == logging.INFO and "start" in msg for lvl, msg in messages)
+    assert any(lvl == logging.ERROR and "exhausted" in msg for lvl, msg in messages)
+
+    # None of the log lines should carry the intent text itself — we log
+    # lengths, not content (PII / secrets guard).
+    for rec in records:
+        assert "abcdef" not in rec.getMessage()
+
+
+async def test_logs_circuit_open_warning(monkeypatch):
+    _install_fake(monkeypatch)
+    handler, records = _attach_capture_handler()
+    try:
+        r = llm.AnthropicReasoner()
+        r._breaker._state = "open"
+        import time as _time
+
+        r._breaker._opened_at = _time.monotonic()
+        world = await make_world()
+        await r.answer(Intent(text="q"), world, ToolRegistry())
+    finally:
+        logging.getLogger("mente.llm").removeHandler(handler)
+
+    warnings = [rec for rec in records if rec.levelno == logging.WARNING]
+    assert any("circuit open" in rec.getMessage() for rec in warnings)
 
 
 @pytest.mark.skipif(
