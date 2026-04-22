@@ -1,6 +1,8 @@
 """Tests for mente.verifier.Verifier — accept/reject + contradiction detection."""
 from __future__ import annotations
 
+import logging
+
 from fixtures.cognition_helpers import make_world
 
 from mente.types import Belief, Intent, Response
@@ -99,3 +101,47 @@ async def test_score_clamped_to_unit_interval():
     v = Verifier()
     verdict = v.verify(Intent(text="hi"), _resp("fine", conf=1.5), world)
     assert 0.0 <= verdict.score <= 1.0
+
+
+class _RecordCapture(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__(level=logging.DEBUG)
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+async def test_reject_emits_warning_log():
+    """Rejected verdicts should emit a WARNING with reasons attached."""
+    world = await make_world()
+    v = Verifier()
+    target = logging.getLogger("mente.verifier")
+    cap = _RecordCapture()
+    prior_level = target.level
+    target.setLevel(logging.WARNING)
+    target.addHandler(cap)
+    try:
+        v.verify(Intent(text="hi"), _resp("", conf=0.95), world)
+    finally:
+        target.removeHandler(cap)
+        target.setLevel(prior_level)
+    assert cap.records, "expected a warning on rejected verdict"
+    assert cap.records[0].levelno == logging.WARNING
+    assert "reject" in cap.records[0].getMessage().lower()
+
+
+async def test_accept_does_not_emit_warning_log():
+    world = await make_world()
+    v = Verifier()
+    target = logging.getLogger("mente.verifier")
+    cap = _RecordCapture()
+    prior_level = target.level
+    target.setLevel(logging.WARNING)
+    target.addHandler(cap)
+    try:
+        v.verify(Intent(text="hi"), _resp("hello there"), world)
+    finally:
+        target.removeHandler(cap)
+        target.setLevel(prior_level)
+    assert not cap.records

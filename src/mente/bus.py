@@ -10,13 +10,21 @@ from __future__ import annotations
 
 import asyncio
 import fnmatch
-from collections.abc import Awaitable, Callable
+import logging
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
+from typing import Any
 
+from .logging import get_logger
 from .transport import InProcessTransport, Transport
 from .types import Event
 
-Handler = Callable[[Event], Awaitable[None]]
+# Handler must be a coroutine function (``async def``), not a generic
+# awaitable-returning callable — ``asyncio.create_task`` requires a real
+# Coroutine, and narrowing the type here lets strict mypy verify it.
+Handler = Callable[[Event], Coroutine[Any, Any, None]]
+
+_log = get_logger("bus")
 
 
 @dataclass
@@ -64,7 +72,10 @@ class EventBus:
             handler: Async callable invoked with each matching event.
             name: Optional label for logs; defaults to ``handler.__name__``.
         """
-        self._subs.append(Subscription(pattern=pattern, handler=handler, name=name or handler.__name__))
+        sub_name = name or handler.__name__
+        self._subs.append(Subscription(pattern=pattern, handler=handler, name=sub_name))
+        # DEBUG: Runtime wiring subscribes many times at startup; keep it quiet at INFO.
+        _log.debug("subscribe %s -> %s", pattern, sub_name)
 
     async def start(self) -> None:
         """Activate the remote transport, if any.
@@ -109,6 +120,16 @@ class EventBus:
         self._tap.append(event)
         if len(self._tap) > self._tap_limit:
             self._tap = self._tap[-self._tap_limit :]
+        # Hot path: gate on isEnabledFor so the ``extra=`` dict isn't built
+        # when DEBUG is off. ``logger.debug`` checks level internally too, but
+        # only after evaluating call arguments.
+        if _log.isEnabledFor(logging.DEBUG):
+            _log.debug(
+                "publish %s origin=%s",
+                event.topic,
+                event.origin,
+                extra={"trace_id": event.trace_id},
+            )
         # Local fan-out + remote fan-out in parallel.
         await asyncio.gather(
             self._dispatch(event),

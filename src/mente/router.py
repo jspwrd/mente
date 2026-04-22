@@ -13,11 +13,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .logging import get_logger
 from .metacog import Metacog
 from .reasoners import Reasoner
 from .tools import ToolRegistry
 from .types import Decision, Intent, Response
 from .world_model import WorldModel
+
+_log = get_logger("router")
 
 
 @dataclass
@@ -54,6 +57,14 @@ class Router:
         attempted: list[Decision] = []
         decision = self.decide(intent)
         attempted.append(decision)
+        # Intent text is NOT logged (may carry PII); keep it at DEBUG only.
+        _log.info(
+            "dispatch reasoner=%s predicted_confidence=%.2f predicted_cost_ms=%.1f",
+            decision.reasoner,
+            decision.predicted_confidence,
+            decision.predicted_cost_ms,
+            extra={"trace_id": intent.trace_id},
+        )
         reasoner = next(r for r in self.reasoners if r.name == decision.reasoner)
         response = await reasoner.answer(intent, world, tools)
 
@@ -72,6 +83,13 @@ class Router:
                     predicted_confidence=0.7,
                 )
                 attempted.append(escalation)
+                _log.info(
+                    "escalate from=%s to=%s response_confidence=%.2f",
+                    decision.reasoner,
+                    escalation.reasoner,
+                    response.confidence,
+                    extra={"trace_id": intent.trace_id},
+                )
                 response = await next_r.answer(intent, world, tools)
                 decision = escalation
 

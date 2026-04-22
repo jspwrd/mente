@@ -2,12 +2,17 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 import pytest
 
 from mente.bus import EventBus
 from mente.types import Event
 from tests.fixtures.core_events import EventCapture
+
+# ``mente.*`` disables propagation once ``logging.configure`` has run, so
+# caplog (which attaches to root) can miss records. Tests that assert on
+# logging attach a ``_RecordCapture`` handler directly to the target logger.
 
 
 @pytest.mark.asyncio
@@ -151,3 +156,45 @@ async def test_start_on_default_transport_is_noop(bus: EventBus, event_capture: 
     await bus.publish(Event(topic="k.go", payload={}, origin="t"))
     assert len(event_capture.events) == 1
     await bus.close()
+
+
+class _RecordCapture(logging.Handler):
+    """Plain handler that records LogRecords into a list.
+
+    ``caplog`` only captures via root, and ``mente.*`` has ``propagate=False``
+    once ``configure()`` has been called, so we attach directly to the
+    target logger in tests.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(level=logging.DEBUG)
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+@pytest.mark.asyncio
+async def test_subscribe_and_publish_emit_debug_log(
+    bus: EventBus,
+    event_capture: EventCapture,
+):
+    """Bus logs subscribe/publish at DEBUG so INFO stays quiet by default."""
+    target = logging.getLogger("mente.bus")
+    cap = _RecordCapture()
+    prior_level = target.level
+    target.setLevel(logging.DEBUG)
+    target.addHandler(cap)
+    try:
+        bus.subscribe("k.*", event_capture.handler, name="cap")
+        await bus.publish(Event(topic="k.go", payload={}, origin="t", trace_id="tr_x"))
+    finally:
+        target.removeHandler(cap)
+        target.setLevel(prior_level)
+
+    messages = [r.getMessage() for r in cap.records]
+    assert any("subscribe" in m and "k.*" in m and "cap" in m for m in messages)
+    assert any("publish" in m and "k.go" in m for m in messages)
+    # trace_id is attached via extra=...
+    publish_records = [r for r in cap.records if "publish" in r.getMessage()]
+    assert any(getattr(r, "trace_id", None) == "tr_x" for r in publish_records)
