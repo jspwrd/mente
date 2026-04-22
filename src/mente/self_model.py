@@ -10,13 +10,20 @@ reasoner have agreed?"); is the alignment interface described in §11.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import Any
 
 from .memory import SlowMemory
 from .reasoners import Reasoner
 from .state import LatentState
 from .tools import ToolRegistry
+
+# A single dispatch entry: a tuple of substring keywords that match the
+# lowercased question, paired with a handler that turns the describe()
+# snapshot into a user-facing reply. Order defines precedence.
+DispatchHandler = Callable[[dict[str, Any]], str]
+DispatchEntry = tuple[tuple[str, ...], DispatchHandler]
 
 
 @dataclass
@@ -25,6 +32,17 @@ class SelfModel:
     slow_mem: SlowMemory
     reasoners: list[Reasoner]
     tools: ToolRegistry
+    _dispatch: list[DispatchEntry] = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        # Precedence: reasoner/model > tool > turn/count > doing/digest/summary.
+        # If no entry matches the question, answer() falls through to _fallback.
+        self._dispatch = [
+            (("reasoner", "model"), self._describe_reasoners),
+            (("tool",), self._describe_tools),
+            (("turn", "how many"), self._describe_turns),
+            (("doing", "digest", "summary"), self._describe_digest),
+        ]
 
     def describe(self) -> dict[str, Any]:
         return {
@@ -42,23 +60,35 @@ class SelfModel:
 
     def answer(self, question: str) -> str:
         q = question.lower()
-        d = self.describe()
-        if "reasoner" in q or "model" in q:
-            names = [r["name"] for r in d["reasoners"]]
-            return f"I have {len(names)} reasoners loaded: {', '.join(names)}."
-        if "tool" in q:
-            names = [t["name"] for t in d["tools"]]
-            return f"I have {len(names)} tools: {', '.join(names)}."
-        if "turn" in q or "how many" in q:
-            turns = d["latent"].get("turns", 0)
-            return f"I have handled {turns} turns so far."
-        if "doing" in q or "digest" in q or "summary" in q:
-            digest = d["recent_digest"]
-            if not digest:
-                return "No consolidation has run yet."
-            return (
-                f"Last digest: {digest['total_responses']} responses, "
-                f"accept rate {digest['accept_rate']}, "
-                f"routing mix {digest['by_reasoner']}."
-            )
+        desc = self.describe()
+        for keywords, handler in self._dispatch:
+            if any(k in q for k in keywords):
+                return handler(desc)
+        return self._fallback(desc)
+
+    # -- handlers -----------------------------------------------------------
+
+    def _describe_reasoners(self, desc: dict[str, Any]) -> str:
+        names = [r["name"] for r in desc["reasoners"]]
+        return f"I have {len(names)} reasoners loaded: {', '.join(names)}."
+
+    def _describe_tools(self, desc: dict[str, Any]) -> str:
+        names = [t["name"] for t in desc["tools"]]
+        return f"I have {len(names)} tools: {', '.join(names)}."
+
+    def _describe_turns(self, desc: dict[str, Any]) -> str:
+        turns = desc["latent"].get("turns", 0)
+        return f"I have handled {turns} turns so far."
+
+    def _describe_digest(self, desc: dict[str, Any]) -> str:
+        digest = desc["recent_digest"]
+        if not digest:
+            return "No consolidation has run yet."
+        return (
+            f"Last digest: {digest['total_responses']} responses, "
+            f"accept rate {digest['accept_rate']}, "
+            f"routing mix {digest['by_reasoner']}."
+        )
+
+    def _fallback(self, desc: dict[str, Any]) -> str:
         return "I can answer about my reasoners, tools, turns, or recent activity."
