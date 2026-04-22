@@ -1240,6 +1240,12 @@
 <p>The implementation moved to <code>mente.verifiers</code>. This file preserves the
 legacy import path so <code>from mente.verifier import Verifier, Verdict</code> keeps
 working for the Router/Runtime and any external code.</p>
+<p>The shim is also where we attach module-level logging: rejected verdicts
+emit a WARNING so operators see them without having to crank the whole
+package to DEBUG. We install the wrapper here (rather than in the
+<code>mente.verifiers</code> package) so the pure verifier implementation stays
+free of logging concerns and the identity <code>Verifier is HeuristicVerifier</code>
+is preserved for back-compat.</p>
 
 
 
