@@ -134,11 +134,12 @@ async def test_tick_activity_tracker_ignores_internal_origins() -> None:
         cur = Curiosity(bus=bus, world=world, latent=latent, idle_threshold_s=0.5)
         cur.wire()
 
-        # Curiosity-originated intent — should NOT bump the idle marker.
-        before = cur._last_user_intent_ts
-        await asyncio.sleep(0.01)  # ensure time.time() advances if it were (wrongly) set
-        await bus.publish(Event(topic="intent.curiosity", origin="curiosity", payload={"text": "self-prompt"}))
-        await asyncio.sleep(0)
-        assert cur._last_user_intent_ts == before
+        # Pin the marker to a sentinel. If an internal-origin event wrongly
+        # bumped it, `time.time()` would overwrite 0.0 with a positive number.
+        for origin in ("curiosity", "self"):
+            cur._last_user_intent_ts = 0.0
+            await bus.publish(Event(topic=f"intent.{origin}", origin=origin, payload={"text": "self-prompt"}))
+            await asyncio.sleep(0)
+            assert cur._last_user_intent_ts == 0.0
     finally:
         await bus.close()
