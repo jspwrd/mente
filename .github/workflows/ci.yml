@@ -44,3 +44,38 @@ jobs:
 
       - name: Smoke tests
         run: ./mente test
+
+  wheel-install:
+    # Packaging integrity: build the wheel, install it in a fresh venv, and
+    # verify the installed package imports, exposes the CLI entry point, and
+    # ships the PEP 561 py.typed marker.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Build wheel + sdist
+        run: uv build
+
+      - name: Create fresh venv
+        run: python -m venv /tmp/wheel-venv
+
+      - name: Install wheel into fresh venv
+        run: /tmp/wheel-venv/bin/pip install dist/*.whl
+
+      - name: Import installed package
+        run: /tmp/wheel-venv/bin/python -c "from mente.runtime import Runtime; from mente import __version__; print(__version__)"
+
+      - name: Run CLI entry point (mente test)
+        run: /tmp/wheel-venv/bin/mente test
+
+      - name: Verify py.typed marker is installed
+        run: test -f /tmp/wheel-venv/lib/python*/site-packages/mente/py.typed
