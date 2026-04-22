@@ -7,7 +7,7 @@ Output docs/assets/demo.gif
 Set FontSize 14
 Set Width 900
 Set Height 540
-Set Theme "Tokyo Night"
+Set Theme "TokyoNight"
 Set TypingSpeed 40ms
 Set Padding 18
 
