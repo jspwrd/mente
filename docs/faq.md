@@ -68,6 +68,15 @@ The opposite direction — calling async MENTE code from a sync caller — is
 what `asyncio.run(main())` handles in the README's ten-line example. Don't
 call `asyncio.run` from inside a running loop; reuse the loop you're in.
 
+## How do I upgrade my .mente/ state after a mente version bump?
+
+Run: `mente migrate [--data-dir PATH]`
+
+The migrator reads every JSON file under your data dir, converts it to the
+current schema version, and writes it back atomically. Use `--dry-run` to
+preview. Safe to run against a newer-version directory — already-current
+files are untouched.
+
 ## What's the license?
 
 MIT. See [LICENSE](https://github.com/jspwrd/mente/blob/main/LICENSE) for

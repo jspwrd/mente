@@ -7,6 +7,7 @@ All entry points live here so there's exactly one thing to run:
     ./mente federated    # hub + peer in one process, real TCP bus between them
     ./mente reset        # wipe .mente/ state
     ./mente test         # smoke tests (bus, synthesis, memory)
+    ./mente migrate      # upgrade state files to the current schema
     ./mente --help       # all options
 """
 from __future__ import annotations
@@ -14,11 +15,13 @@ from __future__ import annotations
 import argparse
 import asyncio
 import contextlib
+import json
 import os
 import shutil
 import signal
 import sys
 from pathlib import Path
+from typing import Any
 
 from .config import MenteConfig
 from .logging import get_logger
@@ -339,6 +342,151 @@ async def _smoke_tests() -> int:
 
 
 # ---------------------------------------------------------------------------
+# migrate
+# ---------------------------------------------------------------------------
+
+
+def _current_schema_version() -> int | None:
+    """Return the current state/library schema version, or None if undefined.
+
+    Unit 10 adds ``_SCHEMA_VERSION`` to ``mente.state`` / ``mente.synthesis``.
+    We import defensively so this CLI still works if the attribute is absent
+    — in that case every file is reported "already current".
+    """
+    from . import state, synthesis
+
+    for mod in (state, synthesis):
+        v = getattr(mod, "_SCHEMA_VERSION", None)
+        if isinstance(v, int):
+            return v
+    return None
+
+
+def _file_schema_version(payload: Any) -> int | None:
+    """Best-effort extraction of a file's declared schema version.
+
+    Matches the ``{"_schema": <int>, ...}`` envelope used by
+    ``LatentState.checkpoint`` / ``LibraryStore.save``. A bare dict with no
+    ``_schema`` key is pre-versioning (v0).
+    """
+    if isinstance(payload, dict):
+        v = payload.get("_schema")
+        if isinstance(v, int):
+            return v
+        return 0  # pre-versioning: bare {key: value} dict
+    return None
+
+
+def _looks_like_library(payload: dict[str, Any]) -> bool:
+    """True for a LibraryStore file, versioned or pre-v1."""
+    if "primitives" in payload:
+        return True
+    if "_schema" in payload or not payload:
+        return False
+    sample = next(iter(payload.values()), None)
+    return isinstance(sample, dict) and "entrypoint" in sample and "source" in sample
+
+
+def _looks_like_latent(payload: dict[str, Any]) -> bool:
+    """True for a LatentState file, versioned or pre-v1 bare dict."""
+    if "values" in payload and isinstance(payload.get("values"), dict):
+        return True
+    if "_schema" in payload:
+        return False
+    return not _looks_like_library(payload)
+
+
+def _upgrade_payload(payload: Any, target: int) -> Any:
+    """Drive the tolerant loaders for a known file, or stamp as a fallback.
+
+    Dispatch by envelope shape: library files go through
+    ``synthesis._migrate_library``, latent files through ``state._migrate``.
+    Unknown shapes just get their ``_schema`` marker stamped — we don't
+    invent migration logic.
+    """
+    from . import state, synthesis
+
+    if not isinstance(payload, dict):
+        return payload
+
+    library_migrate = getattr(synthesis, "_migrate_library", None)
+    latent_migrate = getattr(state, "_migrate", None)
+    from_version = _file_schema_version(payload) or 0
+
+    if _looks_like_library(payload) and callable(library_migrate):
+        return library_migrate(payload, from_version=from_version)
+    if _looks_like_latent(payload) and callable(latent_migrate):
+        return latent_migrate(payload, from_version=from_version)
+
+    stamped = dict(payload)
+    stamped["_schema"] = target
+    return stamped
+
+
+def _atomic_write_json(path: Path, payload: Any) -> None:
+    """Atomic replacement matching state.py / synthesis.py conventions."""
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, default=str, indent=2))
+    tmp.replace(path)
+
+
+def _migrate(data_dir: str, *, dry_run: bool) -> int:
+    """Walk ``data_dir`` and upgrade every ``.json`` to the current schema.
+
+    Returns 0 on success, 1 if the data directory is missing.
+    """
+    log = get_logger("cli.migrate")
+    root = _data_root(data_dir)
+    if not root.exists():
+        print(f"data dir {root} does not exist; nothing to migrate.")
+        return 1
+
+    target = _current_schema_version()
+    inspected = upgraded = current = skipped = 0
+
+    for path in sorted(root.rglob("*.json")):
+        if not path.is_file():
+            continue
+        inspected += 1
+        try:
+            payload = json.loads(path.read_text())
+        except (OSError, json.JSONDecodeError) as e:
+            skipped += 1
+            log.warning("skipping %s: %s", path, e)
+            print(f"  skip  {path} ({e})")
+            continue
+
+        from_version = _file_schema_version(payload)
+        needs_upgrade = target is not None and from_version != target
+
+        if not needs_upgrade:
+            current += 1
+            continue
+
+        if dry_run:
+            print(f"  would upgrade {path} from v{from_version} to v{target}")
+            upgraded += 1
+            continue
+
+        try:
+            new_payload = _upgrade_payload(payload, target)
+            _atomic_write_json(path, new_payload)
+        except OSError as e:
+            skipped += 1
+            log.warning("failed to write %s: %s", path, e)
+            print(f"  skip  {path} (write failed: {e})")
+            continue
+        print(f"  upgrade {path}: v{from_version} -> v{target}")
+        upgraded += 1
+
+    print(
+        f"\n{inspected} files inspected, {upgraded} upgraded, "
+        f"{current} already current, {skipped} skipped (corrupt/unreadable)."
+    )
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # reset
 # ---------------------------------------------------------------------------
 
@@ -484,6 +632,16 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("test", help="smoke tests")
     sub.add_parser("reset", help="wipe all .mente* state directories")
 
+    p_mig = sub.add_parser(
+        "migrate",
+        help="upgrade state JSON files under --data-dir to the current schema",
+    )
+    p_mig.add_argument("--data-dir", default=".mente", help="state directory")
+    p_mig.add_argument(
+        "--dry-run", action="store_true",
+        help="report what would change without touching any files",
+    )
+
     p_tv = sub.add_parser(
         "train-verifier",
         help="train the baseline trained verifier from episodic traces",
@@ -520,6 +678,8 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(_smoke_tests())
     elif cmd == "reset":
         _reset()
+    elif cmd == "migrate":
+        return _migrate(args.data_dir, dry_run=args.dry_run)
     elif cmd == "train-verifier":
         return _train_verifier(args.data_dir, args.output, args.min_samples)
     else:
