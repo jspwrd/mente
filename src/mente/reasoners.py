@@ -60,6 +60,29 @@ _SIMPLE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
 
 @dataclass
 class FastHeuristicReasoner:
+    """Cheap pattern-matching reasoner for known intent shapes.
+
+    Scans the intent text against a small table of regexes. On a hit it
+    either returns a canned reply, dispatches a tool (``clock.now``,
+    ``memory.note``, ``memory.recall``, ``memory.search``), or defers to
+    the self-model via the injected hook. On a miss it returns an empty
+    response with ``confidence=0``, signalling the router to escalate.
+
+    Covered patterns:
+        - Greetings (``hi``/``hello``/``hey``) → fixed reply.
+        - ``what time is it`` → ``clock.now`` tool.
+        - ``who am i`` → lookup via the world model.
+        - ``remember that <fact>`` → ``memory.note`` tool.
+        - ``what do you remember`` → ``memory.recall`` tool.
+        - ``what do you know about <topic>`` → ``memory.search`` tool.
+        - Self-referential queries (``what are you``, ``how many turns``,
+          ``describe yourself``, etc.) → self-model hook if attached.
+
+    Attributes:
+        name: Reasoner identifier used by the router.
+        tier: Router tier label; always ``"fast"``.
+        est_cost_ms: Predicted latency used by metacog estimates.
+    """
     name: str = "fast.heuristic"
     tier: ReasonerTier = "fast"
     est_cost_ms: float = 2.0
@@ -67,6 +90,23 @@ class FastHeuristicReasoner:
     async def answer(
         self, intent: Intent, world: WorldModel, tools: ToolRegistry
     ) -> Response:
+        """Try each pattern in order; return the first matching reply.
+
+        Self-referential patterns dispatch to the module-level self-model
+        hook (set via :func:`set_self_model_hook`); if no hook is attached
+        the reply falls back to a diagnostic string but still reports high
+        confidence so the router does not escalate needlessly.
+
+        Args:
+            intent: The incoming user intent.
+            world: Current world-model snapshot (used for ``who am i``).
+            tools: Tool registry for ``clock.now``, ``memory.*``.
+
+        Returns:
+            A :class:`Response` with ``confidence > 0`` when a pattern
+            matched, or an empty response with ``confidence=0`` when none
+            did (so the router escalates to a deeper tier).
+        """
         tools_used: list[str] = []
         text = intent.text.strip()
         for pat, action in _SIMPLE_PATTERNS:
@@ -148,8 +188,16 @@ class FastHeuristicReasoner:
 class DeepSimulatedReasoner:
     """Stand-in for a heavyweight LLM. Artificial latency; pretends to reason.
 
-    Replace with AnthropicReasoner or LocalReasoner in Phase 2 without touching
-    anything that depends on the Reasoner protocol.
+    Replace with ``AnthropicReasoner`` or ``LocalReasoner`` in Phase 2
+    without touching anything that depends on the Reasoner protocol. Useful
+    for tests and demos that need a deep-tier response shape without
+    hitting a real model.
+
+    Attributes:
+        name: Reasoner identifier used by the router.
+        tier: Router tier label; always ``"deep"``.
+        est_cost_ms: Simulated latency used by metacog estimates and to
+            calibrate the artificial sleep in :meth:`answer`.
     """
     name: str = "deep.sim"
     tier: ReasonerTier = "deep"
@@ -158,6 +206,23 @@ class DeepSimulatedReasoner:
     async def answer(
         self, intent: Intent, world: WorldModel, tools: ToolRegistry
     ) -> Response:
+        """Sleep for a jittered fraction of ``est_cost_ms`` then reply.
+
+        The reply echoes the intent plus a snapshot of every entity in the
+        world model, so callers can see that context propagated through.
+        Confidence is middling (``0.55``) — enough to pass a lax verifier,
+        low enough to be overwritten by a real LLM once wired.
+
+        Args:
+            intent: The incoming user intent.
+            world: Current world-model snapshot; entities are included in
+                the reply text when present.
+            tools: Tool registry (unused in the stub).
+
+        Returns:
+            A :class:`Response` carrying the simulated reply and a fixed
+            middling confidence.
+        """
         # Simulate a forward pass + thinking budget.
         await asyncio.sleep(self.est_cost_ms / 1000.0 * random.uniform(0.8, 1.2))
         snapshot = {e: world.entity(e) for e in world.entities()}

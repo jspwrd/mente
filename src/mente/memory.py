@@ -16,13 +16,39 @@ from typing import Any
 
 @dataclass
 class FastMemory:
-    """In-process scratchpad with optional TTL per key."""
+    """In-process scratchpad with optional TTL per key.
+
+    A working-set cache — process-local, no persistence. Each entry is stored
+    with its insertion timestamp so that reads past the TTL lazily evict.
+    Used by the runtime for short-lived intermediate state that should not
+    survive a restart.
+    """
     _data: dict[str, tuple[Any, float | None, float]] = field(default_factory=dict)
 
     def set(self, key: str, value: Any, ttl_s: float | None = None) -> None:
+        """Store ``value`` under ``key``, optionally expiring after ``ttl_s``.
+
+        Args:
+            key: Lookup identifier. Overwrites any existing entry.
+            value: Arbitrary Python object to cache.
+            ttl_s: Seconds until the entry is considered expired. ``None``
+                means the entry lives until the process exits.
+        """
         self._data[key] = (value, ttl_s, time.time())
 
     def get(self, key: str) -> Any:
+        """Return the value for ``key``, or ``None`` if missing or expired.
+
+        Expired entries are evicted as a side effect so subsequent calls do
+        not re-check the TTL.
+
+        Args:
+            key: Lookup identifier.
+
+        Returns:
+            The cached value, or ``None`` if the key is absent or its TTL
+            has elapsed.
+        """
         if key not in self._data:
             return None
         value, ttl, ts = self._data[key]
@@ -32,6 +58,16 @@ class FastMemory:
         return value
 
     def all(self) -> dict[str, Any]:
+        """Return a snapshot dict of all live (non-expired) entries.
+
+        The returned dict is a fresh copy; callers may mutate it freely.
+        Expired entries are filtered out but not evicted from the backing
+        store (``get`` handles eviction).
+
+        Returns:
+            A ``{key: value}`` mapping of every entry whose TTL has not
+            elapsed (including entries with no TTL).
+        """
         now = time.time()
         return {
             k: v for k, (v, ttl, ts) in self._data.items()
@@ -41,7 +77,18 @@ class FastMemory:
 
 @dataclass
 class SlowMemory:
-    """Append-only episodic log backed by SQLite."""
+    """Append-only episodic log backed by SQLite.
+
+    Every event the runtime chooses to persist (state changes, responses,
+    notes) becomes one row in ``episodes``. The schema is deliberately small
+    — a timestamp, a ``kind`` tag, the originating actor, a JSON payload,
+    and an optional ``trace_id`` — so that downstream consolidators and the
+    self-model can scan the log cheaply.
+
+    Attributes:
+        db_path: Filesystem path to the SQLite database. The parent
+            directory is created on init if it does not exist.
+    """
     db_path: Path
     _conn: sqlite3.Connection | None = None
 
@@ -65,6 +112,16 @@ class SlowMemory:
         self._conn.commit()
 
     def record(self, kind: str, actor: str, payload: dict[str, Any], trace_id: str = "") -> None:
+        """Append one episode row to the log and commit.
+
+        Args:
+            kind: Category tag (e.g. ``"state"``, ``"response"``, ``"note"``).
+            actor: Originator of the event (subsystem or user identifier).
+            payload: Arbitrary JSON-serialisable dict. Non-JSON values are
+                stringified via ``default=str``.
+            trace_id: Optional correlation ID linking this row to other
+                events from the same turn.
+        """
         assert self._conn is not None
         self._conn.execute(
             "INSERT INTO episodes (ts, kind, actor, payload, trace_id) VALUES (?, ?, ?, ?, ?)",
@@ -73,6 +130,20 @@ class SlowMemory:
         self._conn.commit()
 
     def query(self, kind: str | None = None, since: float | None = None, limit: int = 100) -> list[dict[str, Any]]:
+        """Return recent episodes, optionally filtered by kind and time.
+
+        Rows come back newest-first. The ``payload`` column is JSON-decoded
+        back into a dict for each result.
+
+        Args:
+            kind: If set, only episodes with this ``kind`` tag are returned.
+            since: If set, only episodes with ``ts >= since`` are returned.
+            limit: Maximum number of rows (most recent first).
+
+        Returns:
+            A list of dicts with keys ``ts``, ``kind``, ``actor``,
+            ``payload``, ``trace_id`` — one per row, newest first.
+        """
         assert self._conn is not None
         q = "SELECT ts, kind, actor, payload, trace_id FROM episodes WHERE 1=1"
         args: list[Any] = []
@@ -93,8 +164,22 @@ class SlowMemory:
     def summarize(self, kind: str | None = None, since: float | None = None) -> dict[str, Any]:
         """Aggregate stats over episodes.
 
-        Returns totals plus per-kind and per-actor counts and the first/last ts.
-        Uses SQL GROUP BY over the existing connection — cheap even on large logs.
+        Uses SQL ``GROUP BY`` over the existing connection — cheap even on
+        large logs. The consolidator consumes this to build daily digests.
+
+        Args:
+            kind: If set, restrict aggregation to rows with this ``kind`` tag.
+            since: If set, restrict aggregation to rows with ``ts >= since``.
+
+        Returns:
+            A dict with keys:
+            - ``total`` (int): number of matching rows.
+            - ``by_kind`` (dict[str, int]): count per ``kind`` value.
+            - ``by_actor`` (dict[str, int]): count per ``actor`` value.
+            - ``first_ts`` (float | None): earliest ``ts`` in the window,
+                or ``None`` when empty.
+            - ``last_ts`` (float | None): latest ``ts`` in the window, or
+                ``None`` when empty.
         """
         assert self._conn is not None
         where = " WHERE 1=1"
@@ -134,6 +219,7 @@ class SlowMemory:
         }
 
     def close(self) -> None:
+        """Close the SQLite connection. Safe to call more than once."""
         if self._conn:
             self._conn.close()
             self._conn = None

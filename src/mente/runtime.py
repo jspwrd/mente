@@ -41,6 +41,41 @@ _log = get_logger("runtime")
 
 @dataclass
 class Runtime:
+    """Top-level process object wiring the bus, memories, and reasoners.
+
+    A ``Runtime`` owns everything needed to turn an :class:`Intent` into a
+    :class:`Response`: an event bus, a world model, fast/slow/semantic
+    memories, a tool registry, a reasoner roster, a router, a verifier, a
+    self-model, and idle-time consolidation + curiosity loops. Construction
+    seeds default reasoners (using :class:`AnthropicReasoner` when an API
+    key is available, otherwise :class:`DeepSimulatedReasoner`), registers
+    the default tool set, and wires subscribers that persist ``state.*``
+    and ``response.*`` events to slow memory.
+
+    Attributes:
+        root: Filesystem directory where episodic SQLite, semantic SQLite,
+            latent state, and the synthesis library are stored. Created if
+            it does not exist.
+        node_id: Identifier for this runtime instance; surfaces in logs
+            and (Phase 2) in remote bus messages.
+        config: Tunables (log level, verifier threshold, router trade-off,
+            consolidation/curiosity intervals). Defaults to
+            :meth:`MenteConfig.default`.
+        bus: The event bus. Replace to swap transports.
+        world: World model; constructed from ``bus`` in ``__post_init__``.
+        fast_mem: In-process scratchpad.
+        slow_mem: Episodic SQLite log rooted at ``root``.
+        semantic_mem: Vector-search memory rooted at ``root``.
+        latent: Persisted latent summary state at ``root/latent.json``.
+        tools: Tool registry; pre-populated with clock + memory tools.
+        reasoners: Ordered reasoner roster considered by the router.
+        router: Dispatcher picking a reasoner per intent.
+        verifier: Post-hoc acceptance check on every response.
+        self_model: Answers self-referential queries (wired as a hook
+            into :class:`FastHeuristicReasoner`).
+        consolidator: Background task summarising slow memory.
+        curiosity: Background task that self-prompts when idle.
+    """
     root: Path
     node_id: str = "mente.local"
     config: MenteConfig = field(default_factory=MenteConfig.default)
@@ -156,6 +191,35 @@ class Runtime:
 
     # -- the inference loop -------------------------------------------------
     async def handle_intent(self, intent: Intent) -> Response:
+        """Run one turn of the inference pipeline for ``intent``.
+
+        The pipeline is:
+
+        1. **Publish** an ``intent.<source>`` event on the bus so
+           subscribers (persistence, debug taps) see the request.
+        2. **Route** the intent through :class:`Router`, which picks a
+           reasoner (with fall-through on low confidence) and returns the
+           chosen :class:`Decision`, the final :class:`Response`, and the
+           list of reasoners that were attempted.
+        3. **Verify** the response against the intent and world state via
+           :class:`Verifier`, yielding an accept/reject verdict with a
+           numeric score and reasons.
+        4. **Persist** a latent summary of the turn (turn count, last
+           intent, last reasoner, last confidence, last verdict score)
+           and checkpoint it to disk.
+        5. **Publish** a ``response.<tier>`` event carrying the response
+           text, tier, tools used, cost, verdict, and the list of
+           attempted reasoners — so subscribers (including the default
+           ``response.*`` logger) see the outcome.
+
+        Args:
+            intent: The user or system intent to handle.
+
+        Returns:
+            The :class:`Response` selected by the router (after any
+            low-confidence fall-through). The verdict is published on the
+            bus but not attached to the return value.
+        """
         await self.bus.publish(
             Event(topic=f"intent.{intent.source}", origin=intent.source, trace_id=intent.trace_id,
                   payload={"text": intent.text})
@@ -194,7 +258,12 @@ class Runtime:
 
     # -- event loop ---------------------------------------------------------
     async def run(self, inputs: asyncio.Queue[Intent | None]) -> None:
-        """Process intents until a None sentinel is received."""
+        """Process intents from ``inputs`` until a ``None`` sentinel arrives.
+
+        Args:
+            inputs: Queue of intents to handle. Pushing ``None`` cleanly
+                terminates the loop.
+        """
         while True:
             intent = await inputs.get()
             if intent is None:
@@ -206,7 +275,15 @@ class Runtime:
         await self.bus.start()
 
     def start_background(self) -> list[asyncio.Task[None]]:
-        """Start the consolidation + curiosity loops as background tasks."""
+        """Start the consolidation + curiosity loops as background tasks.
+
+        Resets the internal stop events so the loops can be restarted
+        after a previous :meth:`stop_background` call.
+
+        Returns:
+            The two created :class:`asyncio.Task` handles, in order:
+            consolidator first, curiosity second.
+        """
         self._consolidator_stop.clear()
         self._curiosity_stop.clear()
         return [
@@ -215,10 +292,22 @@ class Runtime:
         ]
 
     def stop_background(self) -> None:
+        """Signal the consolidation + curiosity loops to exit.
+
+        Sets the stop events but does not await the tasks — callers that
+        need to join the tasks should retain the handles from
+        :meth:`start_background`.
+        """
         self._consolidator_stop.set()
         self._curiosity_stop.set()
 
     async def shutdown(self) -> None:
+        """Stop loops, run a final consolidation, then close all resources.
+
+        A terminal consolidation ensures the digest reflects the full
+        session before the slow-memory connection is torn down. Safe to
+        call even if the background loops were never started.
+        """
         self.stop_background()
         # Run one final consolidation so the digest reflects the full session.
         self.consolidator.consolidate()
