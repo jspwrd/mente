@@ -52,6 +52,7 @@ nav:
       - discovery: reference/discovery.md
       - types: reference/types.md
   - Performance: performance.md
+  - Federation: federation.md
   - FAQ: faq.md
 
 markdown_extensions:
