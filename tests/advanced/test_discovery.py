@@ -374,6 +374,205 @@ async def test_tcp_transport_bus_round_trip() -> None:
 
 
 @pytest.mark.asyncio
+async def test_directory_evicts_peer_after_stale_after_s() -> None:
+    """With no fresh announcement, ``specialists()`` drops peers older than
+    ``stale_after_s`` on the next call."""
+    bus = EventBus()
+    await bus.start()
+    try:
+        directory = Directory(bus=bus, self_node_id="node.self", stale_after_s=0.05)
+        directory.wire()
+
+        await bus.publish(
+            Event(
+                topic="meta.capability.announce",
+                origin="node.peer",
+                payload={
+                    "node_id": "node.peer",
+                    "reasoner": "specialist.math",
+                    "tier": "specialist",
+                    "est_cost_ms": 12.0,
+                    "specialization": "math",
+                },
+            )
+        )
+        await asyncio.sleep(0)
+        assert len(directory.specialists()) == 1
+
+        # Wait past the staleness window — the next specialists() call must sweep.
+        await asyncio.sleep(0.1)
+        assert directory.specialists() == []
+        assert ("node.peer", "specialist.math") not in directory.peers
+    finally:
+        await bus.close()
+
+
+@pytest.mark.asyncio
+async def test_directory_fresh_announcement_resets_last_seen() -> None:
+    """A second announcement after half the window bumps ``last_seen`` so the
+    peer survives the next sweep."""
+    bus = EventBus()
+    await bus.start()
+    try:
+        directory = Directory(bus=bus, self_node_id="node.self", stale_after_s=0.1)
+        directory.wire()
+
+        payload = {
+            "node_id": "node.peer",
+            "reasoner": "specialist.math",
+            "tier": "specialist",
+            "est_cost_ms": 12.0,
+            "specialization": "math",
+        }
+        await bus.publish(
+            Event(topic="meta.capability.announce", origin="node.peer", payload=payload)
+        )
+        await asyncio.sleep(0)
+        first_seen = directory.peers[("node.peer", "specialist.math")].last_seen
+
+        # Re-announce before expiry — refresh resets last_seen.
+        await asyncio.sleep(0.06)
+        await bus.publish(
+            Event(topic="meta.capability.announce", origin="node.peer", payload=payload)
+        )
+        await asyncio.sleep(0)
+
+        refreshed = directory.peers[("node.peer", "specialist.math")].last_seen
+        assert refreshed > first_seen
+        # Still present — the refresh saved it from the staleness cutoff.
+        assert len(directory.specialists()) == 1
+    finally:
+        await bus.close()
+
+
+@pytest.mark.asyncio
+async def test_directory_run_sweeps_proactively() -> None:
+    """The ``run`` background task evicts stale peers even if nobody calls
+    ``specialists()`` — mirrors the Announcer heartbeat."""
+    bus = EventBus()
+    await bus.start()
+    try:
+        directory = Directory(bus=bus, self_node_id="node.self", stale_after_s=0.05)
+        directory.wire()
+        await bus.publish(
+            Event(
+                topic="meta.capability.announce",
+                origin="node.peer",
+                payload={
+                    "node_id": "node.peer",
+                    "reasoner": "specialist.math",
+                    "tier": "specialist",
+                    "est_cost_ms": 12.0,
+                    "specialization": "math",
+                },
+            )
+        )
+        await asyncio.sleep(0)
+        assert ("node.peer", "specialist.math") in directory.peers
+
+        stop = asyncio.Event()
+        task = asyncio.create_task(directory.run(stop, interval_s=0.02))
+        try:
+            # Allow the sweep to fire after the staleness window passes.
+            await asyncio.sleep(0.15)
+            assert directory.peers == {}
+        finally:
+            stop.set()
+            await task
+    finally:
+        await bus.close()
+
+
+@pytest.mark.asyncio
+async def test_remote_reasoner_opens_breaker_after_consecutive_timeouts() -> None:
+    """Three consecutive timeouts trip the breaker; the fourth call returns
+    the fail-fast ``[peer unavailable]`` without waiting for ``timeout_s``."""
+    bus = EventBus()
+    await bus.start()
+    try:
+        target = PeerCapability(
+            node_id="node.gone", reasoner="echo.specialist",
+            tier="specialist", est_cost_ms=1.0,
+        )
+        # Long recovery so the breaker stays open for the fourth call.
+        remote = RemoteReasoner(
+            bus=bus, node_id="node.self", target=target,
+            timeout_s=0.02, breaker_failure_threshold=3, breaker_recovery_s=30.0,
+        )
+        world = WorldModel(bus=bus)
+        tools = ToolRegistry()
+
+        for _ in range(3):
+            r = await remote.answer(Intent(text="x"), world, tools)
+            assert "timeout" in r.text.lower()
+
+        assert remote._breaker.state == "open"
+
+        # Fourth call: breaker is open, so we expect the fail-fast path and
+        # it must return almost instantly rather than waiting for timeout_s.
+        loop = asyncio.get_event_loop()
+        t0 = loop.time()
+        r = await remote.answer(Intent(text="x"), world, tools)
+        elapsed = loop.time() - t0
+
+        assert r.text == "[peer unavailable]"
+        assert r.confidence == 0.0
+        assert r.cost_ms == 0.0
+        assert elapsed < remote.timeout_s  # fail-fast, not waiting on the bus
+    finally:
+        await bus.close()
+
+
+@pytest.mark.asyncio
+async def test_remote_reasoner_breaker_recovers_after_window_and_success() -> None:
+    """After ``recovery_s`` elapses, a successful probe closes the breaker."""
+    bus = EventBus()
+    await bus.start()
+    try:
+        target = PeerCapability(
+            node_id="node.peer", reasoner="echo.specialist",
+            tier="specialist", est_cost_ms=1.0,
+        )
+        remote = RemoteReasoner(
+            bus=bus, node_id="node.self", target=target,
+            timeout_s=0.02, breaker_failure_threshold=3, breaker_recovery_s=0.05,
+        )
+        world = WorldModel(bus=bus)
+        tools = ToolRegistry()
+
+        # Drive the breaker open with three timeouts (no responder wired yet).
+        for _ in range(3):
+            await remote.answer(Intent(text="x"), world, tools)
+        assert remote._breaker.state == "open"
+
+        # Wait past recovery_s so the breaker transitions to half-open on call.
+        await asyncio.sleep(0.08)
+
+        # Now wire a responder so the probe succeeds and closes the breaker.
+        async def on_request(e: Event) -> None:
+            await bus.publish(
+                Event(
+                    topic="remote.reason.response",
+                    origin="node.peer",
+                    payload={
+                        "request_id": e.payload["request_id"],
+                        "text": "ok",
+                        "confidence": 0.8,
+                        "cost_ms": 1.0,
+                    },
+                )
+            )
+        bus.subscribe("remote.reason.request", on_request, name="test.recovery.responder")
+
+        r = await remote.answer(Intent(text="probe"), world, tools)
+        assert r.text == "ok"
+        assert r.confidence == 0.8
+        assert remote._breaker.state == "closed"
+    finally:
+        await bus.close()
+
+
+@pytest.mark.asyncio
 async def test_announcer_directory_shared_bus_discovery_end_to_end() -> None:
     """Announcer + Directory on the SAME in-process bus: discovery happens
     after one announcement cycle."""

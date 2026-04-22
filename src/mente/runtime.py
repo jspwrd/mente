@@ -128,15 +128,64 @@ class Runtime:
     def _setup_reasoners(self) -> None:
         """Bootstrap the default reasoner roster unless the caller supplied one.
 
-        If an Anthropic API key is available, use the real LLM as the deep
-        tier; otherwise fall back to the simulated stub.
+        Deep-tier selection honours ``config.llm_tier``:
+
+        * ``"auto"`` (default) probes Ollama first (impressive-first REPL for
+          offline users), then Anthropic, then falls back to the sim stub.
+        * ``"ollama"`` / ``"anthropic"`` / ``"sim"`` force the choice and
+          raise ``RuntimeError`` when the requested tier isn't available.
         """
         if self.reasoners:
             return
-        from .llm import AnthropicReasoner, anthropic_available
-        deep = AnthropicReasoner() if anthropic_available() else DeepSimulatedReasoner()
+        deep = self._choose_deep_reasoner()
+        _log.info("deep tier: %s", deep.name)
         synth = SynthesisReasoner(library=self.library, tools=self.tools)
         self.reasoners = [FastHeuristicReasoner(), synth, CodeSpecialist(), deep]
+
+    def _choose_deep_reasoner(self) -> Reasoner:
+        """Pick the deep-tier reasoner based on ``config.llm_tier``."""
+        # Defensive imports: unit 1 (llm_ollama) may not have landed yet, and
+        # the anthropic SDK is an optional extra. Keep Runtime importable in
+        # every environment and surface a clear error only when a tier the
+        # caller explicitly requested is actually missing.
+        try:
+            from .llm_ollama import OllamaReasoner, ollama_available
+        except ImportError:
+            OllamaReasoner = None  # type: ignore[assignment]
+
+            def ollama_available(*_a: Any, **_kw: Any) -> bool:
+                return False
+        from .llm import AnthropicReasoner, anthropic_available
+
+        tier = self.config.llm_tier
+        if tier == "ollama":
+            if OllamaReasoner is None:
+                raise RuntimeError(
+                    "mente[llm-ollama] not installed; "
+                    "run: pip install 'mente[llm-ollama]'"
+                )
+            return OllamaReasoner(url=self.config.ollama_url, model=self.config.ollama_model)
+        if tier == "anthropic":
+            if not anthropic_available():
+                raise RuntimeError(
+                    "llm_tier='anthropic' requested but ANTHROPIC_API_KEY is not set "
+                    "(or the anthropic SDK isn't installed)"
+                )
+            return AnthropicReasoner(config=self.config)
+        if tier == "sim":
+            return DeepSimulatedReasoner()
+        if tier != "auto":
+            raise RuntimeError(
+                f"unknown llm_tier={tier!r}; expected one of auto|ollama|anthropic|sim"
+            )
+
+        # Auto mode: ollama -> anthropic -> sim. Probe ollama BEFORE
+        # constructing OllamaReasoner because its __init__ hits the server.
+        if OllamaReasoner is not None and ollama_available(self.config.ollama_url):
+            return OllamaReasoner(url=self.config.ollama_url, model=self.config.ollama_model)
+        if anthropic_available():
+            return AnthropicReasoner(config=self.config)
+        return DeepSimulatedReasoner()
 
     def _setup_router(self) -> None:
         """Build the metacog + router over the assembled reasoner roster."""

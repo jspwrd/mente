@@ -31,8 +31,11 @@ async def test_start_and_shutdown_leaves_state_on_disk(tmp_path: Path) -> None:
     assert (rt.root / "semantic.sqlite").exists()
     assert (rt.root / "latent.json").exists()
     data = json.loads((rt.root / "latent.json").read_text())
-    assert data.get("turns", 0) >= 1
-    assert data.get("last_intent") == "hello"
+    # latent.json uses the versioned envelope; keys live under "values".
+    assert data.get("_schema") == 1
+    values = data.get("values", {})
+    assert values.get("turns", 0) >= 1
+    assert values.get("last_intent") == "hello"
 
 
 @pytest.mark.asyncio
@@ -126,7 +129,11 @@ async def test_library_store_loaded_from_disk(tmp_path: Path) -> None:
         "signature": {"n": "int"},
         "invocations": 3,
     }
-    lib_path.write_text(json.dumps({primitive["name"]: primitive}))
+    # v1 envelope format: {_schema, primitives}.
+    lib_path.write_text(json.dumps({
+        "_schema": 1,
+        "primitives": {primitive["name"]: primitive},
+    }))
 
     rt = Runtime(root=state_dir)
     try:
@@ -171,3 +178,98 @@ async def test_bus_close_is_idempotent(tmp_path: Path) -> None:
     await rt.handle_intent(Intent(text="hello"))
     await rt.shutdown()
     await rt.bus.close()  # must not raise
+
+
+# -- deep-tier auto-select -------------------------------------------------
+
+
+def _cfg_with_tier(tier: str) -> object:
+    """Return a ``MenteConfig`` with an explicit ``llm_tier`` override."""
+    import dataclasses
+
+    from mente.config import MenteConfig
+    return dataclasses.replace(MenteConfig.default(), llm_tier=tier)
+
+
+@pytest.mark.asyncio
+async def test_runtime_forces_sim_tier(tmp_path: Path) -> None:
+    rt = Runtime(root=tmp_path / "state", config=_cfg_with_tier("sim"))
+    try:
+        names = [r.name for r in rt.reasoners]
+        assert "deep.sim" in names
+    finally:
+        await shutdown_runtime(rt)
+
+
+def test_runtime_forced_anthropic_without_key_raises(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Explicit llm_tier='anthropic' with no API key must raise loudly."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    with pytest.raises(RuntimeError, match="anthropic|ANTHROPIC"):
+        Runtime(root=tmp_path / "state", config=_cfg_with_tier("anthropic"))
+
+
+@pytest.mark.asyncio
+async def test_runtime_auto_falls_back_to_sim_when_nothing_available(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Auto mode in a CI-like environment (no key, no ollama) picks sim."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    # If unit 1 has landed, force its probe False so the test is deterministic.
+    try:
+        import mente.llm_ollama as _llm_ollama
+        monkeypatch.setattr(_llm_ollama, "ollama_available", lambda *a, **kw: False)
+    except ImportError:
+        pass  # module absent -> runtime's defensive fallback returns False
+    rt = Runtime(root=tmp_path / "state", config=_cfg_with_tier("auto"))
+    try:
+        names = [r.name for r in rt.reasoners]
+        assert "deep.sim" in names
+    finally:
+        await shutdown_runtime(rt)
+
+
+@pytest.mark.asyncio
+async def test_runtime_auto_picks_ollama_when_available(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """With ``ollama_available`` mocked True, auto mode chooses deep.ollama."""
+    import sys
+    import types
+
+    class _FakeOllamaReasoner:
+        name = "deep.ollama"
+        tier = "deep"
+        est_cost_ms = 900.0
+
+        def __init__(self, *, url: str = "", model: str = "") -> None:
+            self.url = url
+            self.model = model
+
+        async def answer(self, *a: object, **kw: object) -> object:  # pragma: no cover
+            raise AssertionError("not called in this test")
+
+    stub = types.ModuleType("mente.llm_ollama")
+    stub.OllamaReasoner = _FakeOllamaReasoner  # type: ignore[attr-defined]
+    stub.ollama_available = lambda *a, **kw: True  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "mente.llm_ollama", stub)
+
+    rt = Runtime(root=tmp_path / "state", config=_cfg_with_tier("auto"))
+    try:
+        names = [r.name for r in rt.reasoners]
+        assert "deep.ollama" in names
+        assert "deep.sim" not in names
+    finally:
+        await shutdown_runtime(rt)
+
+
+def test_runtime_forced_ollama_without_module_raises(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``llm_tier='ollama'`` with no ``llm_ollama`` module -> install hint."""
+    import sys
+    # Mask any pre-existing module (sys.modules[x] = None short-circuits import).
+    monkeypatch.setitem(sys.modules, "mente.llm_ollama", None)
+    with pytest.raises(RuntimeError, match=r"mente\[llm-ollama\] not installed"):
+        Runtime(root=tmp_path / "state", config=_cfg_with_tier("ollama"))

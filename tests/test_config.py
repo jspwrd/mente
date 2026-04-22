@@ -27,6 +27,9 @@ def test_default_has_expected_values() -> None:
     assert c.llm_model == "claude-opus-4-7"
     assert c.llm_effort == "medium"
     assert c.llm_max_tokens == 4096
+    assert c.llm_tier == "auto"
+    assert c.ollama_url == "http://127.0.0.1:11434"
+    assert c.ollama_model == "llama3.2"
     assert c.log_level == "INFO"
     assert c.log_json is False
 
@@ -246,3 +249,22 @@ def test_config_is_hashable() -> None:
     b = MenteConfig.default()
     assert hash(a) == hash(b)
     assert {a, b} == {a}
+
+
+# -- deep-tier selection knobs ---------------------------------------------
+
+
+def test_llm_tier_env_override_sim(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MENTE_LLM_TIER", "sim")
+    c = MenteConfig.from_env()
+    assert c.llm_tier == "sim"
+
+
+def test_llm_tier_env_override_ollama(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MENTE_LLM_TIER", "ollama")
+    monkeypatch.setenv("MENTE_OLLAMA_URL", "http://remote:11434")
+    monkeypatch.setenv("MENTE_OLLAMA_MODEL", "llama3.2:70b")
+    c = MenteConfig.from_env()
+    assert c.llm_tier == "ollama"
+    assert c.ollama_url == "http://remote:11434"
+    assert c.ollama_model == "llama3.2:70b"

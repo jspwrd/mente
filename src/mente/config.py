@@ -102,6 +102,11 @@ class MenteConfig:
     llm_model: str = "claude-opus-4-7"
     llm_effort: str = "medium"
     llm_max_tokens: int = 4096
+    # Deep-tier selection. "auto" probes ollama -> anthropic -> sim.
+    # Explicit values force the choice (and fail loudly if unavailable).
+    llm_tier: str = "auto"  # one of: "auto", "ollama", "anthropic", "sim"
+    ollama_url: str = "http://127.0.0.1:11434"
+    ollama_model: str = "llama3.2"
     log_level: str = "INFO"
     log_json: bool = False
 

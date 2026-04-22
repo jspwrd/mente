@@ -1117,6 +1117,9 @@ embeddings-local = [
 llm = [
     { name = "anthropic" },
 ]
+llm-ollama = [
+    { name = "httpx" },
+]
 verifier-ml = [
     { name = "joblib" },
     { name = "scikit-learn" },
@@ -1125,6 +1128,7 @@ verifier-ml = [
 [package.metadata]
 requires-dist = [
     { name = "anthropic", marker = "extra == 'llm'", specifier = ">=0.40.0" },
+    { name = "httpx", marker = "extra == 'llm-ollama'", specifier = ">=0.27" },
     { name = "joblib", marker = "extra == 'verifier-ml'", specifier = ">=1.3" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.5" },
@@ -1138,7 +1142,7 @@ requires-dist = [
     { name = "sentence-transformers", marker = "extra == 'embeddings-local'", specifier = ">=3.0" },
     { name = "voyageai", marker = "extra == 'embeddings'", specifier = ">=0.2" },
 ]
-provides-extras = ["llm", "embeddings", "embeddings-local", "docs", "dev", "verifier-ml"]
+provides-extras = ["llm", "llm-ollama", "embeddings", "embeddings-local", "docs", "dev", "verifier-ml"]
 
 [[package]]
 name = "mergedeep"
