@@ -1981,7 +1981,9 @@ terminates the loop.</p>
 <p>A terminal consolidation ensures the digest reflects the full
 session before the slow-memory connection is torn down. Safe to
 call even if the background loops were never started, and
-idempotent — a second call is a no-op.</p>
+idempotent — a second call is a no-op. Each close step runs
+independently: a failure in one step logs and continues so
+downstream resources still get released.</p>
 
 
             <details class="mkdocstrings-source">
@@ -2003,24 +2005,46 @@ idempotent — a second call is a no-op.</p>
 <span class="normal"><a href="#__codelineno-0-348">348</a></span>
 <span class="normal"><a href="#__codelineno-0-349">349</a></span>
 <span class="normal"><a href="#__codelineno-0-350">350</a></span>
-<span class="normal"><a href="#__codelineno-0-351">351</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-351">351</a></span>
+<span class="normal"><a href="#__codelineno-0-352">352</a></span>
+<span class="normal"><a href="#__codelineno-0-353">353</a></span>
+<span class="normal"><a href="#__codelineno-0-354">354</a></span>
+<span class="normal"><a href="#__codelineno-0-355">355</a></span>
+<span class="normal"><a href="#__codelineno-0-356">356</a></span>
+<span class="normal"><a href="#__codelineno-0-357">357</a></span>
+<span class="normal"><a href="#__codelineno-0-358">358</a></span>
+<span class="normal"><a href="#__codelineno-0-359">359</a></span>
+<span class="normal"><a href="#__codelineno-0-360">360</a></span>
+<span class="normal"><a href="#__codelineno-0-361">361</a></span>
+<span class="normal"><a href="#__codelineno-0-362">362</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-335" name="__codelineno-0-335"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Stop loops, run a final consolidation, then close all resources.</span>
 <a id="__codelineno-0-336" name="__codelineno-0-336"></a>
 <a id="__codelineno-0-337" name="__codelineno-0-337"></a><span class="sd">    A terminal consolidation ensures the digest reflects the full</span>
 <a id="__codelineno-0-338" name="__codelineno-0-338"></a><span class="sd">    session before the slow-memory connection is torn down. Safe to</span>
 <a id="__codelineno-0-339" name="__codelineno-0-339"></a><span class="sd">    call even if the background loops were never started, and</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340"></a><span class="sd">    idempotent — a second call is a no-op.</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342"></a>    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_shutdown_done&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-<a id="__codelineno-0-343" name="__codelineno-0-343"></a>        <span class="k">return</span>
-<a id="__codelineno-0-344" name="__codelineno-0-344"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">stop_background</span><span class="p">()</span>
-<a id="__codelineno-0-345" name="__codelineno-0-345"></a>    <span class="c1"># Run one final consolidation so the digest reflects the full session.</span>
-<a id="__codelineno-0-346" name="__codelineno-0-346"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">consolidator</span><span class="o">.</span><span class="n">consolidate</span><span class="p">()</span>
-<a id="__codelineno-0-347" name="__codelineno-0-347"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">latent</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">()</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">slow_mem</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">semantic_mem</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-<a id="__codelineno-0-350" name="__codelineno-0-350"></a>    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-<a id="__codelineno-0-351" name="__codelineno-0-351"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_shutdown_done</span> <span class="o">=</span> <span class="kc">True</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340"></a><span class="sd">    idempotent — a second call is a no-op. Each close step runs</span>
+<a id="__codelineno-0-341" name="__codelineno-0-341"></a><span class="sd">    independently: a failure in one step logs and continues so</span>
+<a id="__codelineno-0-342" name="__codelineno-0-342"></a><span class="sd">    downstream resources still get released.</span>
+<a id="__codelineno-0-343" name="__codelineno-0-343"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344"></a>    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_shutdown_done&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+<a id="__codelineno-0-345" name="__codelineno-0-345"></a>        <span class="k">return</span>
+<a id="__codelineno-0-346" name="__codelineno-0-346"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">stop_background</span><span class="p">()</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347"></a>    <span class="c1"># Best-effort terminal consolidation + checkpoint + close sweep.</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348"></a>    <span class="k">for</span> <span class="n">step_name</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="p">(</span>
+<a id="__codelineno-0-349" name="__codelineno-0-349"></a>        <span class="p">(</span><span class="s2">&quot;consolidate&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">consolidator</span><span class="o">.</span><span class="n">consolidate</span><span class="p">()),</span>
+<a id="__codelineno-0-350" name="__codelineno-0-350"></a>        <span class="p">(</span><span class="s2">&quot;checkpoint&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">latent</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">()),</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351"></a>        <span class="p">(</span><span class="s2">&quot;close.slow_mem&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">slow_mem</span><span class="o">.</span><span class="n">close</span><span class="p">()),</span>
+<a id="__codelineno-0-352" name="__codelineno-0-352"></a>        <span class="p">(</span><span class="s2">&quot;close.semantic_mem&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantic_mem</span><span class="o">.</span><span class="n">close</span><span class="p">()),</span>
+<a id="__codelineno-0-353" name="__codelineno-0-353"></a>    <span class="p">):</span>
+<a id="__codelineno-0-354" name="__codelineno-0-354"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-355" name="__codelineno-0-355"></a>            <span class="n">step</span><span class="p">()</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356"></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 - shutdown must continue</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357"></a>            <span class="n">_log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;shutdown step </span><span class="si">%s</span><span class="s2"> failed: </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">step_name</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<a id="__codelineno-0-360" name="__codelineno-0-360"></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># noqa: BLE001</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361"></a>        <span class="n">_log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;shutdown step close.bus failed: </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_shutdown_done</span> <span class="o">=</span> <span class="kc">True</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
