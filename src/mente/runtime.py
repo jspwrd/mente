@@ -336,8 +336,11 @@ class Runtime:
 
         A terminal consolidation ensures the digest reflects the full
         session before the slow-memory connection is torn down. Safe to
-        call even if the background loops were never started.
+        call even if the background loops were never started, and
+        idempotent — a second call is a no-op.
         """
+        if getattr(self, "_shutdown_done", False):
+            return
         self.stop_background()
         # Run one final consolidation so the digest reflects the full session.
         self.consolidator.consolidate()
@@ -345,3 +348,4 @@ class Runtime:
         self.slow_mem.close()
         self.semantic_mem.close()
         await self.bus.close()
+        self._shutdown_done = True
