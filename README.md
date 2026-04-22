@@ -54,7 +54,18 @@ framework's worldview.
 
 ## Quickstart
 
-Two ways in — pick whichever feels right.
+Three ways in — pick whichever feels right.
+
+**One-liner installer (recommended):**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jspwrd/mente/main/install.sh | bash
+mente                 # you're done — mente is on your PATH
+```
+
+The script uses `uv tool install` if available, falls back to `pipx`, then
+`pip install --user`. Add `--with=llm` for Claude support, `--with=embeddings-local`
+for sentence-transformers, etc. Run `./install.sh --help` for all flags.
 
 **No install — run straight from a checkout:**
 
@@ -64,11 +75,11 @@ cd mente
 ./mente             # interactive REPL — resolves Python 3.11+ automatically
 ```
 
-**Install from PyPI:**
+**Install from PyPI directly:**
 
 ```bash
-pip install mente
-mente               # same REPL, installed as a script on your PATH
+pip install mente         # or: uv add mente, pipx install mente
+mente                     # same REPL, installed as a script on your PATH
 ```
 
 Either way, try:
